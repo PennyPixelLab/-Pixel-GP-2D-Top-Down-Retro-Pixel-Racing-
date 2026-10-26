@@ -67,25 +67,13 @@
 
 ### 方式一：本地直接遊玩
 
-1. 下載專案中的 `imola_pixel_racer.html`（或重新命名為 `index.html`）。
+1. 下載專案中的 `index.html`）
 
 2. 直接使用任何現代瀏覽器（Chrome / Safari / Edge / Firefox）雙擊打開即可遊玩。
 
-### 方式二：一鍵部署至 GitHub Pages（支援手機掃碼即玩）
+### 方式二：直接使用以下連結
 
-1. 在 GitHub 建立一個新的公開儲存庫（Repository），例如 `pixel-gp-racer`。
-
-2. 將遊戲檔案重新命名為 **`index.html`**，連同本 **`README.md`** 一起上傳至儲存庫根目錄（`main` 分支）。
-
-3. 進入 GitHub 儲存庫的 **Settings** ➔ 左側選單點擊 **Pages**。
-
-4. 在 **Build and deployment** 下方：
-
-   * **Source** 選擇 `Deploy from a branch`。
-
-   * **Branch** 選擇 `main` 並將資料夾設為 `/ (root)`，點擊 **Save**。
-
-5. 等待約 1 分鐘後，即可透過 `https://<你的GitHub帳號>.github.io/pixel-gp-racer/` 在電腦與手機瀏覽器直接全螢幕遊玩！
+1. https://pennypixellab.github.io/-Pixel-GP-2D-Top-Down-Retro-Pixel-Racing-/
 
 ## 🗺️ 未來開發藍圖 (Development Roadmap)
 
