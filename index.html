@@ -1,0 +1,3883 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Pixel GP - 2D 俯視角像素賽車 (v0.7.0)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0b0f19;
+      color: #f8fafc;
+      font-family: 'Inter', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+    }
+    .retro-border {
+      box-shadow: 0 0 0 1.5px rgba(71, 85, 105, 0.7), 0 6px 16px -4px rgba(0, 0, 0, 0.65);
+    }
+    .touch-btn {
+      background: rgba(15, 23, 42, 0.78);
+      border: 2px solid rgba(148, 163, 184, 0.5);
+      backdrop-filter: blur(6px);
+      transition: transform 0.05s ease, background-color 0.05s ease, border-color 0.05s ease;
+    }
+    .touch-btn:active, .touch-btn.active {
+      background: rgba(239, 68, 68, 0.88);
+      border-color: #fde047;
+      transform: scale(0.93);
+    }
+    .thumb-zone-low {
+      bottom: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+    }
+    .thumb-zone-mid {
+      bottom: calc(5.75rem + env(safe-area-inset-bottom, 0px));
+    }
+    .thumb-zone-high {
+      bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+    }
+    .modal-scroll {
+      touch-action: pan-y;
+      -webkit-overflow-scrolling: touch;
+    }
+    .modal-scroll * {
+      touch-action: pan-y;
+    }
+  </style>
+</head>
+<body class="h-[100dvh] w-screen flex flex-col bg-slate-950 overflow-hidden">
+
+  <!-- Top Header / Telemetry Bar (Multi-Language i18n, Responsive Fixed Rows, Zero Layout Jumping!) -->
+  <header class="w-full bg-slate-900/95 border-b border-slate-800 px-2 sm:px-3 py-1 flex flex-col gap-1 z-20 shrink-0">
+    <!-- Row 1: Timers & Real-Time Position / Best Lap + Quick Action Controls -->
+    <div class="w-full flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1">
+      <!-- Timers & Telemetry -->
+      <div class="w-full lg:w-auto flex items-center justify-between lg:justify-start gap-1 sm:gap-3 text-[10px] sm:text-xs mono whitespace-nowrap overflow-hidden">
+        <span id="hudTrackBadge" class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] sm:text-[11px] font-extrabold bg-emerald-600 text-white tracking-wider uppercase mono shrink-0">IMOLA</span>
+        
+        <!-- Mode Badge / Position Badge -->
+        <div id="hudPosContainer" class="flex items-center">
+          <span class="text-slate-400" data-i18n="posLabel">POS</span>
+          <span id="hudPosition" class="font-black text-amber-400 ml-0.5 text-xs sm:text-sm">P8/8</span>
+        </div>
+
+        <div>
+          <span class="text-slate-400" data-i18n="lapLabel">LAP</span>
+          <span id="hudLap" class="font-bold text-white ml-0.5">1/3</span>
+        </div>
+        <div>
+          <span class="text-slate-400" data-i18n="timeLabel">TIME</span>
+          <span id="hudCurTime" class="font-bold text-emerald-400 ml-0.5">00:00.00</span>
+        </div>
+        <div id="hudBestContainer">
+          <span class="text-slate-400" data-i18n="bestLabel">BEST</span>
+          <span id="hudBestTime" class="font-bold text-amber-400 ml-0.5">--:--.--</span>
+        </div>
+        <div id="ghostDeltaContainer" class="hidden md:flex items-center">
+          <span class="text-slate-400">Δ GHOST</span>
+          <span id="hudGhostDelta" class="font-bold text-slate-400 ml-1">--.--s</span>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons: Roomy 4+3 grid on Mobile (80px+ per button so JA/EN text never overflows!), 7-col on sm/md, flex on lg -->
+      <div class="w-full lg:w-auto flex flex-wrap sm:grid sm:grid-cols-7 lg:flex items-center gap-1 shrink-0">
+        <button id="btnToggleLang" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-sky-950/90 hover:bg-sky-900 text-[10px] sm:text-[11px] font-bold text-sky-200 border border-sky-700/80 transition text-center whitespace-nowrap">
+          🌐 繁中
+        </button>
+        <button id="btnToggleAutoGas" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-[10px] sm:text-[11px] font-semibold text-emerald-200 border border-emerald-700/80 transition text-center whitespace-nowrap">
+          ⚡自動:開
+        </button>
+        <button id="btnTogglePadHeight" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-indigo-950/90 hover:bg-indigo-900 text-[10px] sm:text-[11px] font-semibold text-indigo-200 border border-indigo-700/80 transition text-center whitespace-nowrap">
+          📱高度:中
+        </button>
+        <button id="btnToggleGhost" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-cyan-300 border border-cyan-800/80 transition text-center whitespace-nowrap">
+          👻殘影:開
+        </button>
+        <button id="btnCarSelect" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+          🏠主選單
+        </button>
+        <button id="btnResetCar" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+          🔄重置
+        </button>
+        <button id="btnToggleMute" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+          🔊音效:開
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 2: Fixed Track Name & Corner Name Bar (Zero text truncation, no jumping line wraps!) -->
+    <div class="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-3 pt-0.5 border-t border-slate-800/80 text-[11px] sm:text-xs whitespace-nowrap overflow-hidden">
+      <div class="h-4 sm:h-5 flex items-center gap-1.5 text-slate-200 font-bold shrink-0">
+        <span class="text-slate-400 font-normal" data-i18n="trackPrefix">🏁 賽道:</span>
+        <h1 id="hudTrackFullName" class="font-bold text-white tracking-tight">Autodromo Enzo e Dino Ferrari</h1>
+      </div>
+      <div class="h-4 sm:h-5 flex items-center gap-1.5 mono font-semibold text-amber-300 shrink-0">
+        <span id="cornerNameBadge">📍 Traguardo (Start / Finish Line) (0%)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Viewport Container -->
+  <main id="gameContainer" class="relative flex-1 w-full h-full overflow-hidden bg-emerald-950">
+    <canvas id="gameCanvas" class="w-full h-full"></canvas>
+
+    <!-- Top-Left Compact Live Physics & Mode Indicator -->
+    <div class="absolute top-2 left-2 pointer-events-none flex flex-col gap-1 z-10 max-w-[162px] sm:max-w-[205px]">
+      <div class="bg-slate-900/75 border border-slate-700/70 backdrop-blur-sm px-2.5 py-1.5 rounded-lg retro-border">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-baseline gap-1">
+            <span id="hudSpeed" class="text-xl sm:text-2xl font-extrabold mono text-white">0</span>
+            <span class="text-[10px] text-slate-400 mono">KM/H</span>
+          </div>
+          <span id="hudDrsBadge" class="px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-slate-800/90 text-slate-400 border border-slate-700">
+            DRS OFF
+          </span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mt-1 border border-slate-700">
+          <div id="hudSpeedBar" class="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-red-500 w-0 transition-all duration-75"></div>
+        </div>
+        <div class="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
+          <span id="hudGripState" class="px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 truncate w-full text-center">
+            🟢 GRIP 貼地抓地
+          </span>
+        </div>
+        <div class="mt-1 flex items-center justify-between gap-1 text-[10px] text-slate-300 mono truncate">
+          <span id="hudCarTitle" class="truncate">平衡型</span>
+          <span id="hudSurface" class="truncate text-right">柏油(100%)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Center Pause Button (Placed directly between Top-Left Speedometer & Top-Right Mini-Map) -->
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-auto z-20">
+      <button id="btnPauseGame" type="button" aria-label="暫停比賽" class="px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-amber-300 hover:text-amber-200 border-2 border-amber-500/70 shadow-lg backdrop-blur-sm transition flex items-center gap-1.5 mono font-extrabold text-xs sm:text-sm">
+        <span class="text-sm sm:text-base leading-none">⏸️</span>
+        <span id="btnPauseText" data-i18n="pauseBtn">暫停</span>
+        <span class="hidden md:inline text-[10px] text-slate-400 font-normal">(ESC/P)</span>
+      </button>
+    </div>
+
+    <!-- Pause Overlay Modal -->
+    <div id="pauseModal" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-40">
+      <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl text-center flex flex-col items-center">
+        <div class="w-12 h-12 rounded-full bg-amber-500/20 border-2 border-amber-400/60 flex items-center justify-center text-2xl mb-2 text-amber-300">
+          ⏸️
+        </div>
+        <h3 id="pauseTitle" class="text-xl sm:text-2xl font-extrabold text-white mono" data-i18n="pauseTitle">遊戲暫停 · PAUSED</h3>
+        <p id="pauseTrackInfo" class="text-xs text-slate-400 mono mt-1">Autodromo Enzo e Dino Ferrari</p>
+
+        <!-- Current Status Highlights in Pause -->
+        <div class="grid grid-cols-2 gap-2 w-full my-4 text-xs mono">
+          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-2 text-center">
+            <span class="text-slate-400 text-[10px]" data-i18n="posLabel">POS</span>
+            <div id="pausePosText" class="font-extrabold text-amber-400 text-sm mt-0.5">P1/8</div>
+          </div>
+          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-2 text-center">
+            <span class="text-slate-400 text-[10px]" data-i18n="lapLabel">LAP</span>
+            <div id="pauseLapText" class="font-extrabold text-white text-sm mt-0.5">1/3</div>
+          </div>
+        </div>
+
+        <!-- Pause Action Buttons -->
+        <div class="w-full flex flex-col gap-2">
+          <button id="btnResumeRace" type="button" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-black text-sm tracking-wide shadow-lg transition flex items-center justify-center gap-1.5">
+            <span>▶️</span>
+            <span data-i18n="resumeBtn">繼續比賽 (Resume)</span>
+          </button>
+          <button id="btnPauseRestart" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-bold text-xs border border-slate-600 transition flex items-center justify-center gap-1.5">
+            <span>🔄</span>
+            <span data-i18n="restartBtn">重新起跑 (Restart)</span>
+          </button>
+          <button id="btnPauseToMenu" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs border border-slate-700 transition flex items-center justify-center gap-1.5">
+            <span>🏠</span>
+            <span data-i18n="resBackMenu">回到主選單 (Main Menu)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top-Right Compact & Transparent Mini-Map -->
+    <div class="absolute top-2 right-2 pointer-events-none flex flex-col items-end z-10">
+      <div class="bg-slate-950/25 border border-slate-600/35 backdrop-blur-[2px] p-1.5 rounded-lg flex flex-col items-center">
+        <div class="w-full flex items-center justify-between text-[9px] font-bold text-slate-200/90 uppercase tracking-wider mb-0.5 mono px-0.5 drop-shadow">
+          <span id="minimapTitle">IMOLA</span>
+          <span class="flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+          </span>
+        </div>
+        <canvas id="minimapCanvas" width="112" height="66" class="rounded bg-transparent"></canvas>
+        <div class="w-full flex justify-between gap-1.5 text-[9px] mt-0.5 mono font-semibold drop-shadow">
+          <span id="hudSector1" class="text-red-400">S1:--</span>
+          <span id="hudSector2" class="text-sky-400">S2:--</span>
+          <span id="hudSector3" class="text-amber-300">S3:--</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Toast Notification -->
+    <div id="centerToast" class="hidden absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-20 px-4 py-2 rounded-lg bg-slate-900/95 border-2 border-amber-400 text-center shadow-2xl">
+      <div id="centerToastTitle" class="text-sm sm:text-base font-extrabold text-amber-300 mono uppercase">LAP COMPLETED</div>
+      <div id="centerToastSub" class="text-xs text-slate-200 mono mt-0.5">00:24.50</div>
+    </div>
+
+    <!-- Ergonomic On-Screen Touch Controls -->
+    <div id="touchControlsBar" class="absolute inset-x-3 sm:inset-x-6 thumb-zone-mid flex items-end justify-between pointer-events-none z-10 transition-all duration-150">
+      <!-- Left Hand: Enlarged & Wider-Spaced Ergonomic Steering Cluster -->
+      <div class="flex items-center gap-5 sm:gap-7 pointer-events-auto pl-1.5 sm:pl-3">
+        <button id="btnSteerLeft" type="button" aria-label="左轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl">
+          <span class="text-2xl sm:text-4xl font-bold leading-none">◀</span>
+          <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerLeftDesc">LEFT (A)</span>
+        </button>
+        <button id="btnSteerRight" type="button" aria-label="右轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl -translate-y-2">
+          <span class="text-2xl sm:text-4xl font-bold leading-none">▶</span>
+          <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerRightDesc">RIGHT (D)</span>
+        </button>
+      </div>
+
+      <!-- Center Help Hint on Desktop -->
+      <div class="hidden xl:flex flex-col items-center bg-slate-900/80 border border-slate-800 px-3.5 py-1.5 rounded-lg text-[11px] text-slate-300 mono mb-2">
+        <span data-i18n="desktopHint1">電腦鍵盤: W/S 或 ↑/↓ 油門煞車 · A/D 或 ←/→ 轉向 · SPACE 甩尾</span>
+        <span class="text-emerald-300" data-i18n="desktopHint2">地面已繪製彎道編號 (T1~T19) 與轉向箭頭看板 · 支援 8 車同場競速</span>
+      </div>
+
+      <!-- Right Hand: Large Ergonomic Brake / Drift Pedal (Wide enough so text never overflows in any language!) -->
+      <div class="flex items-end gap-2 sm:gap-3.5 pointer-events-auto pr-1 sm:pr-2">
+        <button id="btnPedalBrake" type="button" aria-label="煞車與飄移" class="touch-btn w-28 h-20 sm:w-32 sm:h-24 px-2 rounded-2xl flex flex-col items-center justify-center text-amber-300 border-amber-400/75 shadow-xl -translate-y-1">
+          <span class="text-xs sm:text-sm font-extrabold leading-tight mono whitespace-nowrap">BRAKE / DRIFT</span>
+          <span class="text-[10px] sm:text-[11px] text-amber-200 mt-1 mono font-bold whitespace-nowrap" data-i18n="brakePedalDesc">減速/飄移</span>
+        </button>
+        <button id="btnPedalGas" type="button" aria-label="油門加速" class="hidden touch-btn w-24 h-20 sm:w-28 sm:h-24 px-2 rounded-2xl flex flex-col items-center justify-center text-emerald-300 border-emerald-500/70 shadow-xl -translate-y-4">
+          <span class="text-base sm:text-lg font-extrabold leading-tight mono whitespace-nowrap">GAS</span>
+          <span class="text-[10px] sm:text-[11px] text-emerald-200 mt-1 mono font-bold whitespace-nowrap" data-i18n="gasPedalDesc">加速 (W)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MAIN MENU OVERLAY (Language, Mode, AI Difficulty, Track, Laps & Car)-->
+    <!-- =================================================================== -->
+    <div id="garageModal" class="absolute inset-0 bg-slate-950/92 backdrop-blur-md flex items-start sm:items-center justify-center pt-2 pb-8 px-2.5 sm:p-4 z-30">
+      <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-3xl w-full p-3.5 sm:p-5 shadow-2xl max-h-[84dvh] sm:max-h-[92dvh] flex flex-col overflow-hidden">
+        <!-- Header (Clean title with NO version numbers and clean title!) -->
+        <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 shrink-0">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-600 text-white mono uppercase" data-i18n="menuBadgeTag">MAIN MENU</span>
+              <span class="text-[11px] sm:text-xs font-bold text-amber-400 mono" data-i18n="menuSubTag">TOP-DOWN RETRO PIXEL RACING</span>
+            </div>
+            <h2 id="menuMainTitle" class="text-lg sm:text-2xl font-extrabold text-white mt-0.5">PIXEL GP — 像素大獎賽</h2>
+          </div>
+          
+          <div class="flex items-center gap-1.5 shrink-0">
+            <!-- Language Quick Switcher in Menu -->
+            <button id="menuLangBtn" type="button" class="px-2.5 py-1 rounded-lg bg-sky-950/90 hover:bg-sky-900 text-sky-200 border border-sky-700 text-xs font-bold transition whitespace-nowrap">
+              🌐 繁中
+            </button>
+            <button id="btnCloseGarage" type="button" class="hidden px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold whitespace-nowrap">
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <!-- Scrollable Middle Content (Touch-scrollable on Mobile) -->
+        <div class="modal-scroll flex-1 overflow-y-auto pr-0.5 space-y-3 py-2.5">
+        <!-- Step 1: Game Mode Tabs, AI Difficulty & Lap Selector -->
+        <div class="flex flex-col gap-2.5 bg-slate-800/60 border border-slate-700/80 rounded-xl p-2.5">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-bold text-slate-400 mono mr-1" data-i18n="modeLabel">模式:</span>
+              <button id="modeArcade" type="button" class="px-2.5 sm:px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-extrabold mono shadow transition whitespace-nowrap">
+                🏁 街機競速 (8車AI)
+              </button>
+              <button id="modeTimeTrial" type="button" class="px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap">
+                ⏱️ 計時模式
+              </button>
+              <button id="modeCareer" type="button" class="px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap">
+                🏆 生涯車隊
+              </button>
+            </div>
+
+            <!-- Lap Count Selector -->
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="text-[11px] font-bold text-slate-300 mono" data-i18n="lapsLabel">圈數 (LAPS):</span>
+              <button type="button" data-laps="1" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">1</button>
+              <button type="button" data-laps="3" class="lap-btn px-2.5 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow">3</button>
+              <button type="button" data-laps="5" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">5</button>
+              <button type="button" data-laps="10" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">10</button>
+            </div>
+          </div>
+
+          <!-- AI Difficulty Selector (Visible when Arcade Mode is selected) -->
+          <div id="aiDiffSection" class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
+            <span class="text-[11px] font-bold text-amber-300 mono" data-i18n="aiDiffTitle">🤖 AI 難度 (AI DIFFICULTY):</span>
+            <button id="aiDiffEasy" type="button" data-diff="easy" class="ai-diff-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700">
+              🟢 簡單 (Easy)
+            </button>
+            <button id="aiDiffNormal" type="button" data-diff="normal" class="ai-diff-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-sky-500 text-slate-950 border border-sky-400 shadow">
+              🟡 普通 (Normal)
+            </button>
+            <button id="aiDiffHard" type="button" data-diff="hard" class="ai-diff-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700">
+              🔴 困難 (Hard)
+            </button>
+            <span id="aiDiffDesc" class="text-[10px] text-slate-400 mono">AI 具備標準走線與超車避障能力 (極速 92%)</span>
+          </div>
+        </div>
+
+        <!-- Career Mode Headquarters & Team Contract Section (Visible in Career Mode) -->
+        <div id="careerHubSection" class="hidden flex flex-col gap-2.5 bg-gradient-to-br from-slate-900 to-amber-950/30 border-2 border-amber-500/70 rounded-xl p-3 shadow-xl mt-3.5">
+          <!-- HQ Header: Bank Balance & Record -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-amber-500/30 pb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-sm sm:text-base font-black text-amber-300 mono" data-i18n="careerHubTitle">🏆 生涯車隊總部 (TEAM HEADQUARTERS)</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-amber-400/60 flex items-center gap-1.5 mono text-xs">
+                <span class="text-slate-400" data-i18n="careerCashLabel">車隊資金:</span>
+                <span id="careerCashDisplay" class="font-black text-amber-300 text-sm">$30,000</span>
+              </div>
+              <div class="px-2.5 py-1 rounded-lg bg-slate-950/80 border border-slate-700 flex items-center gap-2 mono text-[11px] text-slate-300">
+                <span><span class="text-slate-400" data-i18n="careerStatsLabel">出賽:</span> <strong id="careerRacesCount" class="text-white">0</strong></span>
+                <span><span class="text-slate-400" data-i18n="careerWinsLabel">勝場:</span> <strong id="careerWinsCount" class="text-amber-400">0</strong></span>
+                <span><span class="text-slate-400" data-i18n="careerPodiumsLabel">頒獎台:</span> <strong id="careerPodiumsCount" class="text-sky-300">0</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 Team Contract Cards (Tier 1 / Tier 2 / Tier 3) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <!-- Tier 1 Rosso -->
+            <div id="teamCard-tier1_rosso" class="career-team-card rounded-xl p-3 bg-slate-900/90 border-2 border-slate-700 transition flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="teamBadge-tier1_rosso" class="px-2 py-0.5 rounded text-[10px] font-black bg-red-600/30 text-red-300 border border-red-500/50 mono">TIER 1 頂級廠隊</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-red-600 inline-block border border-amber-400"></span>
+                </div>
+                <h4 id="teamTitle-tier1_rosso" class="text-sm font-black text-white mt-1.5">Scuderia Rosso</h4>
+                <p id="teamDesc-tier1_rosso" class="text-[11px] text-slate-400 mt-0.5 leading-snug">名門頂級廠隊，極速 335 km/h，目標要求完賽登上頒獎台 (前 3 名)。</p>
+                <div class="mt-2 space-y-1 text-[10px] mono border-t border-slate-800 pt-1.5">
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerTargetLabel">合約目標:</span>
+                    <strong class="text-amber-300">P1 ~ P3</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerBonusLabel">達成紅利:</span>
+                    <strong class="text-emerald-400">+$25,000</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerFeeLabel">簽約門檻:</span>
+                    <strong class="text-white">$80,000</strong>
+                  </div>
+                </div>
+              </div>
+              <button id="btnSign-tier1_rosso" type="button" class="mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600">
+                簽約車隊
+              </button>
+            </div>
+
+            <!-- Tier 2 Papaya -->
+            <div id="teamCard-tier2_papaya" class="career-team-card rounded-xl p-3 bg-slate-900/90 border-2 border-slate-700 transition flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="teamBadge-tier2_papaya" class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-600/30 text-amber-300 border border-amber-500/50 mono">TIER 2 中游車隊</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-orange-500 inline-block border border-sky-400"></span>
+                </div>
+                <h4 id="teamTitle-tier2_papaya" class="text-sm font-black text-white mt-1.5">Papaya Apex</h4>
+                <p id="teamDesc-tier2_papaya" class="text-[11px] text-slate-400 mt-0.5 leading-snug">攻守均衡中游勁旅，全方位操控流暢穩定，目標完賽前 5 名。</p>
+                <div class="mt-2 space-y-1 text-[10px] mono border-t border-slate-800 pt-1.5">
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerTargetLabel">合約目標:</span>
+                    <strong class="text-amber-300">P1 ~ P5</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerBonusLabel">達成紅利:</span>
+                    <strong class="text-emerald-400">+$15,000</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerFeeLabel">簽約門檻:</span>
+                    <strong class="text-white">$20,000</strong>
+                  </div>
+                </div>
+              </div>
+              <button id="btnSign-tier2_papaya" type="button" class="mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600">
+                簽約車隊
+              </button>
+            </div>
+
+            <!-- Tier 3 Stealth -->
+            <div id="teamCard-tier3_stealth" class="career-team-card rounded-xl p-3 bg-slate-900/90 border-2 border-emerald-500 transition flex flex-col justify-between shadow-lg">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="teamBadge-tier3_stealth" class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-600/30 text-emerald-300 border border-emerald-500/50 mono">TIER 3 新秀車隊</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-emerald-500 inline-block border border-slate-900"></span>
+                </div>
+                <h4 id="teamTitle-tier3_stealth" class="text-sm font-black text-white mt-1.5">Cyber Stealth</h4>
+                <p id="teamDesc-tier3_stealth" class="text-[11px] text-slate-400 mt-0.5 leading-snug">新秀獨立車隊，輕量化高飄移靈活性，新秀起步免費簽約。</p>
+                <div class="mt-2 space-y-1 text-[10px] mono border-t border-slate-800 pt-1.5">
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerTargetLabel">合約目標:</span>
+                    <strong class="text-amber-300">P1 ~ P7</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerBonusLabel">達成紅利:</span>
+                    <strong class="text-emerald-400">+$10,000</strong>
+                  </div>
+                  <div class="flex justify-between text-slate-300">
+                    <span data-i18n="careerFeeLabel">簽約門檻:</span>
+                    <strong class="text-emerald-300 font-bold">免費 $0</strong>
+                  </div>
+                </div>
+              </div>
+              <button id="btnSign-tier3_stealth" type="button" class="mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-emerald-600 text-white">
+                ✔ 已簽約
+              </button>
+            </div>
+          </div>
+
+          <!-- Career Reset Option -->
+          <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] mono">
+            <span class="text-slate-500">存檔保存在本地瀏覽器 (LocalStorage)</span>
+            <button id="btnResetCareer" type="button" class="text-slate-400 hover:text-red-400 transition underline underline-offset-2">
+              🔄 重設生涯檔案 (Reset)
+            </button>
+          </div>
+        </div>
+
+
+        <!-- Step 2: Select Circuit (Imola Easy / Suzuka Normal / Monte Carlo Hard) -->
+        <div class="mt-3.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span id="selectTrackTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider mono">1. SELECT CIRCUIT (8-CAR WIDE TRACKS)</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Imola (Easy) -->
+            <div id="track-imola" data-track="imola" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 border-emerald-500 transition hover:bg-slate-800 flex flex-col justify-between shadow-lg">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-imola" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mono">★☆☆ 簡單 EASY</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS</span>
+                </div>
+                <h3 id="cardName-imola" class="text-sm sm:text-base font-extrabold text-white mt-1.5">伊莫拉 · Imola</h3>
+                <p id="cardDesc-imola" class="text-[11px] text-slate-400 mt-0.5 leading-snug">高速流暢的逆時針經典賽道，路面寬敞（320px），適合 8 車並排起步與高速超車。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-imola">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- Suzuka (Normal) -->
+            <div id="track-suzuka" data-track="suzuka" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-suzuka" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
+                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · BRIDGE</span>
+                </div>
+                <h3 id="cardName-suzuka" class="text-sm sm:text-base font-extrabold text-white mt-1.5">鈴鹿 · Suzuka</h3>
+                <p id="cardDesc-suzuka" class="text-[11px] text-slate-400 mt-0.5 leading-snug">鮮明的連續 S 彎、180° 髮夾彎、湯匙彎與真正分層繪製的立體交叉高架橋！</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-sky-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-suzuka">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- Monte Carlo / Monaco (Hard) -->
+            <div id="track-monaco" data-track="monaco" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-monaco" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 mono">★★★ 困難 HARD</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · STREET</span>
+                </div>
+                <h3 id="cardName-monaco" class="text-sm sm:text-base font-extrabold text-white mt-1.5">蒙地卡羅 · Monaco</h3>
+                <p id="cardDesc-monaco" class="text-[11px] text-slate-400 mt-0.5 leading-snug">超寬港灣路面！考驗狹窄彎角走線與超車技巧，Fairmont 髮夾彎與海濱隧道大直線。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-amber-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-monaco">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- São Paulo / Interlagos (Normal) -->
+            <div id="track-interlagos" data-track="interlagos" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-interlagos" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
+                  <span class="text-[10px] text-slate-400 mono">15 CORNERS · CCW</span>
+                </div>
+                <h3 id="cardName-interlagos" class="text-sm sm:text-base font-extrabold text-white mt-1.5">聖保羅 · São Paulo</h3>
+                <p id="cardDesc-interlagos" class="text-[11px] text-slate-400 mt-0.5 leading-snug">巴西英特拉格斯經典逆時針賽道！包含洗拿 S 彎、太陽彎大直線與內場連續髮夾彎。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-sky-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-interlagos">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- Silverstone (Normal) -->
+            <div id="track-silverstone" data-track="silverstone" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-silverstone" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
+                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · FAST</span>
+                </div>
+                <h3 id="cardName-silverstone" class="text-sm sm:text-base font-extrabold text-white mt-1.5">銀石 · Silverstone</h3>
+                <p id="cardDesc-silverstone" class="text-[11px] text-slate-400 mt-0.5 leading-snug">英國高速聖殿！體驗 Copse 高速右彎、Maggots-Becketts 連續 S 彎與 Hangar 大直線。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-sky-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-silverstone">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- Spa-Francorchamps (Hard) -->
+            <div id="track-spa" data-track="spa" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-spa" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 mono">★★★ 困難 HARD</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · LONG</span>
+                </div>
+                <h3 id="cardName-spa" class="text-sm sm:text-base font-extrabold text-white mt-1.5">斯帕 · Spa</h3>
+                <p id="cardDesc-spa" class="text-[11px] text-slate-400 mt-0.5 leading-snug">比利時阿登森林傳奇！La Source 髮夾彎、Eau Rouge 與 Kemmel 超長全油門大直線。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-amber-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-spa">--:--.--</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: 3 Car Spec Cards -->
+        <div class="mt-3.5">
+          <div id="selectCarTitle" class="text-xs font-bold text-slate-400 uppercase tracking-wider mono mb-1.5">2. SELECT YOUR VEHICLE (選擇參賽車輛)</div>
+          <div id="careerCarNotice" class="hidden mb-2.5 p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/50 text-xs text-amber-200 mono flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🏎️</span>
+              <span id="careerCarNoticeText" data-i18n="careerCarSupplied">車輛由簽約車隊專屬提供（請於上方車隊總部更換簽約）</span>
+            </div>
+            <span id="careerActiveTeamCarBadge" class="font-bold text-white px-2 py-0.5 rounded bg-slate-800 border border-amber-400/50">Stealth Green-D</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Balanced -->
+            <div id="card-balanced" data-car="balanced" class="car-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 border-red-500 transition hover:bg-slate-800 flex flex-col justify-between shadow-lg">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40 mono">BALANCED</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-red-500 inline-block border border-white"></span>
+                </div>
+                <h3 id="carName-balanced" class="text-sm sm:text-base font-bold text-white mt-1">平衡型 · Rosso GT</h3>
+                <p id="carDesc-balanced" class="text-[11px] text-slate-400 mt-0.5">抓地與甩尾表現均衡，入彎指向穩定，混戰超車穩定。</p>
+              </div>
+              <div class="mt-2 space-y-1 text-[10px] mono">
+                <div class="flex justify-between"><span data-i18n="topSpeedLabel">極速 Speed</span><span class="text-white font-bold">295 km/h</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-red-500 h-1.5 rounded-full" style="width: 80%"></div></div>
+                <div class="flex justify-between"><span data-i18n="gripLabel">貼地抓地 Grip</span><span class="text-emerald-400 font-bold">85%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: 85%"></div></div>
+                <div class="flex justify-between"><span data-i18n="driftLabel">飄移靈活 Drift</span><span class="text-amber-400 font-bold">75%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 75%"></div></div>
+              </div>
+            </div>
+
+            <!-- Speed -->
+            <div id="card-speed" data-car="speed" class="car-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">SPEED</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-sky-400 inline-block border border-white"></span>
+                </div>
+                <h3 id="carName-speed" class="text-sm sm:text-base font-bold text-white mt-1">速度型 · Azzurro F1</h3>
+                <p id="carDesc-speed" class="text-[11px] text-slate-400 mt-0.5">直線加速王者，DRS 尾速突破 340 km/h，入彎需提早煞車。</p>
+              </div>
+              <div class="mt-2 space-y-1 text-[10px] mono">
+                <div class="flex justify-between"><span data-i18n="topSpeedLabel">極速 Speed</span><span class="text-white font-bold">330 km/h</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-sky-400 h-1.5 rounded-full" style="width: 98%"></div></div>
+                <div class="flex justify-between"><span data-i18n="gripLabel">貼地抓地 Grip</span><span class="text-emerald-400 font-bold">90%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: 90%"></div></div>
+                <div class="flex justify-between"><span data-i18n="driftLabel">飄移靈活 Drift</span><span class="text-amber-400 font-bold">55%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 55%"></div></div>
+              </div>
+            </div>
+
+            <!-- Drift -->
+            <div id="card-drift" data-car="drift" class="car-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 mono">DRIFT</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-amber-400 inline-block border border-white"></span>
+                </div>
+                <h3 id="carName-drift" class="text-sm sm:text-base font-bold text-white mt-1">飄移型 · Giallo Spec-D</h3>
+                <p id="carDesc-drift" class="text-[11px] text-slate-400 mt-0.5">極早觸發甩尾，側滑動量守恆極高，連續彎道連環超車神車。</p>
+              </div>
+              <div class="mt-2 space-y-1 text-[10px] mono">
+                <div class="flex justify-between"><span data-i18n="topSpeedLabel">極速 Speed</span><span class="text-white font-bold">280 km/h</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 74%"></div></div>
+                <div class="flex justify-between"><span data-i18n="gripLabel">貼地抓地 Grip</span><span class="text-emerald-400 font-bold">72%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: 72%"></div></div>
+                <div class="flex justify-between"><span data-i18n="driftLabel">飄移靈活 Drift</span><span class="text-amber-400 font-bold">98%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 98%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        </div><!-- End Scrollable Middle Content -->
+
+        <!-- Pinned Footer Start Action (Always visible above mobile bottom bar!) -->
+        <div class="shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3 pt-2.5 pb-1 border-t border-slate-800 bg-slate-900">
+          <div id="menuSummaryText" class="text-[11px] sm:text-xs text-slate-300 mono text-center sm:text-left truncate max-w-full">
+            🏁 準備出戰：<strong class="text-emerald-400">街機模式 (8車AI)</strong> · <strong class="text-amber-300">3 圈</strong>
+          </div>
+          <button id="btnStartRace" type="button" class="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-lg transition">
+            🏁 立即出戰
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- RACE RESULTS SUMMARY MODAL (Arcade 8-Car Classification & Times)    -->
+    <!-- =================================================================== -->
+    <div id="resultModal" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center pt-4 pb-10 px-4 z-30">
+      <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl text-center max-h-[92dvh] overflow-y-auto">
+        <span id="resBadge" class="inline-block px-3 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/50 mono uppercase">
+          🏆 P1 · CHAMPION
+        </span>
+        <h2 id="resTitle" class="text-xl sm:text-2xl font-extrabold text-white mt-2">伊莫拉完賽結算</h2>
+        <p id="resCarUsed" class="text-xs text-slate-400 mono mt-0.5">模式：街機模式 (8車AI) ｜ 車輛：平衡型 (Balanced)</p>
+
+        <!-- Total & Best Lap Highlight -->
+        <div class="grid grid-cols-2 gap-2.5 mt-3.5">
+          <div class="bg-slate-800/90 border border-slate-700 rounded-xl p-3">
+            <div id="resTotalLabel" class="text-[11px] text-slate-400 mono" data-i18n="resTotalLabel">總時間 (TOTAL)</div>
+            <div id="resTotalTime" class="text-base sm:text-xl font-extrabold text-white mono mt-0.5">00:00.00</div>
+          </div>
+          <div class="bg-slate-800/90 border border-amber-500/40 rounded-xl p-3">
+            <div class="text-[11px] text-amber-300 mono" data-i18n="resBestLabel">最佳單圈 (BEST LAP)</div>
+            <div id="resBestLap" class="text-base sm:text-xl font-extrabold text-amber-400 mono mt-0.5">00:00.00</div>
+          </div>
+        </div>
+
+        <!-- 8-Car Classification Leaderboard Table (Arcade) / Lap list (Time Trial) -->
+        <div class="mt-3 text-left">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mono mb-1" id="resTableTitle">
+            🏁 8-CAR FINAL CLASSIFICATION (完賽排名)
+          </div>
+          <div id="resClassificationList" class="modal-scroll bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 text-xs mono space-y-1 max-h-48 overflow-y-auto">
+          </div>
+        </div>
+        <!-- Career Financial & Target Reward Summary (Visible in Career Mode) -->
+        <div id="resCareerSummary" class="hidden mt-3 bg-gradient-to-br from-slate-900 to-amber-950/40 border-2 border-amber-500/70 rounded-xl p-3 text-left">
+          <div class="flex items-center justify-between border-b border-amber-500/30 pb-1.5 mb-2">
+            <span class="text-xs font-black text-amber-300 mono uppercase flex items-center gap-1.5">
+              <span>💰</span> <span data-i18n="careerPrizeTitle">CAREER PRIZE PURSE (生涯賽事財務結算)</span>
+            </span>
+            <span id="resCareerTeamTag" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 mono border border-amber-400/40">
+              TIER 3
+            </span>
+          </div>
+          <div class="space-y-1 text-xs mono">
+            <div class="flex justify-between items-center text-slate-300">
+              <span data-i18n="resBasePrizeLabel">名次獎金 (Rank Prize):</span>
+              <span id="resCareerBasePrize" class="font-bold text-white">+$0</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-300">
+              <span id="resContractTargetText" data-i18n="resTargetBonusLabel">車隊目標達成紅利 (Target Bonus):</span>
+              <span id="resCareerBonusPrize" class="font-bold text-emerald-400">+$0</span>
+            </div>
+            <div class="pt-1.5 border-t border-slate-700/80 flex justify-between items-center">
+              <span class="font-bold text-amber-300" data-i18n="resTotalEarnedLabel">本場總收入 (Total Earned):</span>
+              <span id="resCareerTotalEarned" class="text-sm font-extrabold text-amber-400">+$0</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-400 text-[11px] pt-0.5">
+              <span data-i18n="resNewBalanceLabel">車隊更新總資產 (Bank Balance):</span>
+              <span id="resCareerNewBalance" class="font-bold text-sky-300">$0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons: Play Again or Back to Main Menu or Next GP -->
+        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+          <button id="btnResultToMenu" type="button" class="flex-1 px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs sm:text-sm border border-slate-600 transition">
+            🏠 回到主選單
+          </button>
+          <button id="btnResultNextGP" type="button" class="hidden flex-1 px-3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs sm:text-sm shadow-lg transition">
+            🏆 下一站大獎賽
+          </button>
+          <button id="btnResultRaceAgain" type="button" class="flex-1 px-3 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs sm:text-sm shadow-lg transition">
+            🔄 再跑一場
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // =========================================================================
+    // 1. TRILINGUAL i18n SYSTEM (繁體中文 / 日本語 / English)
+    // =========================================================================
+    let currentLang = 'zh';
+
+    const I18N = {
+      zh: {
+        langBtn: '🌐 繁中',
+        autoGasOn: '⚡自動:開',
+        autoGasOff: '⚡自動:關',
+        padLow: '📱高度:低',
+        padMid: '📱高度:中',
+        padHigh: '📱高度:高',
+        ghostOn: '👻殘影:開',
+        ghostOff: '👻殘影:關',
+        menuBtn: '🏠主選單',
+        resetBtn: '🔄重置',
+        soundOn: '🔊音效:開',
+        soundOff: '🔇音效:關',
+        posLabel: 'POS',
+        lapLabel: 'LAP',
+        timeLabel: 'TIME',
+        bestLabel: 'BEST',
+        trackPrefix: '🏁 賽道:',
+        steerLeftDesc: '左轉 (A)',
+        steerRightDesc: '右轉 (D)',
+        brakePedalDesc: '減速/飄移',
+        gasPedalDesc: '加速 (W)',
+        desktopHint1: '電腦鍵盤: W/S 或 ↑/↓ 油門煞車 · A/D 或 ←/→ 轉向 · SPACE 甩尾',
+        desktopHint2: '地面已繪製彎道編號 (T1~T19) 與轉向箭頭看板 · 支援 8 車同場競速',
+        menuBadgeTag: 'MAIN MENU',
+        menuSubTag: 'TOP-DOWN RETRO PIXEL RACING',
+        mainMenuTitle: 'PIXEL GP — 像素大獎賽',
+        modeLabel: '模式:',
+        lapsLabel: '圈數:',
+        arcadeModeBtn: '🏁 街機競速 (8車AI)',
+        timeTrialModeBtn: '⏱️ 計時模式',
+        careerLockedTag: '🔒 生涯車隊',
+        aiDiffTitle: '🤖 AI 難度:',
+        aiEasy: '🟢 簡單',
+        aiNormal: '🟡 普通',
+        aiHard: '🔴 困難',
+        aiEasyDesc: 'AI 節奏溫和、入彎減速明顯，適合輕鬆超車 (強度 89%)',
+        aiNormalDesc: 'AI 攻守均衡、具備標準走線與適度 DRS 加速 (強度 97%)',
+        aiHardDesc: 'AI 積極晚煞入彎並善用尾流追擊，具挑戰性 (強度 104%)',
+        selectTrackTitle: '1. 選擇比賽賽道 (8車寬規格)',
+        selectCarTitle: '2. 選擇參賽車輛',
+        trackWidthLabel: '賽道寬度: 8車寬',
+        bestShort: '最佳:',
+        topSpeedLabel: '極速 Speed',
+        gripLabel: '貼地抓地 Grip',
+        driftLabel: '飄移靈活 Drift',
+        startRaceBtn: '🏁 立即出戰',
+        resTotalLabel: '總時間 (TOTAL)',
+        resBestLabel: '最佳單圈 (BEST LAP)',
+        resBackMenu: '🏠 回到主選單',
+        resAgain: '🔄 再跑一場',
+        toastAutoGasOn: '自動加速已開啟',
+        toastAutoGasOff: '手動油門模式',
+        toastAutoGasOnSub: '手機免按油門，只需控制減速與方向',
+        toastAutoGasOffSub: '請使用 GAS 鍵或鍵盤 W 加速',
+        toastPadHeight: '觸控按鈕位置已調整',
+        toastReset: '已重新起步',
+        toastLangChanged: '已切換語言：繁體中文',
+        gripStatus: '🟢 GRIP 貼地抓地',
+        driftStatus: '🔥 DRIFT 高速飄移',
+        surfaceAsphalt: '柏油(100%)',
+        surfaceCurb: '路緣石(+指向)',
+        surfaceGrass: '⚠️ 草地減速',
+        surfaceBarrier: '⚠️ 護欄減速區',
+        imolaBadge: '★☆☆ 簡單 EASY',
+        imolaName: '伊莫拉 · Imola',
+        imolaDesc: '高速流暢的逆時針經典賽道，路面寬敞（320px），適合 8 車並排起步與高速超車。',
+        suzukaBadge: '★★☆ 普通 NORMAL',
+        suzukaName: '鈴鹿 · Suzuka',
+        suzukaDesc: '鮮明的連續 S 彎、180° 髮夾彎、湯匙彎與真正分層繪製的立體交叉高架橋！',
+        monacoBadge: '★★★ 困難 HARD',
+        monacoName: '蒙地卡羅 · Monaco',
+        monacoDesc: '超寬港灣街道！考驗連續彎角走線與超車技巧，含 Fairmont 髮夾彎與海濱隧道。',
+        interlagosBadge: '★★☆ 普通 NORMAL',
+        interlagosName: '聖保羅 · São Paulo',
+        interlagosDesc: '巴西英特拉格斯經典逆時針賽道！包含洗拿 S 彎、太陽彎大直線與內場連續髮夾彎。',
+        silverstoneBadge: '★★☆ 普通 NORMAL',
+        silverstoneName: '銀石 · Silverstone',
+        silverstoneDesc: '英國高速聖殿！體驗 Copse 高速右彎、Maggots-Becketts 連續 S 彎與 Hangar 大直線。',
+        spaBadge: '★★★ 困難 HARD',
+        spaName: '斯帕 · Spa',
+        spaDesc: '比利時阿登森林傳奇！La Source 髮夾彎、Eau Rouge 與 Kemmel 超長全油門大直線。',
+        carBalancedName: '平衡型 · Rosso GT',
+        carBalancedDesc: '抓地與甩尾表現均衡，入彎指向穩定，混戰超車穩定。',
+        carSpeedName: '速度型 · Azzurro F1',
+        carSpeedDesc: '直線加速王者，DRS 尾速突破 340 km/h，入彎需提早煞車。',
+        carDriftName: '飄移型 · Giallo Spec-D',
+        carDriftDesc: '極早觸發甩尾，側滑動量守恆極高，連續彎道超車神車。',
+        careerModeBtn: '🏆 生涯車隊',
+        careerHubTitle: '🏆 生涯車隊總部 (TEAM HEADQUARTERS)',
+        careerCashLabel: '車隊資金:',
+        careerStatsLabel: '出賽:',
+        careerWinsLabel: '勝場:',
+        careerPodiumsLabel: '頒獎台:',
+        careerTargetLabel: '合約目標:',
+        careerBonusLabel: '達成紅利:',
+        careerFeeLabel: '簽約門檻:',
+        careerSignedBadge: '✔ 已簽約',
+        careerSignBtn: '簽約車隊',
+        careerSwitchBtn: '切換車隊 (免費)',
+        careerResetBtn: '🔄 重置生涯存檔',
+        careerCarSupplied: '車輛由簽約車隊專屬調校提供（於上方切換車隊）',
+        careerTier1Badge: 'TIER 1 頂級廠隊',
+        careerTier1Name: 'Scuderia Rosso (紅魔廠隊)',
+        careerTier1Desc: '名門頂級廠隊，極速 335 km/h，目標要求完賽登上頒獎台 (前 3 名)。',
+        careerTier1Target: 'P1 ~ P3 (頒獎台)',
+        careerTier2Badge: 'TIER 2 中游車隊',
+        careerTier2Name: 'Papaya Apex (木瓜極速)',
+        careerTier2Desc: '攻守均衡中游勁旅，全方位操控流暢穩定，目標完賽前 5 名。',
+        careerTier2Target: 'P1 ~ P5 (積分區)',
+        careerTier3Badge: 'TIER 3 新秀車隊',
+        careerTier3Name: 'Cyber Stealth (賽博新秀)',
+        careerTier3Desc: '新秀獨立車隊，輕量化高飄移靈活性，新秀起步免費簽約。',
+        careerTier3Target: 'P1 ~ P7 (完賽拿分)',
+        careerPrizeTitle: '🏆 生涯賽事財務結算 (CAREER PURSE)',
+        resBasePrizeLabel: '名次獎金 (Rank Prize):',
+        resTargetBonusLabel: '車隊目標紅利 (Target Bonus):',
+        resTotalEarnedLabel: '本場總收入 (Total Earned):',
+        resNewBalanceLabel: '車隊更新總資產 (Bank Balance):',
+        resNextGPBtn: '🏆 下一站大獎賽',
+        toastSigned: '成功簽約車隊：',
+        toastNoCash: '車隊資金不足！需要簽約金：',
+        toastCareerReset: '生涯進度已重設為新秀起點（獲贈 $30,000）',
+        pauseBtn: '暫停',
+        pauseTitle: '遊戲暫停 · PAUSED',
+        resumeBtn: '繼續比賽 (Resume)',
+        restartBtn: '重新起跑 (Restart)',
+
+      },
+      ja: {
+        langBtn: '🌐 日本語',
+        autoGasOn: '⚡自動:ON',
+        autoGasOff: '⚡自動:OFF',
+        padLow: '📱位置:低',
+        padMid: '📱位置:中',
+        padHigh: '📱位置:高',
+        ghostOn: '👻残像:ON',
+        ghostOff: '👻残像:OFF',
+        menuBtn: '🏠メニュー',
+        resetBtn: '🔄リセット',
+        soundOn: '🔊音:ON',
+        soundOff: '🔇音:OFF',
+        posLabel: '順位',
+        lapLabel: '周回',
+        timeLabel: 'TIME',
+        bestLabel: 'BEST',
+        trackPrefix: '🏁 コース:',
+        steerLeftDesc: '左折 (A)',
+        steerRightDesc: '右折 (D)',
+        brakePedalDesc: '減速/ドリフト',
+        gasPedalDesc: '加速 (W)',
+        desktopHint1: 'キーボード: W/S・↑/↓ アクセル/ブレーキ · A/D・←/→ ステア · SPACE ドリフト',
+        desktopHint2: '路面にコーナー番号(T1~T19)と矢印看板を表示 · 8台AIレース対応',
+        menuBadgeTag: 'MAIN MENU',
+        menuSubTag: 'TOP-DOWN RETRO PIXEL RACING',
+        mainMenuTitle: 'PIXEL GP — ピクセルグランプリ',
+        modeLabel: 'モード:',
+        lapsLabel: '周回数:',
+        arcadeModeBtn: '🏁 アーケード (8台AI)',
+        timeTrialModeBtn: '⏱️ タイムアタック',
+        careerLockedTag: '🔒 キャリア',
+        aiDiffTitle: '🤖 AI難易度:',
+        aiEasy: '🟢 かんたん',
+        aiNormal: '🟡 ふつう',
+        aiHard: '🔴 むずかしい',
+        aiEasyDesc: '控えめなペースで追い越しが楽しい (強度 89%)',
+        aiNormalDesc: 'バランスの取れた標準レースペース (強度 97%)',
+        aiHardDesc: '積極的なコーナリングとスリップ追撃 (強度 104%)',
+        selectTrackTitle: '1. サーキット選択 (8台並行幅)',
+        selectCarTitle: '2. マシン選択',
+        trackWidthLabel: 'コース幅: 8台分',
+        bestShort: '最高:',
+        topSpeedLabel: '最高速 Speed',
+        gripLabel: 'グリップ Grip',
+        driftLabel: 'ドリフト Drift',
+        startRaceBtn: '🏁 レース開始',
+        resTotalLabel: '合計タイム (TOTAL)',
+        resBestLabel: 'ベストラップ (BEST LAP)',
+        resBackMenu: '🏠 メニューへ戻る',
+        resAgain: '🔄 もう一度走る',
+        toastAutoGasOn: 'オートアクセル: ON',
+        toastAutoGasOff: 'マニュアルアクセル: ON',
+        toastAutoGasOnSub: 'スマホ操作は減速と左右ステアのみでOK',
+        toastAutoGasOffSub: 'GASボタンまたはWキーで加速',
+        toastPadHeight: 'ボタン高さを変更しました',
+        toastReset: 'グリッドへ戻りました',
+        toastLangChanged: '言語：日本語',
+        gripStatus: '🟢 GRIP グリップ走法',
+        driftStatus: '🔥 DRIFT 高速ドリフト',
+        surfaceAsphalt: '舗装路(100%)',
+        surfaceCurb: '縁石(+旋回UP)',
+        surfaceGrass: '⚠️ 芝生減速',
+        surfaceBarrier: '⚠️ バリア減速',
+        imolaBadge: '★☆☆ かんたん EASY',
+        imolaName: 'イモラ · Imola',
+        imolaDesc: '高速で流れるような反時計回りコース。道幅320pxで8台バトルや追い越しに最適。',
+        suzukaBadge: '★★☆ ふつう NORMAL',
+        suzukaName: '鈴鹿 · Suzuka',
+        suzukaDesc: '名物S字、180°ヘアピン、スプーン、そして2層立体交差ブリッジを完全再現！',
+        monacoBadge: '★★★ むずかしい HARD',
+        monacoName: 'モンテカルロ · Monaco',
+        monacoDesc: '港湾ストリート！フェアモント・ヘアピンやトンネルなど精密なライン取りが鍵。',
+        interlagosBadge: '★★☆ ふつう NORMAL',
+        interlagosName: 'サンパウロ · São Paulo',
+        interlagosDesc: 'ブラジル・インテルラゴス！セナS字、長大な裏ストレートとインフィールド連続コーナー。',
+        silverstoneBadge: '★★☆ ふつう NORMAL',
+        silverstoneName: 'シルバーストン · Silverstone',
+        silverstoneDesc: '英国高速サーキット！コプス、マゴッツ〜ベケッツ連続高速S字とハンガーストレート。',
+        spaBadge: '★★★ むずかしい HARD',
+        spaName: 'スパ · Spa',
+        spaDesc: 'ベルギー伝統の高速コース！ラ・スルス、オールージュ、ケメルロングストレート。',
+        carBalancedName: 'バランス型 · Rosso GT',
+        carBalancedDesc: 'グリップとドリフトが高次元で調和し、混戦でも安定したコーナリングを実現。',
+        carSpeedName: 'スピード型 · Azzurro F1',
+        carSpeedDesc: '圧倒的な直線加速とDRS最高速340km/h超。コーナー手前の早め減速が必須。',
+        carDriftName: 'ドリフト型 · Giallo Spec-D',
+        carDriftDesc: '素早くドリフトへ移行し失速を最小限に抑える、連続コーナー攻略マシン。',
+        careerModeBtn: '🏆 キャリア',
+        careerHubTitle: '🏆 チーム本部 (TEAM HEADQUARTERS)',
+        careerCashLabel: '資金:',
+        careerStatsLabel: '出走:',
+        careerWinsLabel: '勝利:',
+        careerPodiumsLabel: '表彰台:',
+        careerTargetLabel: '契約目標:',
+        careerBonusLabel: '達成ボーナス:',
+        careerFeeLabel: '契約金:',
+        careerSignedBadge: '✔ 契約中',
+        careerSignBtn: '契約する',
+        careerSwitchBtn: 'チーム切替 (無料)',
+        careerResetBtn: '🔄 キャリア初期化',
+        careerCarSupplied: 'マシンは契約チームから供給されます（上部で変更）',
+        careerTier1Badge: 'TIER 1 トップチーム',
+        careerTier1Name: 'Scuderia Rosso (レッドワークス)',
+        careerTier1Desc: '名門トップチーム。最高速とグリップに優れ、表彰台(前3位)を厳格要求。',
+        careerTier1Target: 'P1 ~ P3 (表彰台)',
+        careerTier2Badge: 'TIER 2 中堅チーム',
+        careerTier2Name: 'Papaya Apex (パパイヤエイペックス)',
+        careerTier2Desc: '攻守バランスに優れる中堅チーム。安定した挙動で前5位を目指す。',
+        careerTier2Target: 'P1 ~ P5 (ポイント圏内)',
+        careerTier3Badge: 'TIER 3 新鋭チーム',
+        careerTier3Name: 'Cyber Stealth (サイバーステルス)',
+        careerTier3Desc: '新鋭プライベーター。ドリフト性能が高く、無料契約が可能。',
+        careerTier3Target: 'P1 ~ P7 (完走ポイント)',
+        careerPrizeTitle: '🏆 キャリア賞金清算 (CAREER PURSE)',
+        resBasePrizeLabel: '順位賞金 (Rank Prize):',
+        resTargetBonusLabel: '契約目標ボーナス (Bonus):',
+        resTotalEarnedLabel: '獲得総額 (Total):',
+        resNewBalanceLabel: 'チーム資金残高 (Balance):',
+        resNextGPBtn: '🏆 次のグランプリへ',
+        toastSigned: 'チームと契約しました：',
+        toastNoCash: '資金が不足しています！契約金：',
+        toastCareerReset: 'キャリア進度を初期化しました（初期資金 $30,000）',
+        pauseBtn: 'ポーズ',
+        pauseTitle: '一時停止 · PAUSED',
+        resumeBtn: 'レース再開 (Resume)',
+        restartBtn: 'リスタート (Restart)',
+
+      },
+      en: {
+        langBtn: '🌐 EN',
+        autoGasOn: '⚡Auto:ON',
+        autoGasOff: '⚡Auto:OFF',
+        padLow: '📱Pad:Low',
+        padMid: '📱Pad:Mid',
+        padHigh: '📱Pad:High',
+        ghostOn: '👻Ghost:ON',
+        ghostOff: '👻Ghost:OFF',
+        menuBtn: '🏠Menu',
+        resetBtn: '🔄Reset',
+        soundOn: '🔊SFX:ON',
+        soundOff: '🔇SFX:OFF',
+        posLabel: 'POS',
+        lapLabel: 'LAP',
+        timeLabel: 'TIME',
+        bestLabel: 'BEST',
+        trackPrefix: '🏁 TRACK:',
+        steerLeftDesc: 'LEFT (A)',
+        steerRightDesc: 'RIGHT (D)',
+        brakePedalDesc: 'Slow / Drift',
+        gasPedalDesc: 'Gas (W)',
+        desktopHint1: 'Keyboard: W/S or ↑/↓ Gas & Brake · A/D or ←/→ Steer · SPACE Drift',
+        desktopHint2: 'On-track Turn Badges (T1~T19) & Chevron Boards · 8-Car Arcade Race',
+        menuBadgeTag: 'MAIN MENU',
+        menuSubTag: 'TOP-DOWN RETRO PIXEL RACING',
+        mainMenuTitle: 'PIXEL GP — GRAND PRIX',
+        modeLabel: 'MODE:',
+        lapsLabel: 'LAPS:',
+        arcadeModeBtn: '🏁 Arcade (8-Car AI)',
+        timeTrialModeBtn: '⏱️ Time Trial',
+        careerLockedTag: '🔒 Career',
+        aiDiffTitle: '🤖 AI LEVEL:',
+        aiEasy: '🟢 Easy',
+        aiNormal: '🟡 Normal',
+        aiHard: '🔴 Hard',
+        aiEasyDesc: 'Relaxed pace & early braking for fun overtaking (89% Pace)',
+        aiNormalDesc: 'Balanced racing line & moderate DRS usage (97% Pace)',
+        aiHardDesc: 'Competitive late braking & slipstream pressure (104% Pace)',
+        selectTrackTitle: '1. SELECT CIRCUIT (8-CAR WIDTH)',
+        selectCarTitle: '2. SELECT VEHICLE',
+        trackWidthLabel: 'Width: 8-Cars',
+        bestShort: 'BEST:',
+        topSpeedLabel: 'Top Speed',
+        gripLabel: 'Tire Grip',
+        driftLabel: 'Drift Agility',
+        startRaceBtn: '🏁 START RACE',
+        resTotalLabel: 'TOTAL TIME',
+        resBestLabel: 'BEST LAP',
+        resBackMenu: '🏠 MAIN MENU',
+        resAgain: '🔄 RACE AGAIN',
+        toastAutoGasOn: 'Auto-Gas Enabled',
+        toastAutoGasOff: 'Manual Throttle',
+        toastAutoGasOnSub: 'Steer and brake only on mobile',
+        toastAutoGasOffSub: 'Use GAS pedal or W to accelerate',
+        toastPadHeight: 'Button height adjusted',
+        toastReset: 'Car reset to grid',
+        toastLangChanged: 'Language: English',
+        gripStatus: '🟢 GRIP CORNERING',
+        driftStatus: '🔥 DRIFT MODE',
+        surfaceAsphalt: 'Asphalt(100%)',
+        surfaceCurb: 'Curb(+Turn)',
+        surfaceGrass: '⚠️ Off-Track',
+        surfaceBarrier: '⚠️ Barrier Slow',
+        imolaBadge: '★☆☆ EASY',
+        imolaName: 'Imola Circuit',
+        imolaDesc: 'Fast, flowing counter-clockwise classic circuit (320px wide), ideal for 8-car slipstream battles.',
+        suzukaBadge: '★★☆ NORMAL',
+        suzukaName: 'Suzuka Circuit',
+        suzukaDesc: 'Iconic S-Curves, 180° Hairpin, Spoon Curve, and a true 2-layer figure-8 overpass bridge!',
+        monacoBadge: '★★★ HARD',
+        monacoName: 'Monaco Monte Carlo',
+        monacoDesc: 'Harbor street circuit featuring Fairmont Hairpin, seafront tunnel, and tight chicane walls.',
+        interlagosBadge: '★★☆ NORMAL',
+        interlagosName: 'São Paulo · Interlagos',
+        interlagosDesc: 'Counter-clockwise Brazilian classic with Senna S, Reta Oposta DRS, and technical infield.',
+        silverstoneBadge: '★★☆ NORMAL',
+        silverstoneName: 'Silverstone Circuit',
+        silverstoneDesc: 'Home of British GP! High-speed Copse, Maggots-Becketts-Chapel S-curves & Hangar Straight.',
+        spaBadge: '★★★ HARD',
+        spaName: 'Spa-Francorchamps',
+        spaDesc: 'Legendary Belgian circuit featuring La Source hairpin, Eau Rouge, Kemmel Straight & Pouhon.',
+        carBalancedName: 'Balanced · Rosso GT',
+        carBalancedDesc: 'Well-rounded grip and drift handling with predictable turn-in for pack racing.',
+        carSpeedName: 'Speed · Azzurro F1',
+        carSpeedDesc: 'Blistering straight-line speed (>340 km/h with DRS); requires early braking for hairpins.',
+        carDriftName: 'Drift · Giallo Spec-D',
+        carDriftDesc: 'Initiates drift early with high momentum retention, built for tight chicanes and hairpins.',
+        careerModeBtn: '🏆 Career',
+        careerHubTitle: '🏆 TEAM HEADQUARTERS',
+        careerCashLabel: 'Funds:',
+        careerStatsLabel: 'Races:',
+        careerWinsLabel: 'Wins:',
+        careerPodiumsLabel: 'Podiums:',
+        careerTargetLabel: 'Contract Goal:',
+        careerBonusLabel: 'Goal Bonus:',
+        careerFeeLabel: 'Signing Fee:',
+        careerSignedBadge: '✔ ACTIVE',
+        careerSignBtn: 'Sign Contract',
+        careerSwitchBtn: 'Switch Team (Free)',
+        careerResetBtn: '🔄 Reset Career',
+        careerCarSupplied: 'Vehicle supplied by contracted team (change above)',
+        careerTier1Badge: 'TIER 1 WORKS TEAM',
+        careerTier1Name: 'Scuderia Rosso (Tier 1)',
+        careerTier1Desc: 'Top-tier works squad with premier top speed & grip. Demands podium finish.',
+        careerTier1Target: 'P1 ~ P3 (Podium)',
+        careerTier2Badge: 'TIER 2 MIDFIELD',
+        careerTier2Name: 'Papaya Apex (Tier 2)',
+        careerTier2Desc: 'Competitive midfield powerhouse with versatile balance. Target P1 ~ P5.',
+        careerTier2Target: 'P1 ~ P5 (Points)',
+        careerTier3Badge: 'TIER 3 ROOKIE',
+        careerTier3Name: 'Cyber Stealth (Tier 3)',
+        careerTier3Desc: 'Feisty independent rookie team with agile drift response. Free signing.',
+        careerTier3Target: 'P1 ~ P7 (Finish)',
+        careerPrizeTitle: '🏆 CAREER PRIZE PURSE',
+        resBasePrizeLabel: 'Position Prize:',
+        resTargetBonusLabel: 'Team Target Bonus:',
+        resTotalEarnedLabel: 'Total Earned:',
+        resNewBalanceLabel: 'Updated Balance:',
+        resNextGPBtn: '🏆 NEXT GRAND PRIX',
+        toastSigned: 'Contract Signed with ',
+        toastNoCash: 'Insufficient funds! Required: ',
+        toastCareerReset: 'Career reset to rookie baseline ($30,000 starting cash)',
+        pauseBtn: 'Pause',
+        pauseTitle: 'GAME PAUSED',
+        resumeBtn: 'Resume Race',
+        restartBtn: 'Restart Race',
+
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const dict = I18N[lang] || I18N.zh;
+
+      document.getElementById('btnToggleLang').textContent = dict.langBtn;
+      document.getElementById('menuLangBtn').textContent = dict.langBtn;
+      document.getElementById('btnCarSelect').textContent = dict.menuBtn;
+      document.getElementById('btnResetCar').textContent = dict.resetBtn;
+      document.getElementById('menuMainTitle').textContent = dict.mainMenuTitle;
+      document.getElementById('modeArcade').textContent = dict.arcadeModeBtn;
+      document.getElementById('modeTimeTrial').textContent = dict.timeTrialModeBtn;
+      const modeCareerBtn = document.getElementById('modeCareer');
+      if (modeCareerBtn) modeCareerBtn.textContent = dict.careerModeBtn || '🏆 生涯車隊';
+
+      // Localize Career Hub Teams
+      if (document.getElementById('teamTitle-tier1_rosso')) {
+        document.getElementById('teamBadge-tier1_rosso').textContent = dict.careerTier1Badge || 'TIER 1 頂級廠隊';
+        document.getElementById('teamTitle-tier1_rosso').textContent = dict.careerTier1Name || 'Scuderia Rosso';
+        document.getElementById('teamDesc-tier1_rosso').textContent = dict.careerTier1Desc || '';
+        document.getElementById('teamBadge-tier2_papaya').textContent = dict.careerTier2Badge || 'TIER 2 中游車隊';
+        document.getElementById('teamTitle-tier2_papaya').textContent = dict.careerTier2Name || 'Papaya Apex';
+        document.getElementById('teamDesc-tier2_papaya').textContent = dict.careerTier2Desc || '';
+        document.getElementById('teamBadge-tier3_stealth').textContent = dict.careerTier3Badge || 'TIER 3 新秀車隊';
+        document.getElementById('teamTitle-tier3_stealth').textContent = dict.careerTier3Name || 'Cyber Stealth';
+        document.getElementById('teamDesc-tier3_stealth').textContent = dict.careerTier3Desc || '';
+      }
+      if (document.getElementById('btnResultNextGP')) {
+        document.getElementById('btnResultNextGP').textContent = dict.resNextGPBtn || '🏆 下一站大獎賽';
+      }
+      if (typeof updateCareerUI === 'function') updateCareerUI();
+      const pauseTextEl = document.getElementById('btnPauseText');
+      if (pauseTextEl) pauseTextEl.textContent = dict.pauseBtn || '暫停';
+      document.getElementById('aiDiffEasy').textContent = dict.aiEasy;
+      document.getElementById('aiDiffNormal').textContent = dict.aiNormal;
+      document.getElementById('aiDiffHard').textContent = dict.aiHard;
+      document.getElementById('selectTrackTitle').textContent = dict.selectTrackTitle;
+      document.getElementById('selectCarTitle').textContent = dict.selectCarTitle;
+      document.getElementById('btnStartRace').textContent = dict.startRaceBtn;
+      document.getElementById('btnResultToMenu').textContent = dict.resBackMenu;
+      document.getElementById('btnResultRaceAgain').textContent = dict.resAgain;
+
+      // Localize Track Cards
+      document.getElementById('cardBadge-imola').textContent = dict.imolaBadge;
+      document.getElementById('cardName-imola').textContent = dict.imolaName;
+      document.getElementById('cardDesc-imola').textContent = dict.imolaDesc;
+      document.getElementById('cardBadge-suzuka').textContent = dict.suzukaBadge;
+      document.getElementById('cardName-suzuka').textContent = dict.suzukaName;
+      document.getElementById('cardDesc-suzuka').textContent = dict.suzukaDesc;
+      document.getElementById('cardBadge-monaco').textContent = dict.monacoBadge;
+      document.getElementById('cardName-monaco').textContent = dict.monacoName;
+      document.getElementById('cardDesc-monaco').textContent = dict.monacoDesc;
+      document.getElementById('cardBadge-interlagos').textContent = dict.interlagosBadge;
+      document.getElementById('cardName-interlagos').textContent = dict.interlagosName;
+      document.getElementById('cardDesc-interlagos').textContent = dict.interlagosDesc;
+      document.getElementById('cardBadge-silverstone').textContent = dict.silverstoneBadge;
+      document.getElementById('cardName-silverstone').textContent = dict.silverstoneName;
+      document.getElementById('cardDesc-silverstone').textContent = dict.silverstoneDesc;
+      document.getElementById('cardBadge-spa').textContent = dict.spaBadge;
+      document.getElementById('cardName-spa').textContent = dict.spaName;
+      document.getElementById('cardDesc-spa').textContent = dict.spaDesc;
+
+      // Localize Car Cards
+      document.getElementById('carName-balanced').textContent = dict.carBalancedName;
+      document.getElementById('carDesc-balanced').textContent = dict.carBalancedDesc;
+      document.getElementById('carName-speed').textContent = dict.carSpeedName;
+      document.getElementById('carDesc-speed').textContent = dict.carSpeedDesc;
+      document.getElementById('carName-drift').textContent = dict.carDriftName;
+      document.getElementById('carDesc-drift').textContent = dict.carDriftDesc;
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) el.textContent = dict[key];
+      });
+
+      updateAutoGasUI();
+      updatePadHeightUI();
+      updateMuteUI();
+      updateGhostUI();
+      updateAiDiffUI();
+      updateMenuSummary();
+    }
+
+
+    // =========================================================================
+    // 1.5. CAREER MODE TEAMS, CONTRACTS & LOCALSTORAGE PERSISTENCE
+    // =========================================================================
+    const CAREER_TEAMS = {
+      tier1_rosso: {
+        id: 'tier1_rosso',
+        tier: 1,
+        tierBadgeKey: 'careerTier1Badge',
+        nameKey: 'careerTier1Name',
+        descKey: 'careerTier1Desc',
+        targetKey: 'careerTier1Target',
+        name: 'Scuderia Rosso',
+        desc: '名門頂級廠隊，極速 335 km/h，目標要求完賽登上頒獎台 (前 3 名)。',
+        targetText: 'P1 ~ P3 (頒獎台)',
+        targetMaxPos: 3,
+        targetBonus: 25000,
+        contractCost: 80000,
+        colorMain: '#dc2626',
+        colorStripe: '#facc15',
+        colorSpoiler: '#7f1d1d',
+        carName: 'Rosso Corsa F1',
+        carShortName: 'Rosso F1',
+        spec: {
+          id: 'career_rosso',
+          name: 'Scuderia Rosso F1',
+          shortName: 'Rosso F1',
+          colorMain: '#dc2626',
+          colorStripe: '#facc15',
+          colorSpoiler: '#7f1d1d',
+          maxSpeed: 700,
+          accel: 520,
+          brake: 640,
+          turnSpeed: 2.85,
+          gripTraction: 11.2,
+          driftTraction: 2.1,
+          driftThreshold: 410,
+          driftRetention: 0.988
+        }
+      },
+      tier2_papaya: {
+        id: 'tier2_papaya',
+        tier: 2,
+        tierBadgeKey: 'careerTier2Badge',
+        nameKey: 'careerTier2Name',
+        descKey: 'careerTier2Desc',
+        targetKey: 'careerTier2Target',
+        name: 'Papaya Apex',
+        desc: '攻守均衡中游勁旅，全方位操控流暢穩定，目標完賽前 5 名。',
+        targetText: 'P1 ~ P5 (積分區)',
+        targetMaxPos: 5,
+        targetBonus: 15000,
+        contractCost: 20000,
+        colorMain: '#f97316',
+        colorStripe: '#0284c7',
+        colorSpoiler: '#9a3412',
+        carName: 'Papaya Apex GT',
+        carShortName: 'Papaya GT',
+        spec: {
+          id: 'career_papaya',
+          name: 'Papaya Apex GT',
+          shortName: 'Papaya GT',
+          colorMain: '#f97316',
+          colorStripe: '#0284c7',
+          colorSpoiler: '#9a3412',
+          maxSpeed: 645,
+          accel: 480,
+          brake: 660,
+          turnSpeed: 3.2,
+          gripTraction: 10.2,
+          driftTraction: 2.4,
+          driftThreshold: 375,
+          driftRetention: 0.993
+        }
+      },
+      tier3_stealth: {
+        id: 'tier3_stealth',
+        tier: 3,
+        tierBadgeKey: 'careerTier3Badge',
+        nameKey: 'careerTier3Name',
+        descKey: 'careerTier3Desc',
+        targetKey: 'careerTier3Target',
+        name: 'Cyber Stealth',
+        desc: '新秀獨立車隊，輕量化高飄移靈活性，新秀起步免費簽約。',
+        targetText: 'P1 ~ P7 (完賽拿分)',
+        targetMaxPos: 7,
+        targetBonus: 10000,
+        contractCost: 0,
+        colorMain: '#10b981',
+        colorStripe: '#0f172a',
+        colorSpoiler: '#047857',
+        carName: 'Stealth Green-D',
+        carShortName: 'Stealth-D',
+        spec: {
+          id: 'career_stealth',
+          name: 'Stealth Green-D',
+          shortName: 'Stealth-D',
+          colorMain: '#10b981',
+          colorStripe: '#0f172a',
+          colorSpoiler: '#047857',
+          maxSpeed: 610,
+          accel: 465,
+          brake: 670,
+          turnSpeed: 3.6,
+          gripTraction: 8.8,
+          driftTraction: 2.95,
+          driftThreshold: 290,
+          driftRetention: 0.997
+        }
+      }
+    };
+
+    const SEASON_CALENDAR = ['imola', 'monaco', 'silverstone', 'spa', 'suzuka', 'interlagos'];
+    const CAREER_STORAGE_KEY = 'pixel_gp_career_v1';
+
+    let careerData = {
+      teamId: 'tier3_stealth',
+      cash: 30000,
+      racesCount: 0,
+      winsCount: 0,
+      podiumsCount: 0,
+      currentRoundIdx: 0,
+      signedTeams: ['tier3_stealth']
+    };
+
+    function loadCareerData() {
+      try {
+        const saved = localStorage.getItem(CAREER_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed.cash === 'number') {
+            careerData = { ...careerData, ...parsed };
+          }
+        }
+      } catch (e) {}
+    }
+
+    function saveCareerData() {
+      try {
+        localStorage.setItem(CAREER_STORAGE_KEY, JSON.stringify(careerData));
+      } catch (e) {}
+    }
+
+    loadCareerData();
+
+    function getPlayerSpec() {
+      if (selectedGameMode === 'career') {
+        const team = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+        return team.spec;
+      }
+      return CAR_SPECS[selectedCarKey];
+    }
+
+    // =========================================================================
+    // 2. VEHICLE SPECS & 7 AI OPPONENT CAR PROFILES (Total 8 Cars on Track)
+    // =========================================================================
+    const CAR_SPECS = {
+      balanced: {
+        id: 'balanced',
+        name: '平衡型 · Rosso GT',
+        shortName: '平衡型',
+        colorMain: '#ef4444',
+        colorStripe: '#fef2f2',
+        colorSpoiler: '#991b1b',
+        maxSpeed: 640,
+        accel: 450,
+        brake: 660,
+        turnSpeed: 3.15,
+        gripTraction: 10.5,
+        driftTraction: 2.35,
+        driftThreshold: 385,
+        driftRetention: 0.992
+      },
+      speed: {
+        id: 'speed',
+        name: '速度型 · Azzurro F1',
+        shortName: '速度型',
+        colorMain: '#0ea5e9',
+        colorStripe: '#e0f2fe',
+        colorSpoiler: '#0369a1',
+        maxSpeed: 710,
+        accel: 510,
+        brake: 610,
+        turnSpeed: 2.65,
+        gripTraction: 11.8,
+        driftTraction: 1.85,
+        driftThreshold: 420,
+        driftRetention: 0.985
+      },
+      drift: {
+        id: 'drift',
+        name: '飄移型 · Giallo Spec-D',
+        shortName: '飄移型',
+        colorMain: '#eab308',
+        colorStripe: '#1e293b',
+        colorSpoiler: '#a16207',
+        maxSpeed: 605,
+        accel: 470,
+        brake: 670,
+        turnSpeed: 3.65,
+        gripTraction: 8.5,
+        driftTraction: 2.95,
+        driftThreshold: 295,
+        driftRetention: 0.997
+      }
+    };
+
+    // 7 Distinct AI Opponents for 8-Car Grid
+    const AI_OPPONENTS_DATA = [
+      { name: 'Silver Arrow', colorMain: '#94a3b8', colorStripe: '#38bdf8', colorSpoiler: '#334155', specKey: 'speed', laneOffset: -0.22, skillMod: 1.02 },
+      { name: 'Verde Bull', colorMain: '#16a34a', colorStripe: '#facc15', colorSpoiler: '#14532d', specKey: 'speed', laneOffset: 0.20, skillMod: 1.01 },
+      { name: 'Papaya GT', colorMain: '#ea580c', colorStripe: '#0284c7', colorSpoiler: '#9a3412', specKey: 'balanced', laneOffset: -0.12, skillMod: 0.98 },
+      { name: 'Alpine Blue', colorMain: '#2563eb', colorStripe: '#f43f5e', colorSpoiler: '#1e40af', specKey: 'drift', laneOffset: 0.14, skillMod: 0.96 },
+      { name: 'Viola Stealth', colorMain: '#7c3aed', colorStripe: '#e9d5ff', colorSpoiler: '#5b21b6', specKey: 'drift', laneOffset: -0.26, skillMod: 0.94 },
+      { name: 'Carbon Apex', colorMain: '#334155', colorStripe: '#22c55e', colorSpoiler: '#0f172a', specKey: 'balanced', laneOffset: 0.24, skillMod: 0.92 },
+      { name: 'Scuderia Corsa', colorMain: '#b91c1c', colorStripe: '#fef08a', colorSpoiler: '#7f1d1d', specKey: 'balanced', laneOffset: 0.02, skillMod: 0.99 }
+    ];
+
+    let aiCars = [];
+
+    // =========================================================================
+    // 3. THREE 8-CAR CIRCUITS (2.2x Scale with 8 Starting Grid Slots)
+    // =========================================================================
+    const TRACK_SCALE = 2.2;
+
+    function scaleWaypoints(rawPts) {
+      return rawPts.map(pt => ({
+        ...pt,
+        x: Math.round(pt.x * TRACK_SCALE),
+        y: Math.round(pt.y * TRACK_SCALE)
+      }));
+    }
+
+    const TRACKS = {
+      imola: {
+        id: 'imola',
+        shortTitle: 'IMOLA',
+        badgeText: 'IMOLA',
+        badgeColor: 'bg-emerald-600',
+        name: '伊莫拉賽道 Imola',
+        fullName: 'Autodromo Enzo e Dino Ferrari',
+        difficultyLabel: '簡單 EASY',
+        trackWidth: 320,
+        curbWidth: 28,
+        groundBg: '#14532d',
+        groundTile: '#166534',
+        runoffColor: '#d97706',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 3250, y: 620,  sector: 1, drs: true,  turnTag: 'FINISH', name: 'Traguardo (Start / Finish Line)' },
+          { x: 2680, y: 630,  sector: 1, drs: true,  turnTag: 'T1',     name: 'T1 · Variante del Parco (DRS)' },
+          { x: 2050, y: 560,  sector: 1, drs: true,  turnTag: '',       name: 'Approccio Tamburello' },
+          { x: 1450, y: 640,  sector: 1, drs: false, turnTag: 'T2',     chevron: 'L', name: 'T2 · Variante Tamburello (L)' },
+          { x: 1280, y: 860,  sector: 1, drs: false, turnTag: 'T3',     chevron: 'R', name: 'T3 · Variante Tamburello (R)' },
+          { x: 1020, y: 960,  sector: 1, drs: false, turnTag: 'T4',     name: 'T4 · Uscita Tamburello' },
+          { x: 840,  y: 1460, sector: 1, drs: false, turnTag: '',       name: 'Rettilineo Villeneuve' },
+          { x: 660,  y: 1840, sector: 1, drs: false, turnTag: 'T5',     chevron: 'L', name: 'T5 · Variante Villeneuve (L)' },
+          { x: 780,  y: 2040, sector: 1, drs: false, turnTag: 'T6',     chevron: 'R', name: 'T6 · Variante Villeneuve (R)' },
+          { x: 480,  y: 2280, sector: 1, drs: false, turnTag: '',       name: 'Frenata Tosa' },
+          { x: 380,  y: 2540, sector: 2, drs: false, turnTag: 'T7 TOSA',chevron: 'L', name: 'T7 · Curva Tosa (180° Hairpin)' },
+          { x: 1120, y: 2480, sector: 2, drs: false, turnTag: 'T8',     name: 'T8 · Salita Piratella' },
+          { x: 1720, y: 2500, sector: 2, drs: false, turnTag: '',       name: 'Colle Piratella' },
+          { x: 1920, y: 2080, sector: 2, drs: false, turnTag: 'T9',     chevron: 'L', name: 'T9 · Curva Piratella (Fast Left)' },
+          { x: 1760, y: 1620, sector: 2, drs: false, turnTag: 'T10',    name: 'T10 · Discesa Acque Minerali' },
+          { x: 1940, y: 1320, sector: 2, drs: false, turnTag: 'T11',    chevron: 'R', name: 'T11 · Acque Minerali (In)' },
+          { x: 2160, y: 1480, sector: 2, drs: false, turnTag: 'T12',    chevron: 'R', name: 'T12 · Acque Minerali (Apex)' },
+          { x: 2420, y: 1460, sector: 2, drs: false, turnTag: 'T13',    name: 'T13 · Uscita Acque Minerali' },
+          { x: 2780, y: 1420, sector: 2, drs: false, turnTag: '',       name: 'Salita Variante Alta' },
+          { x: 3120, y: 1360, sector: 3, drs: false, turnTag: 'T14',    chevron: 'R', name: 'T14 · Variante Alta (Chicane In)' },
+          { x: 3240, y: 1520, sector: 3, drs: false, turnTag: 'T15',    chevron: 'L', name: 'T15 · Variante Alta (Chicane Out)' },
+          { x: 3760, y: 1180, sector: 3, drs: false, turnTag: '',       name: 'Discesa Rivazza' },
+          { x: 4220, y: 780,  sector: 3, drs: false, turnTag: '',       name: 'Frenata Rivazza (Speed Trap)' },
+          { x: 4460, y: 620,  sector: 3, drs: false, turnTag: 'T16',    chevron: 'L', name: 'T16 · Curva Rivazza 1 (90° Left)' },
+          { x: 4280, y: 340,  sector: 3, drs: false, turnTag: 'T17',    chevron: 'L', name: 'T17 · Curva Rivazza 2 (90° Left)' },
+          { x: 3780, y: 520,  sector: 3, drs: true,  turnTag: 'T18',    name: 'T18 · Traguardo Approach' },
+          { x: 3520, y: 620,  sector: 3, drs: true,  turnTag: 'T19',    name: 'T19 · Main Straight (DRS)' }
+        ])
+      },
+
+      suzuka: {
+        id: 'suzuka',
+        shortTitle: 'SUZUKA',
+        badgeText: 'SUZUKA',
+        badgeColor: 'bg-sky-600',
+        name: '鈴鹿賽道 Suzuka',
+        fullName: 'Suzuka International Racing Course',
+        difficultyLabel: '普通 NORMAL',
+        trackWidth: 300,
+        curbWidth: 26,
+        groundBg: '#0f3d26',
+        groundTile: '#134e31',
+        runoffColor: '#b45309',
+        sceneryType: 'suzuka',
+        waypoints: scaleWaypoints([
+          { x: 3600, y: 1050, sector: 1, drs: true,  turnTag: 'FINISH', name: 'Start / Finish Straight (DRS)' },
+          { x: 4350, y: 1650, sector: 1, drs: true,  turnTag: 'T1',     chevron: 'R', name: 'T1 · First Curve (Fast Right)' },
+          { x: 4650, y: 2180, sector: 1, drs: false, turnTag: 'T2',     chevron: 'R', name: 'T2 · Second Curve (Tight Right)' },
+          { x: 4250, y: 2580, sector: 1, drs: false, turnTag: 'T3',     chevron: 'L', name: 'T3 · S-Curves Entry (Sharp Left)' },
+          { x: 3720, y: 2320, sector: 1, drs: false, turnTag: 'T4',     chevron: 'R', name: 'T4 · S-Curves 2 (Sharp Right)' },
+          { x: 3680, y: 1880, sector: 1, drs: false, turnTag: 'T5',     chevron: 'L', name: 'T5 · S-Curves 3 (Switchback Left)' },
+          { x: 3150, y: 1980, sector: 1, drs: false, turnTag: 'T6',     chevron: 'R', name: 'T6 · S-Curves Exit (Sharp Right)' },
+          { x: 3080, y: 1520, sector: 1, drs: false, turnTag: 'T7',     chevron: 'L', name: 'T7 · Dunlop Curve (Sweeping Left)' },
+          { x: 2720, y: 1220, sector: 1, drs: false, turnTag: '',       name: 'Approach to Degner' },
+          { x: 2250, y: 1320, sector: 2, drs: false, turnTag: 'T8',     chevron: 'R', name: 'T8 · Degner Curve 1 (90° Right)' },
+          { x: 1980, y: 1850, sector: 2, drs: false, turnTag: 'T9',     chevron: 'R', name: 'T9 · Degner Curve 2 (90° Right)' },
+          { x: 1650, y: 1420, sector: 2, drs: false, turnTag: 'T10 UNDERPASS', underpass: true, name: 'T10 · Underpass Tunnel (立體橋下)' },
+          { x: 1720, y: 820,  sector: 2, drs: false, turnTag: '',       name: 'Approach Hairpin' },
+          { x: 1920, y: 360,  sector: 2, drs: false, turnTag: 'T11 HAIRPIN', chevron: 'L', name: 'T11 · Suzuka Hairpin (180° Left)' },
+          { x: 1480, y: 320,  sector: 2, drs: false, turnTag: '',       chevron: 'L', name: 'T11 · Hairpin Exit' },
+          { x: 1220, y: 740,  sector: 2, drs: false, turnTag: 'T12',    name: 'T12 · 200R Fast Sweep' },
+          { x: 580,  y: 420,  sector: 2, drs: false, turnTag: 'T13 SPOON', chevron: 'L', name: 'T13 · Spoon Curve Entry (Left)' },
+          { x: 280,  y: 860,  sector: 2, drs: false, turnTag: 'T14',    chevron: 'L', name: 'T14 · Spoon Curve Exit (Left)' },
+          { x: 1020, y: 1220, sector: 3, drs: false, turnTag: '',       name: 'West Backstraight' },
+          { x: 1680, y: 1180, sector: 3, drs: false, turnTag: 'BRIDGE', bridge: true, name: 'Crossover Overpass Bridge (立體高架橋上)' },
+          { x: 2280, y: 880,  sector: 3, drs: false, turnTag: '',       name: 'Approach 130R' },
+          { x: 2580, y: 560,  sector: 3, drs: false, turnTag: 'T15 130R', chevron: 'L', name: 'T15 · 130R (High-Speed Left)' },
+          { x: 3050, y: 520,  sector: 3, drs: false, turnTag: 'T16 CASIO', chevron: 'R', name: 'T16 · Casio Triangle Chicane (In)' },
+          { x: 2980, y: 880,  sector: 3, drs: false, turnTag: 'T17',    chevron: 'L', name: 'T17 · Casio Triangle Chicane (Out)' },
+          { x: 3320, y: 720,  sector: 3, drs: true,  turnTag: 'T18',    chevron: 'R', name: 'T18 · Final Curve (Main Straight)' }
+        ])
+      },
+
+      monaco: {
+        id: 'monaco',
+        shortTitle: 'MONACO',
+        badgeText: 'MONACO',
+        badgeColor: 'bg-amber-600',
+        name: '蒙地卡羅 Monaco',
+        fullName: 'Circuit de Monaco · Monte Carlo',
+        difficultyLabel: '困難 HARD',
+        trackWidth: 288,
+        curbWidth: 24,
+        groundBg: '#0c2340',
+        groundTile: '#0f294a',
+        runoffColor: '#475569',
+        sceneryType: 'monaco',
+        waypoints: scaleWaypoints([
+          { x: 600,  y: 1750, sector: 1, drs: true,  turnTag: 'FINISH', name: 'Boulevard Albert 1er (Start / Finish Line)' },
+          { x: 820,  y: 1180, sector: 1, drs: true,  turnTag: '',       name: 'Approach Sainte Dévote (DRS)' },
+          { x: 1020, y: 620,  sector: 1, drs: false, turnTag: 'T1 DEVOTE', chevron: 'R', name: 'T1 · Sainte Dévote (Sharp 90° Right)' },
+          { x: 1320, y: 560,  sector: 1, drs: false, turnTag: '',       name: 'Sainte Dévote Exit' },
+          { x: 1950, y: 780,  sector: 1, drs: false, turnTag: 'T2',     name: 'T2 · Beau Rivage Climb' },
+          { x: 2550, y: 920,  sector: 1, drs: false, turnTag: 'T3',     chevron: 'L', name: 'T3 · Massenet (Sweeping Left)' },
+          { x: 2980, y: 640,  sector: 1, drs: false, turnTag: 'T4 CASINO', chevron: 'R', name: 'T4 · Casino Square (Sharp Right)' },
+          { x: 3650, y: 580,  sector: 2, drs: false, turnTag: 'T5 MIRABEAU', chevron: 'R', name: 'T5 · Mirabeau Haute (Tight Right)' },
+          { x: 3950, y: 880,  sector: 2, drs: false, turnTag: '',       chevron: 'R', name: 'Drop to Fairmont Hairpin' },
+          { x: 3320, y: 1180, sector: 2, drs: false, turnTag: 'T6 HAIRPIN', chevron: 'L', name: 'T6 · Fairmont Hairpin (180° Slowest Turn!)' },
+          { x: 3480, y: 1520, sector: 2, drs: false, turnTag: '',       chevron: 'L', name: 'Fairmont Hairpin Exit' },
+          { x: 4250, y: 1480, sector: 2, drs: false, turnTag: 'T7',     chevron: 'R', name: 'T7 · Mirabeau Bas (Right)' },
+          { x: 4520, y: 1880, sector: 2, drs: false, turnTag: 'T8 PORTIER', chevron: 'R', name: 'T8 · Portier (90° Right to Seafront)' },
+          { x: 4050, y: 2380, sector: 2, drs: false, turnTag: 'T9 TUNNEL', tunnel: true, name: 'T9 · Monaco Tunnel (Full Throttle)' },
+          { x: 3280, y: 2560, sector: 2, drs: false, turnTag: '',       name: 'Tunnel Exit (Harbor Braking Zone)' },
+          { x: 2650, y: 2520, sector: 2, drs: false, turnTag: 'T10 CHICANE', chevron: 'R', name: 'T10 · Nouvelle Chicane (Hard Brake Right)' },
+          { x: 2460, y: 2180, sector: 2, drs: false, turnTag: 'T11',    chevron: 'L', name: 'T11 · Nouvelle Chicane Apex (Left)' },
+          { x: 2120, y: 2240, sector: 2, drs: false, turnTag: '',       name: 'Harbor Quay Straight' },
+          { x: 1680, y: 2020, sector: 3, drs: false, turnTag: 'T12 TABAC', chevron: 'R', name: 'T12 · Tabac (90° Right Corner)' },
+          { x: 1520, y: 1650, sector: 3, drs: false, turnTag: 'T13 POOL', chevron: 'R', name: 'T13 · Louis Chiron (Swimming Pool Entry)' },
+          { x: 1840, y: 1380, sector: 3, drs: false, turnTag: 'T14',    chevron: 'L', name: 'T14 · Piscine (Swimming Pool Middle)' },
+          { x: 1420, y: 1280, sector: 3, drs: false, turnTag: 'T15-16', chevron: 'L', name: 'T15-T16 · Piscine Chicane Exit (Sharp Left)' },
+          { x: 1120, y: 1950, sector: 3, drs: false, turnTag: 'T17',    name: 'T17 · Approach La Rascasse' },
+          { x: 820,  y: 2580, sector: 3, drs: false, turnTag: 'T18 RASCASSE', chevron: 'R', name: 'T18 · La Rascasse (180° Right Hairpin)' },
+          { x: 380,  y: 2520, sector: 3, drs: false, turnTag: '',       chevron: 'R', name: 'La Rascasse Apex' },
+          { x: 360,  y: 2140, sector: 3, drs: true,  turnTag: 'T19 NOGHES', chevron: 'R', name: 'T19 · Anthony Noghès (90° Right to Finish!)' }
+        ])
+      },
+
+      interlagos: {
+        id: 'interlagos',
+        shortTitle: 'SÃO PAULO',
+        badgeText: 'SÃO PAULO',
+        badgeColor: 'bg-sky-600',
+        name: '聖保羅賽道 São Paulo',
+        fullName: 'Autódromo José Carlos Pace · Interlagos',
+        difficultyLabel: '普通 NORMAL',
+        trackWidth: 308,
+        curbWidth: 26,
+        groundBg: '#14432a',
+        groundTile: '#185233',
+        runoffColor: '#0284c7',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 2200, y: 320,  sector: 1, drs: true,  turnTag: 'FINISH', name: 'Arquibancadas (Start / Finish Line)' },
+          { x: 1150, y: 560,  sector: 1, drs: true,  turnTag: '',       name: 'Approach S do Senna (Speed Trap)' },
+          { x: 420,  y: 860,  sector: 1, drs: false, turnTag: 'T1 SENNA', chevron: 'L', name: 'T1 · S do Senna Entry (Downhill Left)' },
+          { x: 660,  y: 1340, sector: 1, drs: false, turnTag: 'T2',     chevron: 'R', name: 'T2 · S do Senna Apex (Right)' },
+          { x: 360,  y: 1880, sector: 1, drs: false, turnTag: 'T3 SOL', chevron: 'L', name: 'T3 · Curva do Sol (Sweeping Left)' },
+          { x: 1380, y: 2460, sector: 1, drs: true,  turnTag: '',       name: 'Reta Oposta Backstraight (DRS Zone 1)' },
+          { x: 2680, y: 2920, sector: 2, drs: false, turnTag: 'T4 LAGO', chevron: 'L', name: 'T4 · Descida do Lago (Braking Left)' },
+          { x: 2860, y: 2420, sector: 2, drs: false, turnTag: 'T5',     chevron: 'L', name: 'T5 · Descida do Lago Exit (Uphill)' },
+          { x: 1860, y: 1820, sector: 2, drs: false, turnTag: '',       name: 'Infield Climb to Ferradura' },
+          { x: 1420, y: 1220, sector: 2, drs: false, turnTag: 'T6',     chevron: 'R', name: 'T6 · Ferradura (Horseshoe Right)' },
+          { x: 1960, y: 820,  sector: 2, drs: false, turnTag: 'T7',     chevron: 'R', name: 'T7 · Laranjinha (Right)' },
+          { x: 2460, y: 980,  sector: 2, drs: false, turnTag: 'T8 HAIRPIN', chevron: 'L', name: 'T8 · Pinheirinho (Tight Left Hairpin)' },
+          { x: 2280, y: 1480, sector: 2, drs: false, turnTag: 'T9 PATO', chevron: 'R', name: 'T9 · Bico de Pato (Duckbill Elbow)' },
+          { x: 2920, y: 1360, sector: 2, drs: false, turnTag: 'T10',    chevron: 'L', name: 'T10 · Mergulho (Downhill Left Dive)' },
+          { x: 3520, y: 980,  sector: 2, drs: false, turnTag: '',       chevron: 'L', name: 'Mergulho Apex' },
+          { x: 3480, y: 1680, sector: 2, drs: false, turnTag: 'T11',    chevron: 'R', name: 'T11 · Approach Junção' },
+          { x: 4120, y: 2240, sector: 3, drs: false, turnTag: 'T12 JUNCAO', chevron: 'L', name: 'T12 · Junção (90° Left onto Climb)' },
+          { x: 4460, y: 1520, sector: 3, drs: true,  turnTag: 'T13',    name: 'T13 · Subida dos Boxes (Full Throttle)' },
+          { x: 4080, y: 740,  sector: 3, drs: true,  turnTag: 'T14',    chevron: 'L', name: 'T14 · Subida dos Boxes Crest' },
+          { x: 3220, y: 360,  sector: 3, drs: true,  turnTag: 'T15',    name: 'T15 · Arquibancadas (DRS Main Straight)' }
+        ])
+      },
+
+      silverstone: {
+        id: 'silverstone',
+        shortTitle: 'SILVERSTONE',
+        badgeText: 'SILVERSTONE',
+        badgeColor: 'bg-sky-600',
+        name: '銀石賽道 Silverstone',
+        fullName: 'Silverstone Circuit · Great Britain',
+        difficultyLabel: '普通 NORMAL',
+        trackWidth: 312,
+        curbWidth: 26,
+        groundBg: '#113e28',
+        groundTile: '#154d32',
+        runoffColor: '#475569',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 2350, y: 2680, sector: 1, drs: false, turnTag: 'FINISH', name: 'Hamilton Straight (Start / Finish Line)' },
+          { x: 1820, y: 2140, sector: 1, drs: false, turnTag: 'T1 ABBEY', chevron: 'R', name: 'T1 · Abbey (High-Speed Right)' },
+          { x: 2080, y: 1620, sector: 1, drs: false, turnTag: 'T2 FARM',  name: 'T2 · Farm Curve (Sweeping Left)' },
+          { x: 1760, y: 1180, sector: 1, drs: false, turnTag: 'T3 VILLAGE', chevron: 'R', name: 'T3 · Village (Hard Brake Right)' },
+          { x: 2320, y: 1040, sector: 1, drs: false, turnTag: 'T4 LOOP',  chevron: 'L', name: 'T4 · The Loop (180° Arena Hairpin)' },
+          { x: 1680, y: 720,  sector: 1, drs: true,  turnTag: 'T5 AINTREE', chevron: 'L', name: 'T5 · Aintree (Onto Wellington DRS)' },
+          { x: 1020, y: 1280, sector: 1, drs: true,  turnTag: '',       name: 'Wellington Straight (DRS Zone 1)' },
+          { x: 660,  y: 1760, sector: 2, drs: false, turnTag: 'T6 BROOK', chevron: 'L', name: 'T6 · Brooklands (Braking Left)' },
+          { x: 920,  y: 2180, sector: 2, drs: false, turnTag: 'T7 LUFFIELD', chevron: 'R', name: 'T7 · Luffield (180° Right Hairpin)' },
+          { x: 340,  y: 1880, sector: 2, drs: false, turnTag: 'T8 WOODCOTE', chevron: 'R', name: 'T8 · Woodcote (Fast Right)' },
+          { x: 320,  y: 1040, sector: 2, drs: false, turnTag: '',       name: 'National Pit Straight' },
+          { x: 480,  y: 320,  sector: 2, drs: false, turnTag: 'T9 COPSE', chevron: 'R', name: 'T9 · Copse (High-Speed 90° Right)' },
+          { x: 1280, y: 180,  sector: 2, drs: false, turnTag: 'T10 MAGGOTS', chevron: 'L', name: 'T10 · Maggots (Fast Left)' },
+          { x: 1760, y: 320,  sector: 2, drs: false, turnTag: 'T11 BECKETTS', chevron: 'R', name: 'T11 · Becketts (Fast Right)' },
+          { x: 2280, y: 180,  sector: 2, drs: false, turnTag: 'T12',    chevron: 'L', name: 'T12 · Becketts Switchback (Left)' },
+          { x: 2840, y: 380,  sector: 2, drs: false, turnTag: 'T13 CHAPEL', chevron: 'R', name: 'T13 · Chapel Entry (Right)' },
+          { x: 3180, y: 820,  sector: 2, drs: true,  turnTag: 'T14',    chevron: 'L', name: 'T14 · Chapel Exit (Onto Hangar DRS)' },
+          { x: 3920, y: 1460, sector: 3, drs: true,  turnTag: '',       name: 'Hangar Straight (DRS Zone 2)' },
+          { x: 4620, y: 2040, sector: 3, drs: false, turnTag: 'T15 STOWE', chevron: 'R', name: 'T15 · Stowe (Fast 90° Right)' },
+          { x: 3880, y: 2420, sector: 3, drs: false, turnTag: '',       name: 'Approach Vale Chicane' },
+          { x: 3320, y: 2640, sector: 3, drs: false, turnTag: 'T16 VALE', chevron: 'L', name: 'T16 · Vale Chicane (Hard Brake Left)' },
+          { x: 3120, y: 2940, sector: 3, drs: false, turnTag: 'T17',    chevron: 'R', name: 'T17 · Vale Exit (Right)' },
+          { x: 2720, y: 2920, sector: 3, drs: false, turnTag: 'T18 CLUB', chevron: 'R', name: 'T18 · Club Corner (Sweeping Right)' }
+        ])
+      },
+
+      spa: {
+        id: 'spa',
+        shortTitle: 'SPA',
+        badgeText: 'SPA',
+        badgeColor: 'bg-amber-600',
+        name: '斯帕賽道 Spa',
+        fullName: 'Circuit de Spa-Francorchamps · Belgium',
+        difficultyLabel: '困難 HARD',
+        trackWidth: 304,
+        curbWidth: 26,
+        groundBg: '#0c3422',
+        groundTile: '#10422b',
+        runoffColor: '#b91c1c',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 980,  y: 2180, sector: 1, drs: true,  turnTag: 'FINISH', name: 'Start / Finish Straight (Spa)' },
+          { x: 380,  y: 2560, sector: 1, drs: false, turnTag: 'T1 SOURCE', chevron: 'R', name: 'T1 · La Source (180° Right Hairpin)' },
+          { x: 680,  y: 1920, sector: 1, drs: false, turnTag: 'T2 EAU ROUGE', name: 'T2 · Eau Rouge Approach' },
+          { x: 960,  y: 1480, sector: 1, drs: false, turnTag: 'T3 RAIDILLON', chevron: 'R', name: 'T3 · Eau Rouge & Raidillon (Uphill)' },
+          { x: 1380, y: 1280, sector: 1, drs: true,  turnTag: 'T4',     chevron: 'L', name: 'T4 · Raidillon Crest (Onto Kemmel DRS)' },
+          { x: 2320, y: 760,  sector: 1, drs: true,  turnTag: '',       name: 'Kemmel Straight (Full Throttle DRS)' },
+          { x: 3350, y: 320,  sector: 2, drs: false, turnTag: 'T5 COMBES', chevron: 'R', name: 'T5 · Les Combes Entry (Hard Brake Right)' },
+          { x: 3680, y: 520,  sector: 2, drs: false, turnTag: 'T6',     chevron: 'L', name: 'T6 · Les Combes Apex (Left)' },
+          { x: 3980, y: 360,  sector: 2, drs: false, turnTag: 'T7 MALMEDY', chevron: 'R', name: 'T7 · Malmedy (Right)' },
+          { x: 4480, y: 860,  sector: 2, drs: false, turnTag: 'T8 RIVAGE', chevron: 'R', name: 'T8 · Bruxelles / Rivage (180° Right)' },
+          { x: 3920, y: 1060, sector: 2, drs: false, turnTag: 'T9',     chevron: 'L', name: 'T9 · Bruxelles Exit' },
+          { x: 2980, y: 1020, sector: 2, drs: false, turnTag: 'T10',    chevron: 'L', name: 'T10 · Speaker Corner (Sharp Left)' },
+          { x: 2780, y: 1460, sector: 2, drs: false, turnTag: 'T11 POUHON', chevron: 'L', name: 'T11 · Pouhon (High-Speed Double Left)' },
+          { x: 3480, y: 1740, sector: 2, drs: false, turnTag: '',       name: 'Approach Fagnes Chicane' },
+          { x: 3960, y: 1860, sector: 2, drs: false, turnTag: 'T12 FAGNES', chevron: 'R', name: 'T12 · Fagnes Entry (Right)' },
+          { x: 3840, y: 2180, sector: 2, drs: false, turnTag: 'T13',    chevron: 'L', name: 'T13 · Fagnes Exit (Left)' },
+          { x: 4360, y: 2380, sector: 2, drs: false, turnTag: 'T14 CAMPUS', chevron: 'R', name: 'T14 · Campus / Stavelot Entry (Right)' },
+          { x: 4040, y: 2680, sector: 3, drs: false, turnTag: 'T15 STAVELOT', chevron: 'R', name: 'T15 · Stavelot (Fast Right)' },
+          { x: 3180, y: 2320, sector: 3, drs: false, turnTag: 'T16',    name: 'T16 · Paul Frère Curve (Full Throttle)' },
+          { x: 2460, y: 1780, sector: 3, drs: false, turnTag: 'T17 BLANCH', chevron: 'L', name: 'T17 · Blanchimont (Flat-Out Left)' },
+          { x: 1760, y: 1860, sector: 3, drs: false, turnTag: 'T18 CHICANE', chevron: 'R', name: 'T18 · Bus Stop Chicane Entry (Hard Right)' },
+          { x: 1520, y: 1680, sector: 3, drs: true,  turnTag: 'T19',    chevron: 'L', name: 'T19 · Bus Stop Chicane Exit (To Finish!)' }
+        ])
+      }
+    };
+
+    function buildSplineTrack(waypoints, subdivisions = 22) {
+      const pts = [];
+      const n = waypoints.length;
+      for (let i = 0; i < n; i++) {
+        const p0 = waypoints[(i - 1 + n) % n];
+        const p1 = waypoints[i];
+        const p2 = waypoints[(i + 1) % n];
+        const p3 = waypoints[(i + 2) % n];
+
+        for (let step = 0; step < subdivisions; step++) {
+          const t = step / subdivisions;
+          const t2 = t * t;
+          const t3 = t2 * t;
+
+          const x = 0.5 * (
+            (2 * p1.x) +
+            (-p0.x + p2.x) * t +
+            (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+            (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
+          );
+          const y = 0.5 * (
+            (2 * p1.y) +
+            (-p0.y + p2.y) * t +
+            (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+            (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+          );
+          pts.push({
+            x,
+            y,
+            wpIndex: i,
+            isWpStart: step === 0,
+            turnTag: step === 0 ? (p1.turnTag || '') : '',
+            chevron: step === 0 ? (p1.chevron || '') : '',
+            sector: p1.sector,
+            drs: p1.drs,
+            bridge: Boolean(p1.bridge),
+            underpass: Boolean(p1.underpass),
+            tunnel: Boolean(p1.tunnel),
+            cornerName: p1.name
+          });
+        }
+      }
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (let i = 0; i < pts.length; i++) {
+        const prev = pts[(i - 1 + pts.length) % pts.length];
+        const next = pts[(i + 1) % pts.length];
+        const dx = next.x - prev.x;
+        const dy = next.y - prev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        pts[i].tx = dx / len;
+        pts[i].ty = dy / len;
+        pts[i].nx = -pts[i].ty;
+        pts[i].ny = pts[i].tx;
+        if (pts[i].x < minX) minX = pts[i].x;
+        if (pts[i].x > maxX) maxX = pts[i].x;
+        if (pts[i].y < minY) minY = pts[i].y;
+        if (pts[i].y > maxY) maxY = pts[i].y;
+      }
+      return { pts, bounds: { minX, maxX, minY, maxY } };
+    }
+
+    const compiledTracks = {};
+    Object.keys(TRACKS).forEach(key => {
+      const cfg = TRACKS[key];
+      const { pts, bounds } = buildSplineTrack(cfg.waypoints, 22);
+      const scenery = [];
+      const seedMap = { imola: 108, suzuka: 204, monaco: 309, interlagos: 415, silverstone: 522, spa: 637 };
+      let seed = seedMap[key] || 108;
+      function rand() {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      }
+      for (let i = 0; i < 480; i++) {
+        const rx = (bounds.minX - 500) + rand() * (bounds.maxX - bounds.minX + 1000);
+        const ry = (bounds.minY - 500) + rand() * (bounds.maxY - bounds.minY + 1000);
+        let minDist = Infinity;
+        for (let j = 0; j < pts.length; j += 3) {
+          const d = Math.hypot(rx - pts[j].x, ry - pts[j].y);
+          if (d < minDist) minDist = d;
+        }
+        if (minDist > cfg.trackWidth * 0.92) {
+          scenery.push({
+            x: rx,
+            y: ry,
+            type: rand() > 0.22 ? 'primary' : 'grandstand',
+            size: 18 + Math.floor(rand() * 16),
+            shade: cfg.sceneryType === 'monaco'
+              ? (rand() > 0.5 ? '#e2e8f0' : '#94a3b8')
+              : (rand() > 0.5 ? '#15803d' : '#166534')
+          });
+        }
+      }
+      let bridgeStart = -1, bridgeEnd = -1;
+      for (let i = 0; i < pts.length; i++) {
+        if (pts[i].bridge) {
+          if (bridgeStart === -1) bridgeStart = Math.max(0, i - 14);
+          bridgeEnd = Math.min(pts.length - 1, i + 14);
+        }
+      }
+      compiledTracks[key] = { cfg, pts, bounds, scenery, bridgeStart, bridgeEnd, bestLapMs: null, ghostData: null };
+    });
+
+    function isCarOnOverpassBridge(splineIdx, activeTrack) {
+      if (!activeTrack || activeTrack.bridgeStart === -1) return false;
+      return splineIdx >= (activeTrack.bridgeStart - 6) && splineIdx <= (activeTrack.bridgeEnd + 6);
+    }
+
+    let selectedTrackKey = 'imola';
+    let selectedLaps = 3;
+    let selectedGameMode = 'arcade'; // 'arcade' or 'timetrial'
+    let selectedAiDiff = 'normal';   // 'easy', 'normal', 'hard'
+
+    // =========================================================================
+    // 4. RETRO AUDIO SYNTHESIS (Web Audio API)
+    // =========================================================================
+    let audioCtx = null;
+    let engineOsc = null;
+    let engineGain = null;
+    let screechNode = null;
+    let screechGain = null;
+    let curbOsc = null;
+    let curbGain = null;
+    let isMuted = false;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioCtx = new AudioContextClass();
+
+        engineOsc = audioCtx.createOscillator();
+        engineOsc.type = 'sawtooth';
+        engineOsc.frequency.value = 55;
+
+        const engineFilter = audioCtx.createBiquadFilter();
+        engineFilter.type = 'lowpass';
+        engineFilter.frequency.value = 340;
+
+        engineGain = audioCtx.createGain();
+        engineGain.gain.value = 0.0;
+
+        engineOsc.connect(engineFilter);
+        engineFilter.connect(engineGain);
+        engineGain.connect(audioCtx.destination);
+        engineOsc.start();
+
+        const bufferSize = audioCtx.sampleRate * 1.0;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+        screechNode = audioCtx.createBufferSource();
+        screechNode.buffer = noiseBuffer;
+        screechNode.loop = true;
+
+        const bandpass = audioCtx.createBiquadFilter();
+        bandpass.type = 'bandpass';
+        bandpass.frequency.value = 1100;
+        bandpass.Q.value = 3.5;
+
+        screechGain = audioCtx.createGain();
+        screechGain.gain.value = 0.0;
+
+        screechNode.connect(bandpass);
+        bandpass.connect(screechGain);
+        screechGain.connect(audioCtx.destination);
+        screechNode.start();
+
+        curbOsc = audioCtx.createOscillator();
+        curbOsc.type = 'square';
+        curbOsc.frequency.value = 88;
+        curbGain = audioCtx.createGain();
+        curbGain.gain.value = 0.0;
+        curbOsc.connect(curbGain);
+        curbGain.connect(audioCtx.destination);
+        curbOsc.start();
+      } catch (e) {}
+    }
+
+    let lastCurbVibeTime = 0;
+    function updateAudio(speedRatio, isDrifting, onCurb) {
+      if (!audioCtx || isMuted) {
+        if (engineGain) engineGain.gain.value = 0;
+        if (screechGain) screechGain.gain.value = 0;
+        if (curbGain) curbGain.gain.value = 0;
+        return;
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      const baseFreq = 52 + speedRatio * 170;
+      engineOsc.frequency.setTargetAtTime(baseFreq, audioCtx.currentTime, 0.04);
+      engineGain.gain.setTargetAtTime(0.045 + speedRatio * 0.04, audioCtx.currentTime, 0.05);
+
+      const targetScreech = isDrifting ? 0.065 : 0.0;
+      screechGain.gain.setTargetAtTime(targetScreech, audioCtx.currentTime, 0.05);
+
+      const targetCurb = (onCurb && speedRatio > 0.15) ? 0.045 : 0.0;
+      if (curbGain) curbGain.gain.setTargetAtTime(targetCurb, audioCtx.currentTime, 0.03);
+
+      if (onCurb && speedRatio > 0.25) {
+        const nowMs = performance.now();
+        if (nowMs - lastCurbVibeTime > 140) {
+          lastCurbVibeTime = nowMs;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(18); } catch (e) {}
+          }
+        }
+      }
+    }
+
+    function playCheckpointBeep(freq = 660) {
+      if (!audioCtx || isMuted) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        g.gain.value = 0.06;
+        osc.connect(g);
+        g.connect(audioCtx.destination);
+        osc.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+        osc.stop(audioCtx.currentTime + 0.19);
+      } catch (e) {}
+    }
+
+    // =========================================================================
+    // 5. PLAYER CAR & AI CAR OBJECTS
+    // =========================================================================
+    let selectedCarKey = 'balanced';
+    const car = {
+      isPlayer: true,
+      name: 'Player',
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      angle: Math.PI,
+      speed: 0,
+      isDrifting: false,
+      drsActive: false,
+      surface: 'asphalt',
+      closestSplineIdx: 0,
+      lap: 1,
+      totalProgress: 0,
+      finished: false,
+      totalTimeMs: 0
+    };
+
+    const skidMarks = [];
+    const MAX_SKID_MARKS = 420;
+    const smokeParticles = [];
+
+    let ghostEnabled = true;
+    let currentLapRecording = [];
+    let ghostCarState = {
+      x: 0,
+      y: 0,
+      angle: 0,
+      speed: 0,
+      isDrifting: false,
+      visible: false
+    };
+
+    const raceState = {
+      lap: 1,
+      totalLaps: 3,
+      lapTimes: [],
+      lapStartTime: performance.now(),
+      curLapTime: 0,
+      passedSector1: false,
+      passedSector2: false,
+      s1Time: null,
+      s2Time: null,
+      s3Time: null,
+      maxSplineIdxReached: 0,
+      finished: false,
+      playerRank: 8
+    };
+
+    function getActiveTrack() {
+      return compiledTracks[selectedTrackKey];
+    }
+
+    // Helper to find exact closest spline index & continuous progress along track
+    function findNearestSplinePoint(x, y, trackSpline, hintIdx = null) {
+      const N = trackSpline.length;
+      let bestIdx = 0;
+      let minDist = Infinity;
+
+      if (hintIdx !== null && hintIdx !== undefined) {
+        for (let offset = -35; offset <= 35; offset++) {
+          const idx = (hintIdx + offset + N) % N;
+          const d = Math.hypot(x - trackSpline[idx].x, y - trackSpline[idx].y);
+          if (d < minDist) {
+            minDist = d;
+            bestIdx = idx;
+          }
+        }
+        // Fallback full scan if far off
+        if (minDist > 420) {
+          for (let i = 0; i < N; i++) {
+            const d = Math.hypot(x - trackSpline[i].x, y - trackSpline[i].y);
+            if (d < minDist) {
+              minDist = d;
+              bestIdx = i;
+            }
+          }
+        }
+      } else {
+        for (let i = 0; i < N; i++) {
+          const d = Math.hypot(x - trackSpline[i].x, y - trackSpline[i].y);
+          if (d < minDist) {
+            minDist = d;
+            bestIdx = i;
+          }
+        }
+      }
+
+      // Sub-segment fractional progress so overtaking by even 1 pixel updates POS immediately!
+      const pt = trackSpline[bestIdx];
+      const nextPt = trackSpline[(bestIdx + 1) % N];
+      const segLen = Math.max(1, Math.hypot(nextPt.x - pt.x, nextPt.y - pt.y));
+      const proj = ((x - pt.x) * pt.tx + (y - pt.y) * pt.ty) / segLen;
+      const frac = Math.max(-0.5, Math.min(0.99, proj));
+
+      return { bestIdx, minDist, frac };
+    }
+
+    // Continuous race progress for accurate P1~P8 sorting at 60 FPS
+    function computeContinuousProgress(c, N) {
+      let splinePos = c.closestSplineIdx + (c.splineFrac || 0);
+      // When a car is on Lap 1 and still in the starting grid area behind the start/finish line
+      // (before passing Sector 1), its spline index is near N (e.g., N-12 to N-1).
+      // Subtract N so pre-start grid positions are negative (-12 to -1) and smoothly cross 0 at the start line!
+      if (c.lap === 1 && !c.passedSector1 && c.closestSplineIdx > N * 0.70) {
+        splinePos -= N;
+      }
+      return (c.lap - 1) * N + splinePos;
+    }
+
+    // Grid Slot Position Calculator (8 cars on the main straight)
+    function getGridSlotPosition(trackSpline, trackWidth, slotIndex) {
+      const sf = trackSpline[0];
+      const startAngle = Math.atan2(sf.ty, sf.tx);
+      const row = Math.floor(slotIndex / 2);
+      const side = (slotIndex % 2 === 0) ? -1 : 1;
+      const backDist = 62 + row * 60 + (slotIndex % 2) * 26;
+      const lateralOffset = side * (trackWidth * 0.22);
+
+      const gx = sf.x - sf.tx * backDist + sf.nx * lateralOffset;
+      const gy = sf.y - sf.ty * backDist + sf.ny * lateralOffset;
+      return { x: gx, y: gy, angle: startAngle };
+    }
+
+    function initAiCars() {
+      aiCars = [];
+      if (selectedGameMode !== 'arcade' && selectedGameMode !== 'career') return;
+
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const N = trackSpline.length;
+      const trackWidth = active.cfg.trackWidth;
+
+      const diffMultiplier = selectedAiDiff === 'easy' ? 0.89 : (selectedAiDiff === 'normal' ? 0.97 : 1.04);
+
+      AI_OPPONENTS_DATA.forEach((data, idx) => {
+        const slotPos = getGridSlotPosition(trackSpline, trackWidth, idx); // AI slots 0 to 6 (P1 to P7)
+        const spec = CAR_SPECS[data.specKey] || CAR_SPECS.balanced;
+        const nearest = findNearestSplinePoint(slotPos.x, slotPos.y, trackSpline, null);
+
+        const aiObj = {
+          isPlayer: false,
+          id: `ai_${idx}`,
+          name: data.name,
+          colorMain: data.colorMain,
+          colorStripe: data.colorStripe,
+          colorSpoiler: data.colorSpoiler,
+          spec: spec,
+          x: slotPos.x,
+          y: slotPos.y,
+          vx: 0,
+          vy: 0,
+          angle: slotPos.angle,
+          speed: 0,
+          isDrifting: false,
+          drsActive: false,
+          surface: 'asphalt',
+          closestSplineIdx: nearest.bestIdx,
+          splineFrac: nearest.frac,
+          laneOffset: data.laneOffset * trackWidth * 0.72,
+          skillSpeedMod: data.skillMod * diffMultiplier,
+          lap: 1,
+          totalProgress: 0,
+          finished: false,
+          finishTimeMs: null,
+          totalTimeMs: 0,
+          passedSector1: false,
+          passedSector2: false,
+          maxSplineIdxReached: 0
+        };
+        aiObj.totalProgress = computeContinuousProgress(aiObj, N);
+        aiCars.push(aiObj);
+      });
+    }
+
+
+    // =========================================================================
+    // 6.5. PAUSE / RESUME SYSTEM
+    // =========================================================================
+    let isGamePaused = false;
+    let pauseStartTime = 0;
+    const pauseModal = document.getElementById('pauseModal');
+    const btnPauseGame = document.getElementById('btnPauseGame');
+    const btnResumeRace = document.getElementById('btnResumeRace');
+    const btnPauseRestart = document.getElementById('btnPauseRestart');
+    const btnPauseToMenu = document.getElementById('btnPauseToMenu');
+
+    function pauseGame() {
+      if (isGamePaused) return;
+      if (!garageModal.classList.contains('hidden') || !resultModal.classList.contains('hidden')) return;
+
+      isGamePaused = true;
+      pauseStartTime = performance.now();
+      updateAudio(0, false, false);
+
+      const active = getActiveTrack();
+      const trackNameEl = document.getElementById('pauseTrackInfo');
+      if (trackNameEl && active) trackNameEl.textContent = active.cfg.name;
+
+      const posEl = document.getElementById('pausePosText');
+      if (posEl) posEl.textContent = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? `P${raceState.playerRank}/8` : 'P1/1';
+
+      const lapEl = document.getElementById('pauseLapText');
+      if (lapEl) lapEl.textContent = `${raceState.lap}/${raceState.totalLaps}`;
+
+      if (pauseModal) pauseModal.classList.remove('hidden');
+    }
+
+    function resumeGame() {
+      if (!isGamePaused) return;
+      const pauseDuration = performance.now() - pauseStartTime;
+      raceState.lapStartTime += pauseDuration;
+      lastFrameTime = performance.now();
+      isGamePaused = false;
+      if (pauseModal) pauseModal.classList.add('hidden');
+    }
+
+    function togglePause() {
+      if (isGamePaused) {
+        resumeGame();
+      } else {
+        pauseGame();
+      }
+    }
+
+    if (btnPauseGame) btnPauseGame.addEventListener('click', togglePause);
+    if (btnResumeRace) btnResumeRace.addEventListener('click', resumeGame);
+    if (btnPauseRestart) {
+      btnPauseRestart.addEventListener('click', () => {
+        resumeGame();
+        resetCarToStart();
+        const active = getActiveTrack();
+        showToast('RESTARTED', active ? active.cfg.name : '');
+      });
+    }
+    if (btnPauseToMenu) {
+      btnPauseToMenu.addEventListener('click', () => {
+        resumeGame();
+        resultModal.classList.add('hidden');
+        btnCloseGarage.classList.remove('hidden');
+        garageModal.classList.remove('hidden');
+      });
+    }
+
+    function resetCarToStart() {
+      isGamePaused = false;
+      if (pauseModal) pauseModal.classList.add('hidden');
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const N = trackSpline.length;
+      const trackWidth = active.cfg.trackWidth;
+
+      const playerSlot = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? 7 : 0;
+      const slotPos = getGridSlotPosition(trackSpline, trackWidth, playerSlot);
+      const nearest = findNearestSplinePoint(slotPos.x, slotPos.y, trackSpline, null);
+
+      car.x = slotPos.x;
+      car.y = slotPos.y;
+      car.vx = 0;
+      car.vy = 0;
+      car.angle = slotPos.angle;
+      car.speed = 0;
+      car.isDrifting = false;
+      car.drsActive = false;
+      car.closestSplineIdx = nearest.bestIdx;
+      car.splineFrac = nearest.frac;
+      car.lap = 1;
+      car.passedSector1 = false;
+      car.passedSector2 = false;
+      car.finished = false;
+      car.totalTimeMs = 0;
+      car.totalProgress = computeContinuousProgress(car, N);
+
+      raceState.lap = 1;
+      raceState.totalLaps = selectedLaps;
+      raceState.lapTimes = [];
+      raceState.finished = false;
+      raceState.lapStartTime = performance.now();
+      raceState.passedSector1 = false;
+      raceState.passedSector2 = false;
+      raceState.maxSplineIdxReached = 0;
+      raceState.playerRank = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? 8 : 1;
+
+      initAiCars();
+
+      const hudBadge = document.getElementById('hudTrackBadge');
+      hudBadge.textContent = active.cfg.badgeText;
+      hudBadge.className = `inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-extrabold text-white tracking-wider uppercase mono shrink-0 ${active.cfg.badgeColor}`;
+      document.getElementById('hudTrackFullName').textContent = active.cfg.fullName;
+      document.getElementById('minimapTitle').textContent = active.cfg.shortTitle;
+
+      document.getElementById('hudLap').textContent = `1/${raceState.totalLaps}`;
+      document.getElementById('hudBestTime').textContent = active.bestLapMs ? formatTime(active.bestLapMs) : '--:--.--';
+      document.getElementById('hudSector1').textContent = 'S1:--';
+      document.getElementById('hudSector2').textContent = 'S2:--';
+      document.getElementById('hudSector3').textContent = 'S3:--';
+
+      const posContainer = document.getElementById('hudPosContainer');
+      const bestContainer = document.getElementById('hudBestContainer');
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        posContainer.classList.remove('hidden');
+        bestContainer.classList.add('hidden');
+        document.getElementById('hudPosition').textContent = 'P8/8';
+      } else {
+        posContainer.classList.add('hidden');
+        bestContainer.classList.remove('hidden');
+      }
+
+      skidMarks.length = 0;
+      smokeParticles.length = 0;
+      currentLapRecording = [];
+    }
+
+    // =========================================================================
+    // 6. INPUT HANDLING: PC WASD + MOBILE AUTO-ACCELERATE
+    // =========================================================================
+    const input = {
+      left: false,
+      right: false,
+      gas: false,
+      brake: false,
+      handbrake: false
+    };
+
+    let autoAccelerate = true;
+    let usingKeyboardGas = false;
+    const btnToggleAutoGas = document.getElementById('btnToggleAutoGas');
+    const btnPedalGas = document.getElementById('btnPedalGas');
+
+    function updateAutoGasUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      if (autoAccelerate && !usingKeyboardGas) {
+        btnToggleAutoGas.textContent = dict.autoGasOn;
+        btnToggleAutoGas.className = 'flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-[10px] sm:text-[11px] font-semibold text-emerald-200 border border-emerald-700/80 transition text-center whitespace-nowrap';
+        btnPedalGas.classList.add('hidden');
+      } else {
+        btnToggleAutoGas.textContent = dict.autoGasOff;
+        btnToggleAutoGas.className = 'flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-300 border border-slate-700 transition text-center whitespace-nowrap';
+        btnPedalGas.classList.remove('hidden');
+      }
+    }
+
+    btnToggleAutoGas.addEventListener('click', () => {
+      autoAccelerate = !autoAccelerate;
+      usingKeyboardGas = false;
+      updateAutoGasUI();
+      const dict = I18N[currentLang] || I18N.zh;
+      showToast(
+        autoAccelerate ? dict.toastAutoGasOn : dict.toastAutoGasOff,
+        autoAccelerate ? dict.toastAutoGasOnSub : dict.toastAutoGasOffSub
+      );
+    });
+
+    window.addEventListener('keydown', (e) => {
+      initAudio();
+      const code = e.code;
+      if (code === 'Escape' || code === 'KeyP') {
+        togglePause();
+        return;
+      }
+      if (code === 'ArrowLeft' || code === 'KeyA') input.left = true;
+      if (code === 'ArrowRight' || code === 'KeyD') input.right = true;
+      if (code === 'ArrowUp' || code === 'KeyW') {
+        input.gas = true;
+        if (!usingKeyboardGas) {
+          usingKeyboardGas = true;
+          updateAutoGasUI();
+        }
+      }
+      if (code === 'ArrowDown' || code === 'KeyS') input.brake = true;
+      if (code === 'Space') input.handbrake = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const code = e.code;
+      if (code === 'ArrowLeft' || code === 'KeyA') input.left = false;
+      if (code === 'ArrowRight' || code === 'KeyD') input.right = false;
+      if (code === 'ArrowUp' || code === 'KeyW') input.gas = false;
+      if (code === 'ArrowDown' || code === 'KeyS') input.brake = false;
+      if (code === 'Space') input.handbrake = false;
+    });
+
+    function bindTouchButton(btnId, inputKey) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      const activate = (e) => {
+        e.preventDefault();
+        initAudio();
+        if (usingKeyboardGas && autoAccelerate) {
+          usingKeyboardGas = false;
+          updateAutoGasUI();
+        }
+        input[inputKey] = true;
+        btn.classList.add('active');
+      };
+      const deactivate = (e) => {
+        e.preventDefault();
+        input[inputKey] = false;
+        btn.classList.remove('active');
+      };
+      btn.addEventListener('pointerdown', activate);
+      btn.addEventListener('pointerup', deactivate);
+      btn.addEventListener('pointerleave', deactivate);
+      btn.addEventListener('pointercancel', deactivate);
+    }
+
+    bindTouchButton('btnSteerLeft', 'left');
+    bindTouchButton('btnSteerRight', 'right');
+    bindTouchButton('btnPedalGas', 'gas');
+    bindTouchButton('btnPedalBrake', 'brake');
+
+    const padPresetKeys = ['padLow', 'padMid', 'padHigh'];
+    const padClasses = ['thumb-zone-low', 'thumb-zone-mid', 'thumb-zone-high'];
+    let curPadPresetIdx = 1;
+    const touchControlsBar = document.getElementById('touchControlsBar');
+    const btnTogglePadHeight = document.getElementById('btnTogglePadHeight');
+
+    function updatePadHeightUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      btnTogglePadHeight.textContent = dict[padPresetKeys[curPadPresetIdx]];
+    }
+
+    btnTogglePadHeight.addEventListener('click', () => {
+      touchControlsBar.classList.remove(padClasses[curPadPresetIdx]);
+      curPadPresetIdx = (curPadPresetIdx + 1) % padClasses.length;
+      touchControlsBar.classList.add(padClasses[curPadPresetIdx]);
+      updatePadHeightUI();
+      const dict = I18N[currentLang] || I18N.zh;
+      showToast(dict.toastPadHeight, dict[padPresetKeys[curPadPresetIdx]]);
+    });
+
+    // Language toggle handlers
+    const langOrder = ['zh', 'ja', 'en'];
+    function cycleLanguage() {
+      initAudio();
+      const nextIdx = (langOrder.indexOf(currentLang) + 1) % langOrder.length;
+      applyLanguage(langOrder[nextIdx]);
+      const dict = I18N[currentLang];
+      showToast(dict.toastLangChanged, dict.langBtn);
+    }
+    document.getElementById('btnToggleLang').addEventListener('click', cycleLanguage);
+    document.getElementById('menuLangBtn').addEventListener('click', cycleLanguage);
+
+    // =========================================================================
+    // 7. MAIN MENU (Mode, Difficulty, Track, Laps, Car) & RESULTS
+    // =========================================================================
+    const garageModal = document.getElementById('garageModal');
+    const resultModal = document.getElementById('resultModal');
+    const btnCarSelect = document.getElementById('btnCarSelect');
+    const btnCloseGarage = document.getElementById('btnCloseGarage');
+    const btnStartRace = document.getElementById('btnStartRace');
+    const btnResetCar = document.getElementById('btnResetCar');
+    const btnToggleMute = document.getElementById('btnToggleMute');
+    const btnToggleGhost = document.getElementById('btnToggleGhost');
+    const btnResultToMenu = document.getElementById('btnResultToMenu');
+    const btnResultRaceAgain = document.getElementById('btnResultRaceAgain');
+    const modeArcade = document.getElementById('modeArcade');
+    const modeTimeTrial = document.getElementById('modeTimeTrial');
+    const modeCareer = document.getElementById('modeCareer');
+    const aiDiffSection = document.getElementById('aiDiffSection');
+    const careerHubSection = document.getElementById('careerHubSection');
+    const careerCarNotice = document.getElementById('careerCarNotice');
+    const btnResultNextGP = document.getElementById('btnResultNextGP');
+    const resCareerSummary = document.getElementById('resCareerSummary');
+
+    function updateMenuSummary() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const nameMap = {
+        imola: dict.imolaName,
+        suzuka: dict.suzukaName,
+        monaco: dict.monacoName,
+        interlagos: dict.interlagosName,
+        silverstone: dict.silverstoneName,
+        spa: dict.spaName
+      };
+      const trackName = nameMap[selectedTrackKey] || dict.imolaName;
+      const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+      const carName = (selectedGameMode === 'career')
+        ? activeTeam.name + ' (' + activeTeam.carName + ')'
+        : (selectedCarKey === 'balanced' ? dict.carBalancedName : (selectedCarKey === 'speed' ? dict.carSpeedName : dict.carDriftName));
+      const modeText = selectedGameMode === 'arcade'
+        ? dict.arcadeModeBtn
+        : (selectedGameMode === 'career' ? (dict.careerModeBtn || '🏆 生涯車隊') : dict.timeTrialModeBtn);
+      const lapUnit = currentLang === 'en' ? 'Laps' : (currentLang === 'ja' ? '周' : '圈');
+      
+      if (selectedGameMode === 'career') {
+        document.getElementById('menuSummaryText').innerHTML =
+          `<strong class="text-amber-300">${modeText}</strong> · <strong class="text-white">${trackName}</strong> · <strong class="text-emerald-400">${activeTeam.name}</strong> · <span class="text-slate-300">目標: ${activeTeam.targetText}</span>`;
+      } else {
+        document.getElementById('menuSummaryText').innerHTML =
+          `<strong class="text-white">${trackName}</strong> · <strong class="text-emerald-400">${modeText}</strong> · <strong class="text-amber-300">${selectedLaps} ${lapUnit}</strong> · <strong class="text-red-400">${carName}</strong>`;
+      }
+    }
+
+    function updateCareerUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      loadCareerData();
+      
+      const cashEl = document.getElementById('careerCashDisplay');
+      if (cashEl) cashEl.textContent = '$' + careerData.cash.toLocaleString();
+      const racesEl = document.getElementById('careerRacesCount');
+      if (racesEl) racesEl.textContent = careerData.racesCount;
+      const winsEl = document.getElementById('careerWinsCount');
+      if (winsEl) winsEl.textContent = careerData.winsCount;
+      const podiumsEl = document.getElementById('careerPodiumsCount');
+      if (podiumsEl) podiumsEl.textContent = careerData.podiumsCount;
+
+      Object.keys(CAREER_TEAMS).forEach(teamKey => {
+        const team = CAREER_TEAMS[teamKey];
+        const card = document.getElementById('teamCard-' + teamKey);
+        const btn = document.getElementById('btnSign-' + teamKey);
+        if (!card || !btn) return;
+
+        const isCurrent = (careerData.teamId === teamKey);
+        const isSigned = careerData.signedTeams.includes(teamKey) || team.contractCost === 0;
+
+        if (isCurrent) {
+          card.className = 'career-team-card rounded-xl p-3 bg-slate-900/95 border-2 border-emerald-500 transition flex flex-col justify-between shadow-xl';
+          btn.textContent = dict.careerSignedBadge || '✔ 已簽約';
+          btn.className = 'mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-emerald-600 text-white cursor-default shadow';
+        } else if (isSigned) {
+          card.className = 'career-team-card rounded-xl p-3 bg-slate-900/80 border-2 border-slate-700 transition hover:border-slate-500 flex flex-col justify-between';
+          btn.textContent = dict.careerSwitchBtn || '切換車隊 (免費)';
+          btn.className = 'mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600';
+        } else {
+          card.className = 'career-team-card rounded-xl p-3 bg-slate-900/80 border-2 border-slate-700 transition hover:border-slate-500 flex flex-col justify-between';
+          btn.textContent = (dict.careerSignBtn || '簽約車隊') + ' ($' + team.contractCost.toLocaleString() + ')';
+          btn.className = 'mt-2.5 w-full py-1.5 rounded-lg text-xs font-black mono transition bg-amber-600 hover:bg-amber-500 text-slate-950 border border-amber-400 shadow';
+        }
+      });
+
+      const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+      const noticeBadge = document.getElementById('careerActiveTeamCarBadge');
+      if (noticeBadge) noticeBadge.textContent = activeTeam.name + ' (' + activeTeam.carName + ')';
+    }
+
+    function signCareerTeam(teamKey) {
+      initAudio();
+      const dict = I18N[currentLang] || I18N.zh;
+      const team = CAREER_TEAMS[teamKey];
+      if (!team) return;
+
+      if (careerData.teamId === teamKey) {
+        showToast(team.name, dict.careerSignedBadge || '✔ 當前代表車隊');
+        return;
+      }
+
+      const isAlreadySigned = careerData.signedTeams.includes(teamKey) || team.contractCost === 0;
+
+      if (isAlreadySigned) {
+        careerData.teamId = teamKey;
+        if (!careerData.signedTeams.includes(teamKey)) careerData.signedTeams.push(teamKey);
+        saveCareerData();
+        updateCareerUI();
+        updateMenuSummary();
+        showToast((dict.toastSigned || '成功簽約：') + team.name, activeTrackName());
+      } else if (careerData.cash >= team.contractCost) {
+        careerData.cash -= team.contractCost;
+        careerData.teamId = teamKey;
+        careerData.signedTeams.push(teamKey);
+        saveCareerData();
+        updateCareerUI();
+        updateMenuSummary();
+        showToast('🎉 ' + (dict.toastSigned || '成功簽約：') + team.name, `-$${team.contractCost.toLocaleString()}`);
+      } else {
+        showToast('⚠️ ' + (dict.toastNoCash || '資金不足！需要：') + `$${team.contractCost.toLocaleString()}`, `$${careerData.cash.toLocaleString()}`);
+      }
+    }
+
+    function activeTrackName() {
+      const active = getActiveTrack();
+      return active ? active.cfg.name : '';
+    }
+
+    function selectGameMode(mode) {
+      selectedGameMode = mode;
+      if (mode === 'arcade') {
+        modeArcade.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-extrabold mono shadow transition whitespace-nowrap';
+        modeTimeTrial.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        if (modeCareer) modeCareer.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        aiDiffSection.classList.remove('hidden');
+        if (careerHubSection) careerHubSection.classList.add('hidden');
+        if (careerCarNotice) careerCarNotice.classList.add('hidden');
+      } else if (mode === 'career') {
+        if (modeCareer) modeCareer.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-extrabold mono shadow transition whitespace-nowrap';
+        modeArcade.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        modeTimeTrial.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        aiDiffSection.classList.add('hidden');
+        if (careerHubSection) careerHubSection.classList.remove('hidden');
+        if (careerCarNotice) careerCarNotice.classList.remove('hidden');
+        updateCareerUI();
+      } else {
+        modeTimeTrial.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-extrabold mono shadow transition whitespace-nowrap';
+        modeArcade.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        if (modeCareer) modeCareer.className = 'px-2.5 sm:px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-extrabold mono border border-slate-700 shadow transition whitespace-nowrap';
+        aiDiffSection.classList.add('hidden');
+        if (careerHubSection) careerHubSection.classList.add('hidden');
+        if (careerCarNotice) careerCarNotice.classList.add('hidden');
+      }
+      updateMenuSummary();
+    }
+
+    modeArcade.addEventListener('click', () => {
+      initAudio();
+      selectGameMode('arcade');
+    });
+    modeTimeTrial.addEventListener('click', () => {
+      initAudio();
+      selectGameMode('timetrial');
+    });
+    if (modeCareer) {
+      modeCareer.addEventListener('click', () => {
+        initAudio();
+        selectGameMode('career');
+      });
+    }
+
+    // Bind Career Team Sign buttons
+    ['tier1_rosso', 'tier2_papaya', 'tier3_stealth'].forEach(teamKey => {
+      const btn = document.getElementById('btnSign-' + teamKey);
+      if (btn) {
+        btn.addEventListener('click', () => signCareerTeam(teamKey));
+      }
+    });
+
+    const btnResetCareer = document.getElementById('btnResetCareer');
+    if (btnResetCareer) {
+      btnResetCareer.addEventListener('click', () => {
+        initAudio();
+        const dict = I18N[currentLang] || I18N.zh;
+        careerData = {
+          teamId: 'tier3_stealth',
+          cash: 30000,
+          racesCount: 0,
+          winsCount: 0,
+          podiumsCount: 0,
+          currentRoundIdx: 0,
+          signedTeams: ['tier3_stealth']
+        };
+        saveCareerData();
+        updateCareerUI();
+        updateMenuSummary();
+        showToast(dict.toastCareerReset || '生涯已重設', '$30,000');
+      });
+    }
+
+    function updateAiDiffUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      document.querySelectorAll('.ai-diff-btn').forEach(btn => {
+        const isSel = btn.getAttribute('data-diff') === selectedAiDiff;
+        btn.className = isSel
+          ? 'ai-diff-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-sky-500 text-slate-950 border border-sky-400 shadow'
+          : 'ai-diff-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700';
+      });
+      const descEl = document.getElementById('aiDiffDesc');
+      if (selectedAiDiff === 'easy') descEl.textContent = dict.aiEasyDesc;
+      else if (selectedAiDiff === 'normal') descEl.textContent = dict.aiNormalDesc;
+      else descEl.textContent = dict.aiHardDesc;
+    }
+
+    document.querySelectorAll('.ai-diff-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        selectedAiDiff = btn.getAttribute('data-diff');
+        updateAiDiffUI();
+      });
+    });
+
+    function selectTrack(trackKey) {
+      if (!TRACKS[trackKey]) return;
+      selectedTrackKey = trackKey;
+      document.querySelectorAll('.track-card').forEach(card => {
+        const isSel = card.getAttribute('data-track') === trackKey;
+        const borderCol = trackKey === 'imola' ? 'border-emerald-500' : ((trackKey === 'monaco' || trackKey === 'spa') ? 'border-amber-400' : 'border-sky-400');
+        card.className = isSel
+          ? `track-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 ${borderCol} transition flex flex-col justify-between shadow-lg`
+          : 'track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between';
+      });
+      resetCarToStart();
+      camX = car.x - viewW / 2;
+      camY = car.y - viewH / 2;
+      updateMenuSummary();
+    }
+
+    function selectLaps(lapsCount) {
+      selectedLaps = lapsCount;
+      document.querySelectorAll('.lap-btn').forEach(btn => {
+        const isSel = Number(btn.getAttribute('data-laps')) === lapsCount;
+        btn.className = isSel
+          ? 'lap-btn px-2.5 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow'
+          : 'lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700';
+      });
+      updateMenuSummary();
+    }
+
+    function selectCar(carKey) {
+      if (!CAR_SPECS[carKey]) return;
+      selectedCarKey = carKey;
+      document.querySelectorAll('.car-card').forEach((card) => {
+        const isSelected = card.getAttribute('data-car') === carKey;
+        card.className = isSelected
+          ? 'car-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 border-red-500 transition flex flex-col justify-between shadow-lg'
+          : 'car-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between';
+      });
+      document.getElementById('hudCarTitle').textContent = CAR_SPECS[carKey].shortName;
+      updateMenuSummary();
+    }
+
+    document.querySelectorAll('.track-card').forEach(card => {
+      card.addEventListener('click', () => {
+        initAudio();
+        selectTrack(card.getAttribute('data-track'));
+      });
+    });
+
+    document.querySelectorAll('.lap-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        selectLaps(Number(btn.getAttribute('data-laps')));
+      });
+    });
+
+    document.querySelectorAll('.car-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        initAudio();
+        selectCar(card.getAttribute('data-car'));
+      });
+    });
+
+    btnCarSelect.addEventListener('click', () => {
+      resultModal.classList.add('hidden');
+      btnCloseGarage.classList.remove('hidden');
+      garageModal.classList.remove('hidden');
+    });
+    btnCloseGarage.addEventListener('click', () => {
+      initAudio();
+      garageModal.classList.add('hidden');
+    });
+    btnStartRace.addEventListener('click', () => {
+      initAudio();
+      garageModal.classList.add('hidden');
+      resultModal.classList.add('hidden');
+      resetCarToStart();
+      showToast(`${TRACKS[selectedTrackKey].shortTitle} START!`, selectedGameMode === 'arcade' ? '8-Car Arcade Race' : 'Time Trial');
+    });
+    btnResetCar.addEventListener('click', () => {
+      resetCarToStart();
+      const dict = I18N[currentLang] || I18N.zh;
+      showToast(dict.toastReset, `${TRACKS[selectedTrackKey].name}`);
+    });
+
+    function updateMuteUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      btnToggleMute.textContent = isMuted ? dict.soundOff : dict.soundOn;
+    }
+    btnToggleMute.addEventListener('click', () => {
+      initAudio();
+      isMuted = !isMuted;
+      updateMuteUI();
+    });
+
+    function updateGhostUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      btnToggleGhost.textContent = ghostEnabled ? dict.ghostOn : dict.ghostOff;
+    }
+    btnToggleGhost.addEventListener('click', () => {
+      ghostEnabled = !ghostEnabled;
+      updateGhostUI();
+      showToast('Ghost Car', ghostEnabled ? 'Enabled' : 'Disabled');
+    });
+
+    btnResultToMenu.addEventListener('click', () => {
+      resultModal.classList.add('hidden');
+      btnCloseGarage.classList.add('hidden');
+      garageModal.classList.remove('hidden');
+    });
+    btnResultRaceAgain.addEventListener('click', () => {
+      initAudio();
+      resultModal.classList.add('hidden');
+      resetCarToStart();
+      showToast('NEW RACE START!', 'Good luck!');
+    });
+
+    if (btnResultNextGP) {
+      btnResultNextGP.addEventListener('click', () => {
+        initAudio();
+        resultModal.classList.add('hidden');
+        const nextTrackKey = SEASON_CALENDAR[careerData.currentRoundIdx] || 'imola';
+        selectTrack(nextTrackKey);
+        resetCarToStart();
+        const active = getActiveTrack();
+        showToast('🏆 ' + (active ? active.cfg.shortTitle : 'NEXT') + ' GP START!', `Round ${careerData.currentRoundIdx + 1} / 6`);
+      });
+    }
+
+    function showRaceResultsModal() {
+      raceState.finished = true;
+      updateAudio(0, false, false);
+      const active = getActiveTrack();
+      const totalMs = raceState.lapTimes.reduce((a, b) => a + b, 0);
+      const bestSingleMs = Math.min(...raceState.lapTimes);
+
+      car.totalTimeMs = totalMs;
+
+      // Finish results for all cars
+      const allCars = [car, ...aiCars];
+      allCars.sort((a, b) => b.totalProgress - a.totalProgress);
+
+      const playerPos = allCars.indexOf(car) + 1;
+      const resBadge = document.getElementById('resBadge');
+      if (playerPos === 1) {
+        resBadge.textContent = '🏆 P1 · CHAMPION / 冠軍 / 優勝';
+        resBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/50 mono uppercase';
+      } else if (playerPos === 2) {
+        resBadge.textContent = '🥈 P2 · 2ND PLACE / 亞軍';
+        resBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-slate-300/20 text-slate-200 border border-slate-300/50 mono uppercase';
+      } else if (playerPos === 3) {
+        resBadge.textContent = '🥉 P3 · 3RD PLACE / 季軍';
+        resBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-amber-700/20 text-amber-400 border border-amber-600/50 mono uppercase';
+      } else {
+        resBadge.textContent = `🏁 P${playerPos} · FINISHED / 完賽`;
+        resBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-slate-800 text-slate-300 border border-slate-700 mono uppercase';
+      }
+
+      const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+      const carDisplayName = (selectedGameMode === 'career') ? `${activeTeam.name} (${activeTeam.carName})` : CAR_SPECS[selectedCarKey].name;
+      const modeDisplayName = (selectedGameMode === 'career') ? '🏆 生涯大獎賽 (Career GP)' : (selectedGameMode === 'arcade' ? '8-Car Arcade Mode' : 'Time Trial');
+
+      document.getElementById('resTitle').textContent = `${active.cfg.name} (${raceState.totalLaps} LAPS)`;
+      document.getElementById('resCarUsed').textContent = `${modeDisplayName} ｜ ${carDisplayName}`;
+      document.getElementById('resTotalTime').textContent = formatTime(totalMs);
+      document.getElementById('resBestLap').textContent = formatTime(bestSingleMs);
+
+      // Handle Career Financial Calculation and Contract Rewards
+      if (selectedGameMode === 'career') {
+        const PRIZE_SCALE = [50000, 38000, 28000, 20000, 15000, 10000, 7000, 5000];
+        const basePrize = PRIZE_SCALE[playerPos - 1] || 5000;
+        const metTarget = playerPos <= activeTeam.targetMaxPos;
+        const bonusPrize = metTarget ? activeTeam.targetBonus : 0;
+        const totalEarned = basePrize + bonusPrize;
+
+        careerData.cash += totalEarned;
+        careerData.racesCount += 1;
+        if (playerPos === 1) careerData.winsCount += 1;
+        if (playerPos <= 3) careerData.podiumsCount += 1;
+        careerData.currentRoundIdx = (careerData.currentRoundIdx + 1) % SEASON_CALENDAR.length;
+        saveCareerData();
+
+        if (resCareerSummary) {
+          resCareerSummary.classList.remove('hidden');
+          document.getElementById('resCareerTeamTag').textContent = activeTeam.tierBadgeText || `TIER ${activeTeam.tier}`;
+          document.getElementById('resCareerBasePrize').textContent = `+$${basePrize.toLocaleString()}`;
+          const bonusEl = document.getElementById('resCareerBonusPrize');
+          if (metTarget) {
+            bonusEl.textContent = `+$${bonusPrize.toLocaleString()} (P${playerPos} 達標 P${activeTeam.targetMaxPos}!)`;
+            bonusEl.className = 'font-bold text-emerald-400';
+          } else {
+            bonusEl.textContent = `+$0 (未達標需 P${activeTeam.targetMaxPos})`;
+            bonusEl.className = 'font-bold text-slate-400';
+          }
+          document.getElementById('resCareerTotalEarned').textContent = `+$${totalEarned.toLocaleString()}`;
+          document.getElementById('resCareerNewBalance').textContent = `$${careerData.cash.toLocaleString()}`;
+        }
+        if (btnResultNextGP) btnResultNextGP.classList.remove('hidden');
+      } else {
+        if (resCareerSummary) resCareerSummary.classList.add('hidden');
+        if (btnResultNextGP) btnResultNextGP.classList.add('hidden');
+      }
+
+      const tableTitle = document.getElementById('resTableTitle');
+      const listEl = document.getElementById('resClassificationList');
+
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        tableTitle.textContent = '🏁 8-CAR FINAL CLASSIFICATION (8車完賽成績榜)';
+        listEl.innerHTML = allCars.map((c, idx) => {
+          const isPlayer = c.isPlayer;
+          const pos = idx + 1;
+          const badgeClass = pos === 1 ? 'text-amber-300 font-black' : (pos <= 3 ? 'text-sky-300 font-bold' : 'text-slate-400');
+          const rowBg = isPlayer ? 'bg-red-950/40 border border-red-500/50' : 'border-t border-slate-800/80';
+          const interval = idx === 0 ? 'LEADER' : `+${(idx * 1.45 + Math.random() * 0.4).toFixed(2)}s`;
+          return `
+            <div class="flex items-center justify-between p-1 rounded ${rowBg}">
+              <div class="flex items-center gap-2">
+                <span class="${badgeClass} w-6 text-center">P${pos}</span>
+                <span class="w-3 h-3 rounded-full inline-block" style="background:${c.colorMain || '#ef4444'}"></span>
+                <span class="font-bold ${isPlayer ? 'text-white' : 'text-slate-300'}">${c.name} ${isPlayer ? '(YOU)' : ''}</span>
+              </div>
+              <span class="text-slate-400">${idx === 0 ? formatTime(totalMs) : interval}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        tableTitle.textContent = '⏱️ PER-LAP BREAKDOWN (分圈明細)';
+        listEl.innerHTML = raceState.lapTimes.map((ms, idx) => {
+          const isBest = ms === bestSingleMs && raceState.lapTimes.length > 1;
+          return `
+            <div class="flex justify-between items-center ${idx > 0 ? 'border-t border-slate-800/80 pt-1' : ''}">
+              <span class="text-slate-400">LAP ${idx + 1}</span>
+              <span class="font-bold ${isBest ? 'text-amber-400' : 'text-white'}">${formatTime(ms)} ${isBest ? '★' : ''}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      resultModal.classList.remove('hidden');
+    }
+
+    let toastTimeout = null;
+    function showToast(title, sub) {
+      const toast = document.getElementById('centerToast');
+      document.getElementById('centerToastTitle').textContent = title;
+      document.getElementById('centerToastSub').textContent = sub;
+      toast.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2200);
+    }
+
+    function formatTime(ms) {
+      const totalSec = ms / 1000;
+      const mins = Math.floor(totalSec / 60);
+      const secs = Math.floor(totalSec % 60);
+      const hundredths = Math.floor((ms % 1000) / 10);
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(hundredths).padStart(2, '0')}`;
+    }
+
+    // =========================================================================
+    // 8. ADVANCED AI STEERING, CURVATURE THROTTLING & COLLISION PHYSICS
+    // =========================================================================
+    function updateAiPhysics(ai, dt, allCars) {
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const N = trackSpline.length;
+
+      const prevSplineIdx = ai.closestSplineIdx;
+      const nearest = findNearestSplinePoint(ai.x, ai.y, trackSpline, ai.closestSplineIdx);
+      const bestIdx = nearest.bestIdx;
+      ai.closestSplineIdx = bestIdx;
+      ai.splineFrac = nearest.frac;
+
+      const curTrackPt = trackSpline[bestIdx];
+
+      // Sector checkpoints for AI (prevents false lap counting at race start!)
+      if (curTrackPt.sector === 2 && !ai.passedSector1) {
+        ai.passedSector1 = true;
+      }
+      if (curTrackPt.sector === 3 && ai.passedSector1 && !ai.passedSector2) {
+        ai.passedSector2 = true;
+      }
+      if (ai.passedSector1 && bestIdx > ai.maxSplineIdxReached) {
+        ai.maxSplineIdxReached = bestIdx;
+      }
+
+      // Authentic Lap Completion Check for AI:
+      // Must have passed Sector 1 AND Sector 2 before wrapping from Sector 3 into Sector 1
+      const wrappedFinish = (prevSplineIdx > N * 0.75 && bestIdx < 45);
+      const inFinishAfterFullLap = (bestIdx < 32 && ai.passedSector1 && ai.passedSector2 && ai.maxSplineIdxReached > N * 0.72);
+
+      if ((wrappedFinish || inFinishAfterFullLap) && ai.passedSector1 && ai.passedSector2) {
+        ai.lap += 1;
+        ai.passedSector1 = false;
+        ai.passedSector2 = false;
+        ai.maxSplineIdxReached = 0;
+
+        if (!ai.finished && ai.lap > raceState.totalLaps) {
+          ai.finished = true;
+          ai.finishTimeMs = performance.now() - raceState.lapStartTime;
+        }
+      }
+
+      ai.totalProgress = computeContinuousProgress(ai, N);
+
+      // Lookahead target point for smooth cornering (AI continues driving smoothly even after finishing so it never blocks the finish line!)
+      const lookahead = 9;
+      const targetIdx = (bestIdx + lookahead) % N;
+      const targetPt = trackSpline[targetIdx];
+
+      // Curvature calculation for corner slowdown
+      const futureIdx = (bestIdx + 16) % N;
+      const futurePt = trackSpline[futureIdx];
+      const curDir = Math.atan2(targetPt.ty, targetPt.tx);
+      const futDir = Math.atan2(futurePt.ty, futurePt.tx);
+      let angleDiff = Math.abs(futDir - curDir);
+      while (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+
+      // Lateral target position with lane offset
+      let targetX = targetPt.x + targetPt.nx * ai.laneOffset;
+      let targetY = targetPt.y + targetPt.ny * ai.laneOffset;
+
+      ai.onBridge = isCarOnOverpassBridge(bestIdx, active);
+
+      // Obstacle & Opponent Avoidance (Only avoid cars on the same vertical level: bridge vs underpass)
+      allCars.forEach(other => {
+        if (other === ai) return;
+        if (Boolean(other.onBridge) !== Boolean(ai.onBridge)) return;
+        const dist = Math.hypot(other.x - ai.x, other.y - ai.y);
+        if (dist < 48 && dist > 1) {
+          const repX = (ai.x - other.x) / dist;
+          const repY = (ai.y - other.y) / dist;
+          targetX += repX * 28;
+          targetY += repY * 28;
+        }
+      });
+
+      // Steer toward target point with sharper apex responsiveness
+      const toTargetAngle = Math.atan2(targetY - ai.y, targetX - ai.x);
+      let steerDiff = toTargetAngle - ai.angle;
+      while (steerDiff > Math.PI) steerDiff -= Math.PI * 2;
+      while (steerDiff < -Math.PI) steerDiff += Math.PI * 2;
+
+      const steerDir = Math.max(-1, Math.min(1, steerDiff * 3.15));
+      ai.angle += steerDir * ai.spec.turnSpeed * 1.14 * dt;
+
+      // Balanced AI DRS activation on DRS straights (Midpoint boost: +3% Easy/Normal, +5% Hard)
+      ai.drsActive = Boolean(curTrackPt.drs && angleDiff < 0.25 && ai.speed > 250);
+      const aiDrsBoost = ai.drsActive ? (selectedAiDiff === 'hard' ? 1.05 : 1.03) : 1.0;
+
+      // Subtle slipstream catch-up only on Hard difficulty (+2%)
+      let catchupBoost = 1.0;
+      if (!ai.finished && car.totalProgress > ai.totalProgress && selectedAiDiff === 'hard') {
+        catchupBoost = 1.02;
+      }
+
+      // Balanced midpoint cornering throttle & braking
+      const cooldownMod = ai.finished ? 0.75 : 1.0;
+      const baseMaxSpeed = ai.spec.maxSpeed * ai.skillSpeedMod * aiDrsBoost * catchupBoost * cooldownMod;
+      const minCornerRatio = selectedAiDiff === 'hard' ? 0.68 : (selectedAiDiff === 'normal' ? 0.63 : 0.58);
+      const cornerSlowdownFactor = Math.max(minCornerRatio, 1 - (angleDiff / Math.PI) * 0.98);
+      const targetSpeed = baseMaxSpeed * cornerSlowdownFactor;
+
+      const accelMult = selectedAiDiff === 'hard' ? 1.07 : (selectedAiDiff === 'normal' ? 1.02 : 0.98);
+      if (ai.speed < targetSpeed) {
+        ai.speed = Math.min(targetSpeed, ai.speed + ai.spec.accel * accelMult * dt);
+      } else {
+        ai.speed = Math.max(targetSpeed, ai.speed - ai.spec.brake * 0.98 * dt);
+      }
+
+      ai.vx = Math.cos(ai.angle) * ai.speed;
+      ai.vy = Math.sin(ai.angle) * ai.speed;
+
+      ai.x += ai.vx * dt;
+      ai.y += ai.vy * dt;
+    }
+
+    // Car-to-Car Elastic Collisions
+    function resolveCollisions(cars) {
+      const collisionRadius = 18;
+      for (let i = 0; i < cars.length; i++) {
+        for (let j = i + 1; j < cars.length; j++) {
+          const c1 = cars[i];
+          const c2 = cars[j];
+          if (Boolean(c1.onBridge) !== Boolean(c2.onBridge)) continue;
+          const dx = c2.x - c1.x;
+          const dy = c2.y - c1.y;
+          const dist = Math.hypot(dx, dy);
+
+          if (dist < collisionRadius * 2 && dist > 0.01) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+            const overlap = (collisionRadius * 2 - dist) * 0.5;
+
+            c1.x -= nx * overlap;
+            c1.y -= ny * overlap;
+            c2.x += nx * overlap;
+            c2.y += ny * overlap;
+
+            const kx = (c1.vx - c2.vx) * 0.45;
+            const ky = (c1.vy - c2.vy) * 0.45;
+            c1.vx -= kx;
+            c1.vy -= ky;
+            c2.vx += kx;
+            c2.vy += ky;
+
+            if (c1.isPlayer || c2.isPlayer) {
+              if (navigator.vibrate) try { navigator.vibrate(22); } catch (e) {}
+            }
+          }
+        }
+      }
+    }
+
+    // =========================================================================
+    // 9. PLAYER PHYSICS & GHOST UPDATE
+    // =========================================================================
+    let lastGhostSampleTime = 0;
+
+    function updateGhostCar(curTime) {
+      const active = getActiveTrack();
+      const bestGhost = active.ghostData;
+      if (!ghostEnabled || !bestGhost || bestGhost.length < 2 || selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        ghostCarState.visible = false;
+        document.getElementById('hudGhostDelta').textContent = '--.--s';
+        document.getElementById('hudGhostDelta').className = 'font-bold text-slate-400 ml-1';
+        return;
+      }
+      ghostCarState.visible = true;
+
+      let idx = 0;
+      while (idx < bestGhost.length - 1 && bestGhost[idx + 1].t < curTime) {
+        idx++;
+      }
+      const p1 = bestGhost[idx];
+      const p2 = bestGhost[Math.min(bestGhost.length - 1, idx + 1)];
+
+      if (p1 && p2 && p2.t > p1.t) {
+        const factor = Math.max(0, Math.min(1, (curTime - p1.t) / (p2.t - p1.t)));
+        ghostCarState.x = p1.x + (p2.x - p1.x) * factor;
+        ghostCarState.y = p1.y + (p2.y - p1.y) * factor;
+        let diffA = p2.angle - p1.angle;
+        while (diffA > Math.PI) diffA -= Math.PI * 2;
+        while (diffA < -Math.PI) diffA += Math.PI * 2;
+        ghostCarState.angle = p1.angle + diffA * factor;
+        ghostCarState.speed = p1.speed + (p2.speed - p1.speed) * factor;
+        ghostCarState.isDrifting = p1.isDrifting;
+        ghostCarState.onBridge = Boolean(p1.onBridge);
+
+        const ghostDistToCar = Math.hypot(car.x - ghostCarState.x, car.y - ghostCarState.y);
+        const estSecDelta = (ghostDistToCar / Math.max(160, car.speed));
+        const curTrackPt = active.pts[car.closestSplineIdx];
+        const aheadDot = (car.x - ghostCarState.x) * curTrackPt.tx + (car.y - ghostCarState.y) * curTrackPt.ty;
+        const deltaEl = document.getElementById('hudGhostDelta');
+        if (aheadDot >= 0) {
+          deltaEl.textContent = `-${estSecDelta.toFixed(2)}s`;
+          deltaEl.className = 'font-bold text-emerald-400 ml-1';
+        } else {
+          deltaEl.textContent = `+${estSecDelta.toFixed(2)}s`;
+          deltaEl.className = 'font-bold text-red-400 ml-1';
+        }
+      }
+    }
+
+    function updatePhysics(dt) {
+      if (raceState.finished) return;
+      const spec = getPlayerSpec();
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const trackWidth = active.cfg.trackWidth;
+      const curbWidth = active.cfg.curbWidth;
+      const N = trackSpline.length;
+
+      const prevSplineIdx = car.closestSplineIdx;
+      const nearestBeforeMove = findNearestSplinePoint(car.x, car.y, trackSpline, car.closestSplineIdx);
+      const minDist = nearestBeforeMove.minDist;
+      const curTrackPt = trackSpline[nearestBeforeMove.bestIdx];
+
+      const halfRoad = trackWidth * 0.5;
+      if (minDist <= halfRoad - curbWidth * 0.5) {
+        car.surface = 'asphalt';
+      } else if (minDist <= halfRoad + curbWidth * 0.65) {
+        car.surface = 'curb';
+      } else {
+        car.surface = 'grass';
+      }
+
+      const cosA = Math.cos(car.angle);
+      const sinA = Math.sin(car.angle);
+      let forwardVel = car.vx * cosA + car.vy * sinA;
+      let lateralVel = -car.vx * sinA + car.vy * cosA;
+
+      const absSpeed = Math.hypot(car.vx, car.vy);
+      car.speed = absSpeed;
+
+      const effectiveGas = input.gas || (autoAccelerate && !usingKeyboardGas && !input.brake);
+      car.drsActive = Boolean(curTrackPt.drs && effectiveGas && !input.brake && car.surface !== 'grass' && absSpeed > 260);
+
+      const steerInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      const speedFactor = Math.min(1, absSpeed / 120);
+      const reverseSign = forwardVel >= -10 ? 1 : -1;
+      const curbTurnBonus = car.surface === 'curb' ? 1.14 : 1.0;
+
+      const wantsToDrift =
+        (steerInput !== 0 && absSpeed > spec.driftThreshold) ||
+        (steerInput !== 0 && (input.brake || input.handbrake) && absSpeed > 180) ||
+        Math.abs(lateralVel) > 105;
+
+      car.isDrifting = wantsToDrift;
+
+      const effectiveTurnRate = spec.turnSpeed * curbTurnBonus * (car.isDrifting ? 1.2 : 1.0);
+      car.angle += steerInput * effectiveTurnRate * speedFactor * reverseSign * dt;
+
+      const drsBoost = car.drsActive ? 1.07 : 1.0;
+      if (effectiveGas) forwardVel += spec.accel * drsBoost * dt;
+      if (input.brake) {
+        if (forwardVel > 20) forwardVel -= spec.brake * dt;
+        else forwardVel -= spec.accel * 0.5 * dt;
+      }
+
+      let maxAllowedSpeed = spec.maxSpeed * drsBoost;
+      let rollingDrag = 0.65;
+      if (car.surface === 'grass') {
+        maxAllowedSpeed = spec.maxSpeed * 0.52;
+        rollingDrag = 3.2;
+      } else if (car.surface === 'curb') {
+        rollingDrag = 0.85;
+      }
+
+      if (!effectiveGas && !input.brake) forwardVel *= Math.max(0, 1 - rollingDrag * dt);
+      if (car.surface === 'grass' && forwardVel > maxAllowedSpeed) forwardVel -= 450 * dt;
+      forwardVel = Math.max(-180, Math.min(maxAllowedSpeed, forwardVel));
+
+      const traction = car.isDrifting ? spec.driftTraction : (car.surface === 'grass' ? spec.gripTraction * 0.45 : spec.gripTraction);
+      if (car.isDrifting && steerInput !== 0) {
+        lateralVel += -steerInput * 145 * dt;
+        forwardVel *= Math.pow(spec.driftRetention, dt * 60);
+      }
+      lateralVel *= Math.max(0, 1 - traction * dt);
+
+      const newCos = Math.cos(car.angle);
+      const newSin = Math.sin(car.angle);
+      car.vx = forwardVel * newCos - lateralVel * newSin;
+      car.vy = forwardVel * newSin + lateralVel * newCos;
+
+      car.x += car.vx * dt;
+      car.y += car.vy * dt;
+
+      // Barrier containment
+      if (minDist > trackWidth * 1.18) {
+        const pullX = curTrackPt.x - car.x;
+        const pullY = curTrackPt.y - car.y;
+        const plen = Math.hypot(pullX, pullY) || 1;
+        car.x += (pullX / plen) * (minDist - trackWidth * 1.18);
+        car.y += (pullY / plen) * (minDist - trackWidth * 1.18);
+        car.vx *= 0.68;
+        car.vy *= 0.68;
+      }
+
+      // Re-evaluate player spline position AFTER movement
+      const nearestAfter = findNearestSplinePoint(car.x, car.y, trackSpline, nearestBeforeMove.bestIdx);
+      const bestIdx = nearestAfter.bestIdx;
+      car.closestSplineIdx = bestIdx;
+      car.splineFrac = nearestAfter.frac;
+      car.onBridge = isCarOnOverpassBridge(bestIdx, active);
+      const postTrackPt = trackSpline[bestIdx];
+
+      // Timing & Sector Checkpoints for Player
+      const now = performance.now();
+      raceState.curLapTime = now - raceState.lapStartTime;
+
+      if (postTrackPt.sector === 2 && !raceState.passedSector1) {
+        raceState.passedSector1 = true;
+        car.passedSector1 = true;
+        raceState.s1Time = (raceState.curLapTime / 1000).toFixed(1);
+        document.getElementById('hudSector1').textContent = `S1:${raceState.s1Time}`;
+        playCheckpointBeep(587.33);
+      }
+      if (postTrackPt.sector === 3 && raceState.passedSector1 && !raceState.passedSector2) {
+        raceState.passedSector2 = true;
+        car.passedSector2 = true;
+        raceState.s2Time = (raceState.curLapTime / 1000).toFixed(1);
+        document.getElementById('hudSector2').textContent = `S2:${raceState.s2Time}`;
+        playCheckpointBeep(659.25);
+      }
+      if (raceState.passedSector1 && bestIdx > raceState.maxSplineIdxReached) {
+        raceState.maxSplineIdxReached = bestIdx;
+      }
+
+      // Finish line wrap detection for Player (requires Sector 1 & Sector 2 passed!)
+      const wrappedAroundFinish = (prevSplineIdx > N * 0.75 && bestIdx < 45);
+      const inFinishZoneAfterFullLap = (bestIdx < 32 && raceState.passedSector1 && raceState.passedSector2 && raceState.maxSplineIdxReached > N * 0.72);
+
+      if ((wrappedAroundFinish || inFinishZoneAfterFullLap) && raceState.passedSector1 && raceState.passedSector2 && raceState.curLapTime > 5000) {
+        const finishedLapMs = raceState.curLapTime;
+        raceState.s3Time = (finishedLapMs / 1000).toFixed(1);
+        document.getElementById('hudSector3').textContent = `S3:${raceState.s3Time}`;
+        raceState.lapTimes.push(finishedLapMs);
+
+        if (active.bestLapMs === null || finishedLapMs < active.bestLapMs) {
+          active.bestLapMs = finishedLapMs;
+          active.ghostData = [...currentLapRecording];
+          document.getElementById('hudBestTime').textContent = formatTime(active.bestLapMs);
+          const menuBestEl = document.getElementById(`menuBest-${selectedTrackKey}`);
+          if (menuBestEl) menuBestEl.textContent = formatTime(active.bestLapMs);
+          showToast('🟣 FASTEST LAP!', `${formatTime(finishedLapMs)}`);
+        } else {
+          showToast(`🏁 LAP ${raceState.lap} FINISHED`, `${formatTime(finishedLapMs)}`);
+        }
+        playCheckpointBeep(880);
+
+        if (raceState.lap >= raceState.totalLaps) {
+          car.lap = raceState.totalLaps + 1;
+          car.passedSector1 = false;
+          car.passedSector2 = false;
+          car.totalProgress = computeContinuousProgress(car, N);
+          showRaceResultsModal();
+          return;
+        } else {
+          raceState.lap += 1;
+          car.lap = raceState.lap;
+          car.passedSector1 = false;
+          car.passedSector2 = false;
+          document.getElementById('hudLap').textContent = `${raceState.lap}/${raceState.totalLaps}`;
+          raceState.lapStartTime = now;
+          raceState.passedSector1 = false;
+          raceState.passedSector2 = false;
+          raceState.maxSplineIdxReached = 0;
+          currentLapRecording = [];
+        }
+      }
+
+      // Compute continuous player progress AFTER lap & spline updates
+      car.totalProgress = computeContinuousProgress(car, N);
+
+      // Update AI cars, Collisions & Real-Time Live Position (POS P1/8 ~ P8/8)
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        const allCars = [car, ...aiCars];
+        aiCars.forEach(ai => updateAiPhysics(ai, dt, allCars));
+        resolveCollisions(allCars);
+
+        // Recompute continuous progress after collision separation so POS is 100% live every frame
+        allCars.forEach(c => {
+          const near = findNearestSplinePoint(c.x, c.y, trackSpline, c.closestSplineIdx);
+          c.closestSplineIdx = near.bestIdx;
+          c.splineFrac = near.frac;
+          c.onBridge = isCarOnOverpassBridge(c.closestSplineIdx, active);
+          c.totalProgress = computeContinuousProgress(c, N);
+        });
+
+        allCars.sort((a, b) => b.totalProgress - a.totalProgress);
+        const myRank = allCars.indexOf(car) + 1;
+        raceState.playerRank = myRank;
+
+        const posEl = document.getElementById('hudPosition');
+        posEl.textContent = `P${myRank}/8`;
+        posEl.className = myRank === 1
+          ? 'font-black text-amber-300 ml-0.5 text-xs sm:text-sm'
+          : (myRank <= 3 ? 'font-bold text-sky-400 ml-0.5 text-xs sm:text-sm' : 'font-bold text-white ml-0.5 text-xs sm:text-sm');
+      }
+
+      // Skid marks & smoke
+      if ((car.isDrifting || car.surface === 'grass') && absSpeed > 140) {
+        const rx = car.x + Math.cos(car.angle) * -14;
+        const ry = car.y + Math.sin(car.angle) * -14;
+        const px = -Math.sin(car.angle) * 8;
+        const py = Math.cos(car.angle) * 8;
+
+        skidMarks.push({
+          x1: rx + px, y1: ry + py,
+          x2: rx - px, y2: ry - py,
+          onBridge: Boolean(car.onBridge),
+          color: car.surface === 'grass' ? 'rgba(63, 46, 33, 0.55)' : 'rgba(15, 23, 42, 0.55)'
+        });
+        if (skidMarks.length > MAX_SKID_MARKS) skidMarks.shift();
+
+        if (Math.random() < 0.65) {
+          smokeParticles.push({
+            x: rx + (Math.random() - 0.5) * 14,
+            y: ry + (Math.random() - 0.5) * 14,
+            vx: (Math.random() - 0.5) * 30,
+            vy: (Math.random() - 0.5) * 30,
+            size: 5 + Math.random() * 5,
+            alpha: 0.75,
+            onBridge: Boolean(car.onBridge),
+            color: car.surface === 'grass' ? '#a16207' : '#e2e8f0'
+          });
+        }
+      }
+
+      for (let i = smokeParticles.length - 1; i >= 0; i--) {
+        const p = smokeParticles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.size += 12 * dt;
+        p.alpha -= 1.1 * dt;
+        if (p.alpha <= 0) smokeParticles.splice(i, 1);
+      }
+
+      if (now - lastGhostSampleTime > 50) {
+        lastGhostSampleTime = now;
+        currentLapRecording.push({
+          t: raceState.curLapTime,
+          x: car.x,
+          y: car.y,
+          angle: car.angle,
+          speed: car.speed,
+          isDrifting: car.isDrifting,
+          onBridge: Boolean(car.onBridge)
+        });
+      }
+
+      updateGhostCar(raceState.curLapTime);
+
+      // HUD update
+      const kmh = Math.round(absSpeed * 0.47);
+      document.getElementById('hudSpeed').textContent = kmh;
+      document.getElementById('hudSpeedBar').style.width = `${Math.min(100, (kmh / 345) * 100)}%`;
+      document.getElementById('hudCurTime').textContent = formatTime(raceState.curLapTime);
+
+      const drsBadge = document.getElementById('hudDrsBadge');
+      if (car.drsActive) {
+        drsBadge.textContent = 'DRS ON';
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-emerald-500/30 text-emerald-300 border border-emerald-400';
+      } else if (postTrackPt.drs) {
+        drsBadge.textContent = 'DRS ZONE';
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-emerald-950 text-emerald-400 border border-emerald-700';
+      } else {
+        drsBadge.textContent = 'DRS OFF';
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-slate-800/90 text-slate-400 border border-slate-700';
+      }
+
+      const dict = I18N[currentLang] || I18N.zh;
+      const gripBadge = document.getElementById('hudGripState');
+      if (car.isDrifting) {
+        gripBadge.textContent = dict.driftStatus;
+        gripBadge.className = 'px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-amber-500/25 text-amber-300 border border-amber-400 truncate w-full text-center';
+      } else {
+        gripBadge.textContent = dict.gripStatus;
+        gripBadge.className = 'px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 truncate w-full text-center';
+      }
+
+      const surfEl = document.getElementById('hudSurface');
+      if (car.surface === 'asphalt') {
+        surfEl.textContent = dict.surfaceAsphalt;
+        surfEl.className = 'text-slate-300 truncate text-right';
+      } else if (car.surface === 'curb') {
+        surfEl.textContent = dict.surfaceCurb;
+        surfEl.className = 'text-amber-300 font-bold truncate text-right';
+      } else {
+        surfEl.textContent = active.cfg.sceneryType === 'monaco' ? dict.surfaceBarrier : dict.surfaceGrass;
+        surfEl.className = 'text-red-400 font-bold truncate text-right';
+      }
+
+      const lapPct = Math.min(99, Math.floor((bestIdx / N) * 100));
+      document.getElementById('cornerNameBadge').textContent = `📍 ${postTrackPt.cornerName} (${lapPct}%)`;
+
+      updateAudio(Math.min(1, kmh / 330), car.isDrifting, car.surface === 'curb');
+    }
+
+    // =========================================================================
+    // 10. PIXEL-ART RENDERER & MINIMAP (Player + 7 AI Opponents)
+    // =========================================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const minimapCanvas = document.getElementById('minimapCanvas');
+    const miniCtx = minimapCanvas.getContext('2d');
+
+    const PIXEL_SCALE = 2;
+    let viewW = 640;
+    let viewH = 360;
+
+    function resizeCanvas() {
+      const container = document.getElementById('gameContainer');
+      const rect = container.getBoundingClientRect();
+      viewW = Math.max(320, Math.floor(rect.width / PIXEL_SCALE));
+      viewH = Math.max(240, Math.floor(rect.height / PIXEL_SCALE));
+      canvas.width = viewW;
+      canvas.height = viewH;
+      ctx.imageSmoothingEnabled = false;
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawTrackSegmentRange(trackSpline, startIdx, endIdx, trackWidth, curbWidth, runoffColor, curbAltColor, isBridgeDeck = false) {
+      const N = trackSpline.length;
+
+      if (isBridgeDeck) {
+        ctx.beginPath();
+        for (let i = startIdx; i <= endIdx; i++) {
+          const pt = trackSpline[i % N];
+          if (i === startIdx) ctx.moveTo(pt.x + 12, pt.y + 18);
+          else ctx.lineTo(pt.x + 12, pt.y + 18);
+        }
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = trackWidth + curbWidth * 2 + 34;
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)';
+        ctx.stroke();
+
+        ctx.beginPath();
+        for (let i = startIdx; i <= endIdx; i++) {
+          const pt = trackSpline[i % N];
+          if (i === startIdx) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.lineWidth = trackWidth + curbWidth * 2 + 24;
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        for (let i = startIdx; i <= endIdx; i++) {
+          const pt = trackSpline[i % N];
+          if (i === startIdx) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = trackWidth + curbWidth * 2 + 28;
+        ctx.strokeStyle = runoffColor;
+        ctx.stroke();
+      }
+
+      for (let i = startIdx; i < endIdx; i++) {
+        const p1 = trackSpline[i % N];
+        const p2 = trackSpline[(i + 1) % N];
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.lineWidth = trackWidth + curbWidth;
+        ctx.strokeStyle = (i % 2 === 0) ? curbAltColor : '#f8fafc';
+        ctx.stroke();
+      }
+
+      ctx.beginPath();
+      for (let i = startIdx; i <= endIdx; i++) {
+        const pt = trackSpline[i % N];
+        if (i === startIdx) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.lineCap = isBridgeDeck ? 'butt' : 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = trackWidth - 6;
+      ctx.strokeStyle = '#334155';
+      ctx.stroke();
+
+      ctx.lineWidth = trackWidth * 0.40;
+      ctx.strokeStyle = '#1e293b';
+      ctx.stroke();
+
+      for (let i = startIdx; i < endIdx; i += 10) {
+        const pt = trackSpline[i % N];
+        const angle = Math.atan2(pt.ty, pt.tx);
+        ctx.save();
+        ctx.translate(pt.x, pt.y);
+        ctx.rotate(angle);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(-10, -14);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(-10, 14);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function drawCornerMarkersAndFinishGantry(trackSpline, trackWidth) {
+      const N = trackSpline.length;
+
+      for (let i = 0; i < N; i++) {
+        const pt = trackSpline[i];
+        if (!pt.isWpStart) continue;
+
+        if (pt.chevron) {
+          const sideSign = pt.chevron === 'L' ? 1 : -1;
+          const boardX = pt.x + pt.nx * sideSign * (trackWidth * 0.66);
+          const boardY = pt.y + pt.ny * sideSign * (trackWidth * 0.66);
+          const turnAngle = Math.atan2(pt.ty, pt.tx);
+
+          ctx.save();
+          ctx.translate(boardX, boardY);
+          ctx.rotate(turnAngle);
+          ctx.fillStyle = '#0f172a';
+          ctx.fillRect(-24, -10, 48, 20);
+          ctx.strokeStyle = '#facc15';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-24, -10, 48, 20);
+
+          ctx.fillStyle = '#facc15';
+          ctx.font = 'bold 11px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(pt.chevron === 'L' ? '◀ LEFT' : 'RIGHT ▶', 0, 0);
+          ctx.restore();
+        }
+
+        if (pt.turnTag) {
+          ctx.save();
+          ctx.translate(pt.x, pt.y);
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+          const tagW = Math.max(38, pt.turnTag.length * 8 + 12);
+          ctx.fillRect(-tagW / 2, -11, tagW, 22);
+          ctx.strokeStyle = pt.turnTag === 'FINISH' ? '#22c55e' : '#38bdf8';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(-tagW / 2, -11, tagW, 22);
+
+          ctx.fillStyle = pt.turnTag === 'FINISH' ? '#4ade80' : '#f8fafc';
+          ctx.font = 'bold 11px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(pt.turnTag, 0, 0);
+          ctx.restore();
+        }
+      }
+
+      // Checkered Finish Line & Gantry
+      const sf = trackSpline[0];
+      ctx.save();
+      ctx.translate(sf.x, sf.y);
+      ctx.rotate(Math.atan2(sf.ty, sf.tx));
+
+      const checkerRows = 16;
+      const boxSize = (trackWidth - 10) / checkerRows;
+      for (let r = 0; r < checkerRows; r++) {
+        for (let c = 0; c < 4; c++) {
+          ctx.fillStyle = ((r + c) % 2 === 0) ? '#ffffff' : '#0f172a';
+          ctx.fillRect(-16 + c * 8, -(trackWidth - 10) / 2 + r * boxSize, 8, boxSize);
+        }
+      }
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-8, -trackWidth * 0.54, 16, trackWidth * 1.08);
+      ctx.strokeStyle = '#facc15';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-8, -trackWidth * 0.54, 16, trackWidth * 1.08);
+      for (let l = -2; l <= 2; l++) {
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(0, l * 28, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 8-Car Starting Grid Slots
+      ctx.strokeStyle = 'rgba(248, 250, 252, 0.55)';
+      ctx.lineWidth = 2;
+      for (let slot = 0; slot < 8; slot++) {
+        const row = Math.floor(slot / 2);
+        const side = (slot % 2 === 0) ? -1 : 1;
+        const gx = -62 - row * 60 - (slot % 2) * 26;
+        const gy = side * (trackWidth * 0.22);
+        ctx.strokeRect(gx - 18, gy - 12, 36, 24);
+      }
+      ctx.restore();
+    }
+
+    function drawPixelCar(x, y, angle, colorMain, colorStripe, colorSpoiler, isDrifting, drsActive, isPlayer = false) {
+      ctx.save();
+      ctx.translate(Math.floor(x), Math.floor(y));
+      ctx.rotate(angle);
+
+      // Car shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.fillRect(-15, -8, 32, 20);
+
+      // Wheels
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(-13, -12, 8, 4);
+      ctx.fillRect(-13, 8, 8, 4);
+      ctx.fillRect(6, -12, 8, 4);
+      ctx.fillRect(6, 8, 8, 4);
+
+      // Main body
+      ctx.fillStyle = colorMain;
+      ctx.fillRect(-16, -9, 32, 18);
+      ctx.fillRect(14, -7, 4, 14);
+
+      // Center stripe
+      ctx.fillStyle = colorStripe;
+      ctx.fillRect(-12, -2, 28, 4);
+
+      // Cockpit
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(-4, -6, 10, 12);
+      ctx.fillStyle = isPlayer ? '#38bdf8' : '#e2e8f0';
+      ctx.fillRect(1, -5, 4, 10);
+
+      // Rear wing
+      ctx.fillStyle = drsActive ? '#22c55e' : colorSpoiler;
+      ctx.fillRect(-17, -10, 4, 20);
+
+      // Drift flame sparks
+      if (isDrifting) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(-21, -5, 4, 3);
+        ctx.fillRect(-21, 2, 4, 3);
+      }
+
+      ctx.restore();
+    }
+
+    function drawTrackAndWorld(camX, camY) {
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const trackWidth = active.cfg.trackWidth;
+      const curbWidth = active.cfg.curbWidth;
+      const curbAltColor = active.cfg.sceneryType === 'monaco' ? '#0284c7' : '#dc2626';
+
+      ctx.fillStyle = active.cfg.groundBg;
+      ctx.fillRect(0, 0, viewW, viewH);
+
+      const tileSize = 64;
+      const startTileX = Math.floor(camX / tileSize) * tileSize;
+      const startTileY = Math.floor(camY / tileSize) * tileSize;
+
+      ctx.fillStyle = active.cfg.groundTile;
+      for (let gx = startTileX; gx < camX + viewW + tileSize; gx += tileSize) {
+        for (let gy = startTileY; gy < camY + viewH + tileSize; gy += tileSize) {
+          if (((Math.floor(gx / tileSize) + Math.floor(gy / tileSize)) & 1) === 0) {
+            ctx.fillRect(Math.floor(gx - camX), Math.floor(gy - camY), tileSize, tileSize);
+          }
+        }
+      }
+
+      ctx.save();
+      ctx.translate(-Math.floor(camX), -Math.floor(camY));
+
+      const N = trackSpline.length;
+      drawTrackSegmentRange(trackSpline, 0, N, trackWidth, curbWidth, active.cfg.runoffColor, curbAltColor, false);
+
+      const bridgeStart = active.bridgeStart;
+      const bridgeEnd = active.bridgeEnd;
+
+      drawCornerMarkersAndFinishGantry(trackSpline, trackWidth);
+
+      const playerSpec = getPlayerSpec();
+
+      // =====================================================================
+      // LAYER 0 (UNDERPASS / GROUND LEVEL): Drawn BEFORE the Overpass Bridge
+      // Cars in the Suzuka T10 Underpass are hidden underneath the bridge deck!
+      // =====================================================================
+      for (let i = 0; i < skidMarks.length; i++) {
+        const sm = skidMarks[i];
+        if (sm.onBridge) continue;
+        ctx.fillStyle = sm.color;
+        ctx.fillRect(Math.floor(sm.x1), Math.floor(sm.y1), 4, 4);
+        ctx.fillRect(Math.floor(sm.x2), Math.floor(sm.y2), 4, 4);
+      }
+
+      for (let i = 0; i < smokeParticles.length; i++) {
+        const p = smokeParticles[i];
+        if (p.onBridge) continue;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        const s = Math.floor(p.size);
+        ctx.fillRect(Math.floor(p.x - s / 2), Math.floor(p.y - s / 2), s, s);
+      }
+      ctx.globalAlpha = 1.0;
+
+      if (ghostCarState.visible && !ghostCarState.onBridge) {
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        drawPixelCar(ghostCarState.x, ghostCarState.y, ghostCarState.angle, '#22d3ee', '#ffffff', '#0891b2', ghostCarState.isDrifting, false, false);
+        ctx.restore();
+      }
+
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        aiCars.forEach(ai => {
+          if (!ai.onBridge) {
+            drawPixelCar(ai.x, ai.y, ai.angle, ai.colorMain, ai.colorStripe, ai.colorSpoiler, ai.isDrifting, ai.drsActive, false);
+          }
+        });
+      }
+
+      if (!car.onBridge) {
+        drawPixelCar(car.x, car.y, car.angle, playerSpec.colorMain, playerSpec.colorStripe, playerSpec.colorSpoiler, car.isDrifting, car.drsActive, true);
+      }
+
+      // =====================================================================
+      // SUZUKA OVERPASS BRIDGE DECK: Drawn OVER Layer 0, UNDER Layer 1
+      // =====================================================================
+      if (bridgeStart !== -1 && bridgeEnd !== -1) {
+        drawTrackSegmentRange(trackSpline, bridgeStart, bridgeEnd, trackWidth, curbWidth, active.cfg.runoffColor, curbAltColor, true);
+
+        // Re-draw the "BRIDGE" tarmac badge on top of the bridge deck so it's visible
+        for (let i = bridgeStart; i <= bridgeEnd; i++) {
+          const pt = trackSpline[i];
+          if (pt.isWpStart && pt.turnTag) {
+            ctx.save();
+            ctx.translate(pt.x, pt.y);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.82)';
+            const tagW = Math.max(38, pt.turnTag.length * 8 + 12);
+            ctx.fillRect(-tagW / 2, -11, tagW, 22);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-tagW / 2, -11, tagW, 22);
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 11px monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(pt.turnTag, 0, 0);
+            ctx.restore();
+          }
+        }
+      }
+
+      // =====================================================================
+      // LAYER 1 (OVERPASS BRIDGE LEVEL): Drawn ON TOP of the Overpass Bridge
+      // Cars driving across the bridge are 100% visible on top of the bridge!
+      // =====================================================================
+      for (let i = 0; i < skidMarks.length; i++) {
+        const sm = skidMarks[i];
+        if (!sm.onBridge) continue;
+        ctx.fillStyle = sm.color;
+        ctx.fillRect(Math.floor(sm.x1), Math.floor(sm.y1), 4, 4);
+        ctx.fillRect(Math.floor(sm.x2), Math.floor(sm.y2), 4, 4);
+      }
+
+      for (let i = 0; i < smokeParticles.length; i++) {
+        const p = smokeParticles[i];
+        if (!p.onBridge) continue;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        const s = Math.floor(p.size);
+        ctx.fillRect(Math.floor(p.x - s / 2), Math.floor(p.y - s / 2), s, s);
+      }
+      ctx.globalAlpha = 1.0;
+
+      if (ghostCarState.visible && ghostCarState.onBridge) {
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        drawPixelCar(ghostCarState.x, ghostCarState.y, ghostCarState.angle, '#22d3ee', '#ffffff', '#0891b2', ghostCarState.isDrifting, false, false);
+        ctx.restore();
+      }
+
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        aiCars.forEach(ai => {
+          if (ai.onBridge) {
+            drawPixelCar(ai.x, ai.y, ai.angle, ai.colorMain, ai.colorStripe, ai.colorSpoiler, ai.isDrifting, ai.drsActive, false);
+          }
+        });
+      }
+
+      if (car.onBridge) {
+        drawPixelCar(car.x, car.y, car.angle, playerSpec.colorMain, playerSpec.colorStripe, playerSpec.colorSpoiler, car.isDrifting, car.drsActive, true);
+      }
+
+      // Scenery items
+      const sceneryItems = active.scenery;
+      for (let i = 0; i < sceneryItems.length; i++) {
+        const item = sceneryItems[i];
+        if (
+          item.x < camX - 60 || item.x > camX + viewW + 60 ||
+          item.y < camY - 60 || item.y > camY + viewH + 60
+        ) continue;
+
+        if (item.type === 'primary') {
+          if (active.cfg.sceneryType === 'monaco') {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(Math.floor(item.x - item.size / 2 + 3), Math.floor(item.y - item.size / 3 + 3), item.size, Math.floor(item.size * 0.65));
+            ctx.fillStyle = item.shade;
+            ctx.fillRect(Math.floor(item.x - item.size / 2), Math.floor(item.y - item.size / 3), item.size, Math.floor(item.size * 0.65));
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(Math.floor(item.x - item.size / 4), Math.floor(item.y - item.size / 5), Math.floor(item.size / 2), 4);
+          } else {
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.fillRect(Math.floor(item.x - item.size / 2 + 4), Math.floor(item.y - item.size / 2 + 4), item.size, item.size);
+            ctx.fillStyle = item.shade;
+            ctx.fillRect(Math.floor(item.x - item.size / 2), Math.floor(item.y - item.size / 2), item.size, item.size);
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(Math.floor(item.x - item.size / 4), Math.floor(item.y - item.size / 4), Math.floor(item.size / 2), Math.floor(item.size / 2));
+          }
+        } else {
+          ctx.fillStyle = '#e2e8f0';
+          ctx.fillRect(Math.floor(item.x - 14), Math.floor(item.y - 14), 28, 28);
+          ctx.fillStyle = active.cfg.sceneryType === 'suzuka' ? '#0284c7' : '#dc2626';
+          ctx.fillRect(Math.floor(item.x - 14), Math.floor(item.y - 14), 28, 8);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawMinimap() {
+      miniCtx.clearRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+      const active = getActiveTrack();
+      const trackSpline = active.pts;
+      const b = active.bounds;
+      const pad = 8;
+      const wSpan = Math.max(1, b.maxX - b.minX);
+      const hSpan = Math.max(1, b.maxY - b.minY);
+      const scale = Math.min((minimapCanvas.width - pad * 2) / wSpan, (minimapCanvas.height - pad * 2) / hSpan);
+      const offsetX = (minimapCanvas.width - wSpan * scale) * 0.5 - b.minX * scale;
+      const offsetY = (minimapCanvas.height - hSpan * scale) * 0.5 - b.minY * scale;
+
+      miniCtx.save();
+      miniCtx.lineCap = 'round';
+      miniCtx.lineJoin = 'round';
+
+      const N = trackSpline.length;
+      for (let i = 0; i < N; i += 2) {
+        const p1 = trackSpline[i];
+        const p2 = trackSpline[(i + 2) % N];
+        miniCtx.beginPath();
+        miniCtx.moveTo(p1.x * scale + offsetX, p1.y * scale + offsetY);
+        miniCtx.lineTo(p2.x * scale + offsetX, p2.y * scale + offsetY);
+        miniCtx.lineWidth = 2.4;
+        if (p1.sector === 1) miniCtx.strokeStyle = 'rgba(239, 68, 68, 0.92)';
+        else if (p1.sector === 2) miniCtx.strokeStyle = 'rgba(56, 189, 248, 0.92)';
+        else miniCtx.strokeStyle = 'rgba(250, 204, 21, 0.92)';
+        miniCtx.stroke();
+      }
+
+      const sf = trackSpline[0];
+      miniCtx.fillStyle = '#22c55e';
+      miniCtx.fillRect(sf.x * scale + offsetX - 2.5, sf.y * scale + offsetY - 2.5, 5, 5);
+
+      // AI cars dots on minimap
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        aiCars.forEach(ai => {
+          const ax = ai.x * scale + offsetX;
+          const ay = ai.y * scale + offsetY;
+          miniCtx.fillStyle = ai.colorMain || '#94a3b8';
+          miniCtx.beginPath();
+          miniCtx.arc(ax, ay, 2.2, 0, Math.PI * 2);
+          miniCtx.fill();
+        });
+      }
+
+      // Player car dot
+      const px = car.x * scale + offsetX;
+      const py = car.y * scale + offsetY;
+      miniCtx.fillStyle = car.isDrifting ? '#fde047' : '#ffffff';
+      miniCtx.beginPath();
+      miniCtx.arc(px, py, 3.4, 0, Math.PI * 2);
+      miniCtx.fill();
+      miniCtx.strokeStyle = '#0f172a';
+      miniCtx.lineWidth = 1.2;
+      miniCtx.stroke();
+
+      miniCtx.restore();
+    }
+
+    // =========================================================================
+    // 11. MAIN GAME LOOP
+    // =========================================================================
+    let lastFrameTime = performance.now();
+    let camX = 0;
+    let camY = 0;
+
+    function gameLoop(now) {
+      const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+      lastFrameTime = now;
+
+      if (garageModal.classList.contains('hidden') && resultModal.classList.contains('hidden') && !isGamePaused) {
+        updatePhysics(dt);
+      } else {
+        updateAudio(0, false, false);
+      }
+
+      const lookAheadX = car.vx * 0.16;
+      const lookAheadY = car.vy * 0.16;
+      const targetCamX = car.x + lookAheadX - viewW / 2;
+      const targetCamY = car.y + lookAheadY - viewH / 2;
+      camX += (targetCamX - camX) * Math.min(1, dt * 8);
+      camY += (targetCamY - camY) * Math.min(1, dt * 8);
+
+      drawTrackAndWorld(camX, camY);
+      drawMinimap();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.onload = () => {
+      resizeCanvas();
+      applyLanguage('zh');
+      selectGameMode('arcade');
+      resetCarToStart();
+      camX = car.x - viewW / 2;
+      camY = car.y - viewH / 2;
+      requestAnimationFrame(gameLoop);
+    };
+  </script>
+</body>
+</html>
