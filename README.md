@@ -5,6 +5,9 @@
 ## ✨ 遊戲核心特色 (Core Features · v1.0.3)
 
 ### 1. 職業生涯模式（Career Mode · 車隊合約與賽事經濟體系）
+<img width="2560" height="1399" alt="image" src="https://github.com/user-attachments/assets/a819bba2-c388-418b-9c34-5c105d7930c2" />
+<img width="2560" height="1399" alt="image" src="https://github.com/user-attachments/assets/4168e9f2-774b-4e87-aefd-6de8c8264702" />
+<img width="2560" height="1399" alt="image" src="https://github.com/user-attachments/assets/0acb1935-85c8-44cd-9c21-2c5e6eded0bb" />
 
 * **三階實力車隊自由簽約（3-Tier Team Contracts）**：
   * **🔴 Tier 1 頂級廠隊 · Scuderia Rosso**：簽約門檻 $80,000。擁有最高極速（~335 km/h）與貼地抓地力，賽季合約目標要求完賽登上頒獎台（P1~P3），達成獎勵 **+$25,000**。
