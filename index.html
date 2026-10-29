@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Pixel GP - 2D 俯視角像素賽車 (v0.7.0)</title>
+  <title>Pixel GP - 2D 俯視角像素賽車 (v1.0.3)</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -60,6 +60,9 @@
     .modal-scroll * {
       touch-action: pan-y;
     }
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body class="h-[100dvh] w-screen flex flex-col bg-slate-950 overflow-hidden">
@@ -96,13 +99,16 @@
         </div>
       </div>
 
-      <!-- Quick Action Buttons: Roomy 4+3 grid on Mobile (80px+ per button so JA/EN text never overflows!), 7-col on sm/md, flex on lg -->
-      <div class="w-full lg:w-auto flex flex-wrap sm:grid sm:grid-cols-7 lg:flex items-center gap-1 shrink-0">
+      <!-- Quick Action Buttons: Roomy 4+4 grid on Mobile (80px+ per button so JA/EN text never overflows!), 8-col on sm/md, flex on lg -->
+      <div class="w-full lg:w-auto flex flex-wrap sm:grid sm:grid-cols-8 lg:flex items-center gap-1 shrink-0">
         <button id="btnToggleLang" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-sky-950/90 hover:bg-sky-900 text-[10px] sm:text-[11px] font-bold text-sky-200 border border-sky-700/80 transition text-center whitespace-nowrap">
           🌐 繁中
         </button>
         <button id="btnToggleAutoGas" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-[10px] sm:text-[11px] font-semibold text-emerald-200 border border-emerald-700/80 transition text-center whitespace-nowrap">
           ⚡自動:開
+        </button>
+        <button id="btnToggleSteerMode" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-amber-950/90 hover:bg-amber-900 text-[10px] sm:text-[11px] font-semibold text-amber-200 border border-amber-700/80 transition text-center whitespace-nowrap">
+          🎮操控:按鍵
         </button>
         <button id="btnTogglePadHeight" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-indigo-950/90 hover:bg-indigo-900 text-[10px] sm:text-[11px] font-semibold text-indigo-200 border border-indigo-700/80 transition text-center whitespace-nowrap">
           📱高度:中
@@ -110,13 +116,13 @@
         <button id="btnToggleGhost" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-cyan-300 border border-cyan-800/80 transition text-center whitespace-nowrap">
           👻殘影:開
         </button>
-        <button id="btnCarSelect" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+        <button id="btnCarSelect" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
           🏠主選單
         </button>
-        <button id="btnResetCar" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+        <button id="btnResetCar" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
           🔄重置
         </button>
-        <button id="btnToggleMute" type="button" class="flex-1 basis-[30%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+        <button id="btnToggleMute" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
           🔊音效:開
         </button>
       </div>
@@ -162,6 +168,26 @@
           <span id="hudCarTitle" class="truncate">平衡型</span>
           <span id="hudSurface" class="truncate text-right">柏油(100%)</span>
         </div>
+        <!-- v1.0 Live Weather & Track Wetness Indicator -->
+        <div class="mt-1 flex items-center justify-between gap-1 text-[10px] mono">
+          <span id="hudWeatherBadge" class="px-1.5 py-0.5 rounded font-bold bg-sky-500/20 text-sky-200 border border-sky-400/40 truncate w-full text-center">
+            ☀️ DRY 0%
+          </span>
+        </div>
+        <!-- v0.9/v1.0 Tire Compound & Wear Bar + Next Pit Compound Selector -->
+        <div class="mt-1.5 pt-1 border-t border-slate-700/80 flex flex-col gap-1 pointer-events-auto">
+          <div class="flex items-center justify-between gap-1 text-[10px] mono">
+            <span id="hudTireBadge" class="px-1.5 py-0.5 rounded font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50">
+              🟡 M 100%
+            </span>
+            <button id="btnCyclePitTire" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-sky-300 border border-sky-700/70 transition whitespace-nowrap" title="預約本圈自動進站 (Key: B / C)">
+              🔧預約進站
+            </button>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+            <div id="hudTireBar" class="h-full bg-emerald-400 w-full transition-all duration-150"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -172,6 +198,32 @@
         <span id="btnPauseText" data-i18n="pauseBtn">暫停</span>
         <span class="hidden md:inline text-[10px] text-slate-400 font-normal">(ESC/P)</span>
       </button>
+    </div>
+
+    <!-- 3-Red-Lights-Out F1 Race Start Countdown Gantry Overlay -->
+    <div id="startLightsOverlay" class="hidden absolute top-14 sm:top-16 left-1/2 -translate-x-1/2 pointer-events-none z-20 flex flex-col items-center">
+      <div class="bg-slate-950/95 border-2 border-slate-600 rounded-2xl px-5 sm:px-7 py-2.5 sm:py-3 shadow-2xl backdrop-blur-md flex flex-col items-center gap-2">
+        <div class="flex items-center gap-3.5 sm:gap-5">
+          <!-- Light 1 -->
+          <div class="flex flex-col items-center gap-1 bg-slate-900 px-2.5 py-2 rounded-xl border border-slate-800">
+            <div class="w-3 h-1.5 rounded-full bg-slate-800"></div>
+            <div id="startLight1" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-700 transition-all duration-75"></div>
+          </div>
+          <!-- Light 2 -->
+          <div class="flex flex-col items-center gap-1 bg-slate-900 px-2.5 py-2 rounded-xl border border-slate-800">
+            <div class="w-3 h-1.5 rounded-full bg-slate-800"></div>
+            <div id="startLight2" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-700 transition-all duration-75"></div>
+          </div>
+          <!-- Light 3 -->
+          <div class="flex flex-col items-center gap-1 bg-slate-900 px-2.5 py-2 rounded-xl border border-slate-800">
+            <div class="w-3 h-1.5 rounded-full bg-slate-800"></div>
+            <div id="startLight3" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-700 transition-all duration-75"></div>
+          </div>
+        </div>
+        <div id="startLightsText" class="text-xs sm:text-sm font-black mono tracking-wider text-amber-300 uppercase whitespace-nowrap">
+          🏁 準備起跑 · GET READY
+        </div>
+      </div>
     </div>
 
     <!-- Pause Overlay Modal -->
@@ -239,18 +291,93 @@
       <div id="centerToastSub" class="text-xs text-slate-200 mono mt-0.5">00:24.50</div>
     </div>
 
+    <!-- v1.0.2 Interactive Pit Autopilot Tire Selection Overlay (Shown automatically while Pit Autopilot drives the car!) -->
+    <div id="pitTireSelectOverlay" class="hidden absolute inset-x-2 top-16 sm:top-20 flex justify-center pointer-events-auto z-30">
+      <div class="bg-slate-950/95 border-2 border-sky-400 rounded-2xl max-w-lg w-full p-3 sm:p-4 shadow-[0_0_30px_rgba(56,189,248,0.45)] backdrop-blur-md text-center">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+          <div class="flex items-center gap-1.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-sky-500 text-slate-950 mono animate-pulse">🤖 PIT AUTOPILOT</span>
+            <span id="pitOverlayTitle" class="text-xs sm:text-sm font-extrabold text-white mono">自動進站駕駛中 · 請選擇換裝輪胎</span>
+          </div>
+          <span id="pitOverlayStatus" class="text-[11px] font-bold text-amber-300 mono">駛入維修區...</span>
+        </div>
+
+        <div id="pitOverlayWeatherHint" class="mt-1.5 text-[11px] text-sky-200 mono bg-sky-950/60 border border-sky-700/60 rounded-lg py-1 px-2">
+          ☀️ 當前路面濕度 0% · ★ 推薦換裝：🔴 軟胎 Soft 或 🟡 中性胎 Med
+        </div>
+
+        <!-- 5 Large One-Tap Tire Buttons during Pit Autopilot (with Remaining Tire Set Count!) -->
+        <div class="grid grid-cols-5 gap-1.5 sm:gap-2 mt-2.5">
+          <button type="button" data-pit-select="soft" class="pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95">
+            <span class="text-base sm:text-lg leading-none">🔴</span>
+            <span class="text-[10px] sm:text-xs font-black text-white mono mt-0.5">SOFT</span>
+            <span class="text-[9px] text-red-300 mono" data-i18n="pitShortSoft">抓地+8%</span>
+            <span id="pitCount-soft" class="mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap">剩 2 套</span>
+            <span id="pitRec-soft" class="hidden mt-0.5 px-1 rounded text-[8px] font-black bg-amber-400 text-slate-950 mono">★推薦</span>
+          </button>
+          <button type="button" data-pit-select="medium" class="pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95">
+            <span class="text-base sm:text-lg leading-none">🟡</span>
+            <span class="text-[10px] sm:text-xs font-black text-white mono mt-0.5">MED</span>
+            <span class="text-[9px] text-amber-300 mono" data-i18n="pitShortMed">均衡耐磨</span>
+            <span id="pitCount-medium" class="mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap">剩 2 套</span>
+            <span id="pitRec-medium" class="hidden mt-0.5 px-1 rounded text-[8px] font-black bg-amber-400 text-slate-950 mono">★推薦</span>
+          </button>
+          <button type="button" data-pit-select="hard" class="pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95">
+            <span class="text-base sm:text-lg leading-none">⚪</span>
+            <span class="text-[10px] sm:text-xs font-black text-white mono mt-0.5">HARD</span>
+            <span class="text-[9px] text-slate-300 mono" data-i18n="pitShortHard">超長壽命</span>
+            <span id="pitCount-hard" class="mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap">剩 2 套</span>
+            <span id="pitRec-hard" class="hidden mt-0.5 px-1 rounded text-[8px] font-black bg-amber-400 text-slate-950 mono">★推薦</span>
+          </button>
+          <button type="button" data-pit-select="inter" class="pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95">
+            <span class="text-base sm:text-lg leading-none">🟢</span>
+            <span class="text-[10px] sm:text-xs font-black text-white mono mt-0.5">INTER</span>
+            <span class="text-[9px] text-emerald-300 mono" data-i18n="pitShortInter">微雨半濕</span>
+            <span id="pitCount-inter" class="mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap">剩 3 套</span>
+            <span id="pitRec-inter" class="hidden mt-0.5 px-1 rounded text-[8px] font-black bg-amber-400 text-slate-950 mono">★推薦</span>
+          </button>
+          <button type="button" data-pit-select="wet" class="pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95">
+            <span class="text-base sm:text-lg leading-none">🔵</span>
+            <span class="text-[10px] sm:text-xs font-black text-white mono mt-0.5">WET</span>
+            <span class="text-[9px] text-sky-300 mono" data-i18n="pitShortWet">暴雨排水</span>
+            <span id="pitCount-wet" class="mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap">剩 2 套</span>
+            <span id="pitRec-wet" class="hidden mt-0.5 px-1 rounded text-[8px] font-black bg-amber-400 text-slate-950 mono">★推薦</span>
+          </button>
+        </div>
+
+        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mt-2.5 border border-slate-700">
+          <div id="pitOverlayProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 w-full transition-all duration-75"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hot-Slide Style 360° Direct Heading Touch Ring Overlay (Concentric Circles + Yellow Pointer) -->
+    <div id="directSteerRing" class="hidden fixed pointer-events-none z-20 -translate-x-1/2 -translate-y-1/2" style="width: 104px; height: 104px;">
+      <!-- Outer Translucent Circle -->
+      <div class="w-full h-full rounded-full border-2 border-white/45 bg-slate-950/15 flex items-center justify-center relative shadow-[0_0_16px_rgba(0,0,0,0.35)]">
+        <!-- Inner Translucent Circle -->
+        <div class="w-12 h-12 rounded-full border-2 border-white/55 bg-white/5"></div>
+        <!-- Rotating Yellow Direction Triangle Pointer on Ring Edge -->
+        <div id="directSteerRingArrow" class="hidden absolute inset-0 flex items-center justify-end pr-0.5">
+          <div style="width: 0; height: 0; border-top: 8px solid transparent; border-bottom: 8px solid transparent; border-left: 14px solid #facc15; filter: drop-shadow(0 0 4px rgba(0,0,0,0.85));"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Ergonomic On-Screen Touch Controls -->
     <div id="touchControlsBar" class="absolute inset-x-3 sm:inset-x-6 thumb-zone-mid flex items-end justify-between pointer-events-none z-10 transition-all duration-150">
-      <!-- Left Hand: Enlarged & Wider-Spaced Ergonomic Steering Cluster -->
-      <div class="flex items-center gap-5 sm:gap-7 pointer-events-auto pl-1.5 sm:pl-3">
-        <button id="btnSteerLeft" type="button" aria-label="左轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl">
-          <span class="text-2xl sm:text-4xl font-bold leading-none">◀</span>
-          <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerLeftDesc">LEFT (A)</span>
-        </button>
-        <button id="btnSteerRight" type="button" aria-label="右轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl -translate-y-2">
-          <span class="text-2xl sm:text-4xl font-bold leading-none">▶</span>
-          <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerRightDesc">RIGHT (D)</span>
-        </button>
+      <!-- Left Hand: Enlarged & Wider-Spaced Ergonomic Steering Buttons (Hidden when in direct screen-swipe mode) -->
+      <div class="pointer-events-auto pl-1 sm:pl-3">
+        <div id="steerButtonsCluster" class="flex items-center gap-5 sm:gap-7">
+          <button id="btnSteerLeft" type="button" aria-label="左轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl">
+            <span class="text-2xl sm:text-4xl font-bold leading-none">◀</span>
+            <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerLeftDesc">LEFT (A)</span>
+          </button>
+          <button id="btnSteerRight" type="button" aria-label="右轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl -translate-y-2">
+            <span class="text-2xl sm:text-4xl font-bold leading-none">▶</span>
+            <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerRightDesc">RIGHT (D)</span>
+          </button>
+        </div>
       </div>
 
       <!-- Center Help Hint on Desktop -->
@@ -316,13 +443,13 @@
               </button>
             </div>
 
-            <!-- Lap Count Selector -->
-            <div class="flex items-center gap-1.5 shrink-0">
-              <span class="text-[11px] font-bold text-slate-300 mono" data-i18n="lapsLabel">圈數 (LAPS):</span>
-              <button type="button" data-laps="1" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">1</button>
-              <button type="button" data-laps="3" class="lap-btn px-2.5 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow">3</button>
-              <button type="button" data-laps="5" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">5</button>
-              <button type="button" data-laps="10" class="lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700">10</button>
+            <!-- Track-Proportional Race Length Selector (3圈 / 短程 / 中程 / 長程) -->
+            <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+              <span class="text-[11px] font-bold text-slate-300 mono" data-i18n="lapsLabel">賽程 (DIST):</span>
+              <button id="distBtn-sprint3" type="button" data-dist="sprint3" class="lap-btn px-2 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow whitespace-nowrap">3圈 (3L)</button>
+              <button id="distBtn-short" type="button" data-dist="short" class="lap-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 whitespace-nowrap">短程 (6L)</button>
+              <button id="distBtn-medium" type="button" data-dist="medium" class="lap-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 whitespace-nowrap">中程 (10L)</button>
+              <button id="distBtn-long" type="button" data-dist="long" class="lap-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 whitespace-nowrap">長程 (15L)</button>
             </div>
           </div>
 
@@ -339,6 +466,54 @@
               🔴 困難 (Hard)
             </button>
             <span id="aiDiffDesc" class="text-[10px] text-slate-400 mono">AI 具備標準走線與超車避障能力 (極速 92%)</span>
+          </div>
+
+          <!-- Mobile Steering Mode Selector (Buttons vs 360 Direct Heading) -->
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
+            <span class="text-[11px] font-bold text-sky-300 mono" data-i18n="steerModeLabel">📱 觸控轉向模式:</span>
+            <button id="menuSteerButtons" type="button" class="px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap">
+              🎮 左右按鍵 (Buttons)
+            </button>
+            <button id="menuSteerSwipe" type="button" class="px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+              🧭 360°車頭指向 (Direct)
+            </button>
+            <span id="menuSteerDesc" class="text-[10px] text-slate-400 mono">經典獨立左右方向鍵，適合快速俐落拍擊過彎</span>
+          </div>
+
+          <!-- v1.0 Weather Condition Selector (Dry / Dynamic / Rain) -->
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
+            <span class="text-[11px] font-bold text-cyan-300 mono" data-i18n="weatherModeLabel">🌦️ 賽事天氣 (WEATHER):</span>
+            <button id="weatherBtn-dry" type="button" data-weather="dry" class="weather-mode-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+              ☀️ 晴朗乾地 (Dry)
+            </button>
+            <button id="weatherBtn-dynamic" type="button" data-weather="dynamic" class="weather-mode-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-cyan-500 text-slate-950 border border-cyan-300 shadow transition whitespace-nowrap">
+              🌦️ 動態天氣 (Dynamic)
+            </button>
+            <button id="weatherBtn-wet" type="button" data-weather="wet" class="weather-mode-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+              🌧️ 傾盆大雨 (Wet)
+            </button>
+            <span id="weatherModeDesc" class="text-[10px] text-slate-400 mono">比賽期間天氣與路面濕度動態變化，考驗進站換裝半雨胎/全雨胎時機！</span>
+          </div>
+
+          <!-- v0.9/v1.0 Starting Tire Compound Selector (Soft / Medium / Hard / Inter / Wet) -->
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
+            <span class="text-[11px] font-bold text-emerald-300 mono" data-i18n="tireCompoundLabel">🛞 起跑輪胎配方 (TIRE):</span>
+            <button id="tireBtn-soft" type="button" data-tire="soft" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="tireSoftBtn">
+              🔴 軟胎 Soft
+            </button>
+            <button id="tireBtn-medium" type="button" data-tire="medium" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap" data-i18n="tireMedBtn">
+              🟡 中性胎 Med
+            </button>
+            <button id="tireBtn-hard" type="button" data-tire="hard" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="tireHardBtn">
+              ⚪ 硬胎 Hard
+            </button>
+            <button id="tireBtn-inter" type="button" data-tire="inter" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="tireInterBtn">
+              🟢 半雨胎 Inter
+            </button>
+            <button id="tireBtn-wet" type="button" data-tire="wet" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="tireWetBtn">
+              🔵 全雨胎 Wet
+            </button>
+            <span id="tireCompoundDesc" class="text-[10px] text-slate-400 mono">抓地與耐磨完美均衡，適合 3~5 圈賽事（主直線右側設可進站換胎區 PIT）</span>
           </div>
         </div>
 
@@ -452,6 +627,118 @@
             </div>
           </div>
 
+          <!-- R&D Garage Upgrade Center (4 Departments: Engine, Aero, Chassis, Steering) -->
+          <div class="mt-2 pt-2.5 border-t border-amber-500/30">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
+              <span class="text-xs sm:text-sm font-black text-sky-300 mono" data-i18n="rdCenterTitle">🔧 車隊研發與車輛升級中心 (R&D GARAGE UPGRADE)</span>
+              <span class="text-[10px] text-slate-400 mono" data-i18n="rdCenterSub">升级屬性直接套用至當前簽約車隊賽車 (最高 Lv.5)</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+              <!-- Engine Upgrade -->
+              <div class="rounded-xl p-2.5 bg-slate-950/85 border border-slate-700/90 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-white" data-i18n="rdEngineTitle">⚡ 引擎動力</span>
+                    <span id="rdLvl-engine" class="text-[10px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">Lv.0/5</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="rdEngineDesc">提升直線極速與尾速</p>
+                  <div id="rdBars-engine" class="grid grid-cols-5 gap-1 my-1.5">
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                  </div>
+                  <div id="rdStat-engine" class="text-[10px] text-emerald-400 font-bold mono">極速加成: +0 km/h</div>
+                </div>
+                <button id="btnUpgrade-engine" type="button" class="mt-2 w-full py-1 rounded-lg text-[11px] font-black mono transition bg-sky-600 hover:bg-sky-500 text-white shadow">
+                  ⬆️ 升級 ($15,000)
+                </button>
+              </div>
+
+              <!-- Aero Upgrade -->
+              <div class="rounded-xl p-2.5 bg-slate-950/85 border border-slate-700/90 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-white" data-i18n="rdAeroTitle">🌀 空力下壓力</span>
+                    <span id="rdLvl-aero" class="text-[10px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">Lv.0/5</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="rdAeroDesc">強化高速過彎貼地抓地</p>
+                  <div id="rdBars-aero" class="grid grid-cols-5 gap-1 my-1.5">
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                  </div>
+                  <div id="rdStat-aero" class="text-[10px] text-emerald-400 font-bold mono">抓地加成: +0%</div>
+                </div>
+                <button id="btnUpgrade-aero" type="button" class="mt-2 w-full py-1 rounded-lg text-[11px] font-black mono transition bg-sky-600 hover:bg-sky-500 text-white shadow">
+                  ⬆️ 升級 ($15,000)
+                </button>
+              </div>
+
+              <!-- Chassis / Lightweight Upgrade -->
+              <div class="rounded-xl p-2.5 bg-slate-950/85 border border-slate-700/90 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-white" data-i18n="rdChassisTitle">🪶 輕量化傳動</span>
+                    <span id="rdLvl-chassis" class="text-[10px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">Lv.0/5</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="rdChassisDesc">提升出彎加速與晚煞制動</p>
+                  <div id="rdBars-chassis" class="grid grid-cols-5 gap-1 my-1.5">
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                  </div>
+                  <div id="rdStat-chassis" class="text-[10px] text-emerald-400 font-bold mono">加速與制動: +0%</div>
+                </div>
+                <button id="btnUpgrade-chassis" type="button" class="mt-2 w-full py-1 rounded-lg text-[11px] font-black mono transition bg-sky-600 hover:bg-sky-500 text-white shadow">
+                  ⬆️ 升級 ($15,000)
+                </button>
+              </div>
+
+              <!-- Steering & Drift Upgrade -->
+              <div class="rounded-xl p-2.5 bg-slate-950/85 border border-slate-700/90 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-extrabold text-white" data-i18n="rdSteeringTitle">🔥 轉向與飄移</span>
+                    <span id="rdLvl-steering" class="text-[10px] font-black px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">Lv.0/5</span>
+                  </div>
+                  <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="rdSteeringDesc">強化入彎指向與甩尾動量</p>
+                  <div id="rdBars-steering" class="grid grid-cols-5 gap-1 my-1.5">
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                    <div class="h-1.5 rounded bg-slate-800"></div>
+                  </div>
+                  <div id="rdStat-steering" class="text-[10px] text-emerald-400 font-bold mono">轉向與飄移: +0%</div>
+                </div>
+                <button id="btnUpgrade-steering" type="button" class="mt-2 w-full py-1 rounded-lg text-[11px] font-black mono transition bg-sky-600 hover:bg-sky-500 text-white shadow">
+                  ⬆️ 升級 ($15,000)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Season Driver Championship Standings (8 Drivers, 6-Race Season) -->
+          <div class="mt-2 pt-2.5 border-t border-amber-500/30">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2">
+                <span class="text-xs sm:text-sm font-black text-amber-300 mono" data-i18n="standingsTitle">🏆 賽季車手積分榜 (DRIVER STANDINGS)</span>
+              </div>
+              <div class="flex items-center gap-2 text-[11px] mono">
+                <span id="careerSeasonProgressBadge" class="px-2 py-0.5 rounded bg-slate-950/90 text-slate-200 border border-slate-700">賽季進度: 0 / 6 站</span>
+                <span id="careerTitlesBadge" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/50 font-extrabold">👑 總冠軍: 0 冠</span>
+              </div>
+            </div>
+            <div id="careerStandingsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-950/80 border border-slate-800 rounded-xl p-2 text-[11px] mono">
+            </div>
+          </div>
+
           <!-- Career Reset Option -->
           <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[10px] mono">
             <span class="text-slate-500">存檔保存在本地瀏覽器 (LocalStorage)</span>
@@ -473,7 +760,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-imola" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mono">★☆☆ 簡單 EASY</span>
-                  <span class="text-[10px] text-slate-400 mono">19 CORNERS</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · 🌧️22%</span>
                 </div>
                 <h3 id="cardName-imola" class="text-sm sm:text-base font-extrabold text-white mt-1.5">伊莫拉 · Imola</h3>
                 <p id="cardDesc-imola" class="text-[11px] text-slate-400 mt-0.5 leading-snug">高速流暢的逆時針經典賽道，路面寬敞（320px），適合 8 車並排起步與高速超車。</p>
@@ -489,7 +776,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-suzuka" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
-                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · BRIDGE</span>
+                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · 🌧️30%</span>
                 </div>
                 <h3 id="cardName-suzuka" class="text-sm sm:text-base font-extrabold text-white mt-1.5">鈴鹿 · Suzuka</h3>
                 <p id="cardDesc-suzuka" class="text-[11px] text-slate-400 mt-0.5 leading-snug">鮮明的連續 S 彎、180° 髮夾彎、湯匙彎與真正分層繪製的立體交叉高架橋！</p>
@@ -505,7 +792,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-monaco" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 mono">★★★ 困難 HARD</span>
-                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · STREET</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · 🌧️12%</span>
                 </div>
                 <h3 id="cardName-monaco" class="text-sm sm:text-base font-extrabold text-white mt-1.5">蒙地卡羅 · Monaco</h3>
                 <p id="cardDesc-monaco" class="text-[11px] text-slate-400 mt-0.5 leading-snug">超寬港灣路面！考驗狹窄彎角走線與超車技巧，Fairmont 髮夾彎與海濱隧道大直線。</p>
@@ -521,7 +808,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-interlagos" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
-                  <span class="text-[10px] text-slate-400 mono">15 CORNERS · CCW</span>
+                  <span class="text-[10px] text-slate-400 mono">15 CORNERS · 🌧️40%</span>
                 </div>
                 <h3 id="cardName-interlagos" class="text-sm sm:text-base font-extrabold text-white mt-1.5">聖保羅 · São Paulo</h3>
                 <p id="cardDesc-interlagos" class="text-[11px] text-slate-400 mt-0.5 leading-snug">巴西英特拉格斯經典逆時針賽道！包含洗拿 S 彎、太陽彎大直線與內場連續髮夾彎。</p>
@@ -537,7 +824,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-silverstone" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/40 mono">★★☆ 普通 NORMAL</span>
-                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · FAST</span>
+                  <span class="text-[10px] text-slate-400 mono">18 CORNERS · 🌧️35%</span>
                 </div>
                 <h3 id="cardName-silverstone" class="text-sm sm:text-base font-extrabold text-white mt-1.5">銀石 · Silverstone</h3>
                 <p id="cardDesc-silverstone" class="text-[11px] text-slate-400 mt-0.5 leading-snug">英國高速聖殿！體驗 Copse 高速右彎、Maggots-Becketts 連續 S 彎與 Hangar 大直線。</p>
@@ -553,7 +840,7 @@
               <div>
                 <div class="flex items-center justify-between gap-1">
                   <span id="cardBadge-spa" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 mono">★★★ 困難 HARD</span>
-                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · LONG</span>
+                  <span class="text-[10px] text-slate-400 mono">19 CORNERS · 🌧️45%</span>
                 </div>
                 <h3 id="cardName-spa" class="text-sm sm:text-base font-extrabold text-white mt-1.5">斯帕 · Spa</h3>
                 <p id="cardDesc-spa" class="text-[11px] text-slate-400 mt-0.5 leading-snug">比利時阿登森林傳奇！La Source 髮夾彎、Eau Rouge 與 Kemmel 超長全油門大直線。</p>
@@ -561,6 +848,22 @@
               <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
                 <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
                 <span class="text-amber-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-spa">--:--.--</span></span>
+              </div>
+            </div>
+
+            <!-- Singapore Marina Bay (Night Street Circuit - v1.0 New!) -->
+            <div id="track-singapore" data-track="singapore" class="track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between gap-1">
+                  <span id="cardBadge-singapore" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 mono">★★★ 夜賽 NIGHT</span>
+                  <span class="text-[10px] text-fuchsia-300 mono">19 CORNERS · 🌧️18%</span>
+                </div>
+                <h3 id="cardName-singapore" class="text-sm sm:text-base font-extrabold text-white mt-1.5">新加坡 · Singapore</h3>
+                <p id="cardDesc-singapore" class="text-[11px] text-slate-400 mt-0.5 leading-snug">F1 經典濱海灣夜間街道賽！霓虹夜光照明、Raffles 大直線、安德森橋與港灣連續 90° 彎。</p>
+              </div>
+              <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
+                <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
+                <span class="text-fuchsia-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-singapore">--:--.--</span></span>
               </div>
             </div>
           </div>
@@ -576,7 +879,7 @@
             </div>
             <span id="careerActiveTeamCarBadge" class="font-bold text-white px-2 py-0.5 rounded bg-slate-800 border border-amber-400/50">Stealth Green-D</span>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
             <!-- Balanced -->
             <div id="card-balanced" data-car="balanced" class="car-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 border-red-500 transition hover:bg-slate-800 flex flex-col justify-between shadow-lg">
               <div>
@@ -634,6 +937,26 @@
                 <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: 72%"></div></div>
                 <div class="flex justify-between"><span data-i18n="driftLabel">飄移靈活 Drift</span><span class="text-amber-400 font-bold">98%</span></div>
                 <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 98%"></div></div>
+              </div>
+            </div>
+
+            <!-- Hybrid (v0.9 New High-Recognition Car: Cyan/Yellow ERS Hybrid Prototype) -->
+            <div id="card-hybrid" data-car="hybrid" class="car-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 mono">HYBRID ERS</span>
+                  <span class="w-3.5 h-3.5 rounded-full bg-cyan-400 inline-block border border-amber-300"></span>
+                </div>
+                <h3 id="carName-hybrid" class="text-sm sm:text-base font-bold text-white mt-1">混動型 · Apex Hybrid</h3>
+                <p id="carDesc-hybrid" class="text-[11px] text-slate-400 mt-0.5">搭載 ERS 電能扭力分配，出彎爆發力強且輪胎磨損降低 18%！</p>
+              </div>
+              <div class="mt-2 space-y-1 text-[10px] mono">
+                <div class="flex justify-between"><span data-i18n="topSpeedLabel">極速 Speed</span><span class="text-white font-bold">315 km/h</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-cyan-400 h-1.5 rounded-full" style="width: 90%"></div></div>
+                <div class="flex justify-between"><span data-i18n="gripLabel">貼地抓地 Grip</span><span class="text-emerald-400 font-bold">92%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-emerald-400 h-1.5 rounded-full" style="width: 92%"></div></div>
+                <div class="flex justify-between"><span data-i18n="driftLabel">飄移靈活 Drift</span><span class="text-amber-400 font-bold">82%</span></div>
+                <div class="w-full bg-slate-950 h-1.5 rounded-full"><div class="bg-amber-400 h-1.5 rounded-full" style="width: 82%"></div></div>
               </div>
             </div>
           </div>
@@ -710,6 +1033,14 @@
             <div class="flex justify-between items-center text-slate-400 text-[11px] pt-0.5">
               <span data-i18n="resNewBalanceLabel">車隊更新總資產 (Bank Balance):</span>
               <span id="resCareerNewBalance" class="font-bold text-sky-300">$0</span>
+            </div>
+            <div class="flex justify-between items-center text-slate-300 pt-1 border-t border-slate-800/80">
+              <span data-i18n="resPointsEarnedLabel">本站積分與賽季排名:</span>
+              <span id="resCareerPointsEarned" class="font-extrabold text-amber-300">+25 PTS (P1)</span>
+            </div>
+            <div id="resSeasonFinaleBox" class="hidden mt-2 p-2.5 rounded-lg bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 border-2 border-amber-400 text-center">
+              <div id="resSeasonFinaleTitle" class="text-xs sm:text-sm font-black text-amber-300 mono">👑 賽季收官總決算 · WORLD CHAMPION!</div>
+              <div id="resSeasonFinaleDesc" class="text-[11px] text-white mono mt-0.5">恭喜奪得年度車手總冠軍！獲發賽季獎金 +$100,000！</div>
             </div>
           </div>
         </div>
@@ -864,7 +1195,90 @@
         pauseTitle: '遊戲暫停 · PAUSED',
         resumeBtn: '繼續比賽 (Resume)',
         restartBtn: '重新起跑 (Restart)',
-
+        rdCenterTitle: '🔧 車隊研發與車輛升級中心 (R&D GARAGE UPGRADE)',
+        rdCenterSub: '升級屬性直接套用至生涯參賽車輛 (最高 Lv.5)',
+        rdEngineTitle: '⚡ 引擎動力',
+        rdEngineDesc: '提升直線極速與尾速',
+        rdAeroTitle: '🌀 空力下壓力',
+        rdAeroDesc: '強化高速過彎貼地抓地',
+        rdChassisTitle: '🪶 輕量化傳動',
+        rdChassisDesc: '提升出彎加速與晚煞制動',
+        rdSteeringTitle: '🔥 轉向與飄移',
+        rdSteeringDesc: '強化入彎指向與甩尾動量',
+        rdUpgradeVerb: '⬆️ 升級',
+        rdMaxLabel: '✔ 已滿級 MAX',
+        standingsTitle: '🏆 賽季車手積分榜 (DRIVER STANDINGS)',
+        resPointsEarnedLabel: '本站積分與賽季排名:',
+        toastUpgraded: '🔧 研發升級成功：',
+        steerModeBtn: '🎮操控:按鍵',
+        steerModeSwipe: '🧭操控:指向',
+        steerModeLabel: '📱 觸控轉向模式:',
+        menuSteerButtons: '🎮 左右按鍵 (Buttons)',
+        menuSteerSwipe: '🧭 360°車頭指向 (Direct)',
+        menuSteerButtonsDesc: '經典獨立左右方向鍵，適合快速俐落點按過彎',
+        menuSteerSwipeDesc: 'Hot Slide 同款！手指往哪個方向拉，車頭就朝該方向精準轉向與自動回正',
+        swipePadTitle: '👆 滑動轉向',
+        swipePadSub: '左右滑動微調轉向角度 (支援半幅微轉)',
+        toastSteerButtons: '已切換：🎮 左右按鍵轉向',
+        toastSteerSwipe: '已切換：🧭 360°車頭指向操控',
+        lightsReady: '🏁 準備起跑 · GET READY',
+        lights1: '🔴 ○ ○ · RED LIGHT 1',
+        lights2: '🔴 🔴 ○ · RED LIGHT 2',
+        lights3: '🔴 🔴 🔴 · HOLD THROTTLE!',
+        lightsGo: '🟢 LIGHTS OUT · GO! 起跑！',
+        tireCompoundLabel: '🛞 起跑輪胎配方 (Tire):',
+        tireSoftBtn: '🔴 軟胎 Soft',
+        tireMedBtn: '🟡 中性胎 Med',
+        tireHardBtn: '⚪ 硬胎 Hard',
+        tireSoftDesc: '抓地力 +8% / 出彎加速 +4%，磨損較快，適合短途衝刺或進站強攻 (Pit Lane 在主直線右側)',
+        tireMedDesc: '抓地力與耐磨度完美均衡，適合 3~5 圈標準大獎賽 (進站換胎請靠主直線右側 Pit Lane)',
+        tireHardDesc: '超高耐久度 (磨損 -42%)，抓地力略降，適合長距離免進站策略',
+        carHybridName: '混動型 · Apex Hybrid',
+        carHybridDesc: 'F1 渦輪油電複合動力，出彎 ERS 電能爆發且低重心省胎 (-18% 磨損)，耐久策略首選。',
+        pitStopToastTitle: '🔧 PIT STOP 完成！',
+        pitStopToastSub: '已換裝 100% 全新輪胎：',
+        pitTireChangedToast: '🔧 預選下次進站輪胎：',
+        boxBoxWarnTitle: '⚠️ BOX BOX! 輪胎嚴重磨損',
+        boxBoxWarnSub: '請在起跑主直線靠右側駛入 PIT LANE 換胎！',
+        weatherModeLabel: '🌦️ 賽事天氣 (Weather):',
+        weatherDryBtn: '☀️ 晴朗乾地',
+        weatherDynBtn: '🌦️ 動態天氣',
+        weatherWetBtn: '🌧️ 傾盆大雨',
+        weatherDryDesc: '全程乾燥晴朗路面 (濕度 0%)，適合軟胎/中性胎/硬胎全力發揮',
+        weatherDynDesc: '比賽途中可能突降陣雨或放晴，考驗觀察路面濕度進站換裝半雨胎/全雨胎的策略！',
+        weatherWetDesc: '開賽即為積水濕滑路面 (濕度 80%)，強烈建議搭配 🟢半雨胎 或 🔵全雨胎 起跑',
+        tireInterBtn: '🟢 半雨胎 Inter',
+        tireWetBtn: '🔵 全雨胎 Wet',
+        tireInterDesc: '專為微雨與潮濕路面 (濕度 20%~65%) 設計，排水抓地力極佳；乾地行駛會過熱快磨',
+        tireWetDesc: '專為暴雨積水路面 (濕度 >55%) 設計，完全破除水漂打滑，重度雨戰首選',
+        singaporeBadge: '★★★ 夜賽 NIGHT',
+        singaporeName: '新加坡 · Singapore',
+        singaporeDesc: 'F1 經典濱海灣夜間街道賽！霓虹夜光照明、Raffles 大直線、安德森橋與港灣連續 90° 彎。',
+        rainAlertTitle: '🌧️ 降雨警報 · 路面轉濕！',
+        rainAlertSub: '乾胎抓地力下降！請按 PIT 按鈕預選 🟢I 或 🔵W 並靠主直線右側進站！',
+        dryTrackAlertTitle: '☀️ 天氣放晴 · 路面漸乾！',
+        dryTrackAlertSub: '路面濕度下降，可準備進站換回 🔴軟胎 或 🟡中性胎 衝刺！',
+        distSprint3: '3圈',
+        distShort: '短程',
+        distMedium: '中程',
+        distLong: '長程',
+        lapUnitShort: '圈',
+        boxReqOff: '🔧預約進站',
+        boxReqOn: '🔧本圈進站:開',
+        pitAutoTitle: '自動進站駕駛中 · 請點選要換裝的輪胎',
+        pitAutoEntering: '🤖 自動駛入 PIT LANE...',
+        pitAutoServicing: '🔧 技師換胎作業中',
+        pitAutoExiting: '🟢 換胎完成 · 自動駛出匯入賽道',
+        pitShortSoft: '抓地+8%',
+        pitShortMed: '均衡耐磨',
+        pitShortHard: '超長壽命',
+        pitShortInter: '微雨半濕',
+        pitShortWet: '暴雨排水',
+        careerWeatherLockedDesc: '🏆 生涯模式固定採用「動態天氣」（依各賽道現實氣候降雨機率觸發降雨）',
+        toastBoxReqOn: '🔧 已預約本圈自動進站 (BOX THIS LAP)',
+        toastBoxReqOnSub: '抵達最後一彎出彎處時，將自動導航駛入 Pit Lane 並彈出選胎選單！',
+        toastBoxReqOff: '已取消預約進站',
+        toastBoxReqOffSub: '您仍可在主直線入口處手動靠右駛入 🔧 PIT IN 啟動自動進站',
       },
       ja: {
         langBtn: '🌐 日本語',
@@ -993,7 +1407,90 @@
         pauseTitle: '一時停止 · PAUSED',
         resumeBtn: 'レース再開 (Resume)',
         restartBtn: 'リスタート (Restart)',
-
+        rdCenterTitle: '🔧 マシン研究開発センター (R&D GARAGE UPGRADE)',
+        rdCenterSub: '強化ステータスはキャリア車両に即時反映 (最大 Lv.5)',
+        rdEngineTitle: '⚡ エンジン出力',
+        rdEngineDesc: '直線最高速・伸びを強化',
+        rdAeroTitle: '🌀 エアロ空力',
+        rdAeroDesc: '高速コーナリンググリップ強化',
+        rdChassisTitle: '🪶 軽量シャシー',
+        rdChassisDesc: '立ち上がり加速・制動力UP',
+        rdSteeringTitle: '🔥 ステア＆ドリフト',
+        rdSteeringDesc: '旋回反応・ドリフト維持率UP',
+        rdUpgradeVerb: '⬆️ 強化',
+        rdMaxLabel: '✔ 最大 MAX',
+        standingsTitle: '🏆 シーズン順位表 (DRIVER STANDINGS)',
+        resPointsEarnedLabel: '獲得ポイント・総合順位:',
+        toastUpgraded: '🔧 アップグレード完了：',
+        steerModeBtn: '🎮操作:ボタン',
+        steerModeSwipe: '🧭操作:360°指向',
+        steerModeLabel: '📱 ステア操作:',
+        menuSteerButtons: '🎮 左右ボタン (Buttons)',
+        menuSteerSwipe: '🧭 360°ダイレクト指向',
+        menuSteerButtonsDesc: '大型の独立左右ボタン。素早いタップ操作に最適',
+        menuSteerSwipeDesc: '指を向けた360°方向へマシンが自動で旋回・ドリフトして直進します',
+        swipePadTitle: '👆 スワイプ操舵',
+        swipePadSub: '左右スライドで旋回角を無段階微調整',
+        toastSteerButtons: '操作モード：🎮 左右ボタン',
+        toastSteerSwipe: '操作モード：🧭 360°ダイレクト指向',
+        lightsReady: '🏁 スタート準備 · GET READY',
+        lights1: '🔴 ○ ○ · RED LIGHT 1',
+        lights2: '🔴 🔴 ○ · RED LIGHT 2',
+        lights3: '🔴 🔴 🔴 · HOLD THROTTLE!',
+        lightsGo: '🟢 LIGHTS OUT · GO! スタート！',
+        tireCompoundLabel: '🛞 スタートタイヤ (Tire):',
+        tireSoftBtn: '🔴 ソフト Soft',
+        tireMedBtn: '🟡 ミディアム Med',
+        tireHardBtn: '⚪ ハード Hard',
+        tireSoftDesc: 'グリップ+8%・加速+4%、摩耗が早いアタック用タイヤ (メインストレート右側がPITレーン)',
+        tireMedDesc: 'グリップと耐久性の黄金バランス。3〜5周レースに最適 (メインストレート右側PITで交換可)',
+        tireHardDesc: '高耐久ロングラン仕様 (摩耗-42%)。ノーピット作戦に最適',
+        carHybridName: 'ハイブリッド型 · Apex Hybrid',
+        carHybridDesc: 'F1ターボERS複合動力！立ち上がり加速とタイヤ保護(-18%摩耗)に優れる戦略マシン。',
+        pitStopToastTitle: '🔧 ピット作業完了！',
+        pitStopToastSub: '100% 新品タイヤへ交換：',
+        pitTireChangedToast: '🔧 次回ピットタイヤ予約：',
+        boxBoxWarnTitle: '⚠️ BOX BOX! タイヤ摩耗限界',
+        boxBoxWarnSub: 'メインストレート右側の PIT LANE へ入ってタイヤ交換してください！',
+        weatherModeLabel: '🌦️ 天候設定 (Weather):',
+        weatherDryBtn: '☀️ 晴れ (Dry)',
+        weatherDynBtn: '🌦️ 変動天候 (Dynamic)',
+        weatherWetBtn: '🌧️ 豪雨 (Wet)',
+        weatherDryDesc: 'ドライ路面 (湿度 0%)。ソフト/ミディアム/ハードで全開アタック可能',
+        weatherDynDesc: 'レース中に雨が降り出す変動天候！路面湿度に応じた 🟢インター / 🔵ウェット交換が鍵',
+        weatherWetDesc: 'スタートからヘビーウェット路面 (湿度 80%)。🟢インターまたは🔵ウェット装着を推奨',
+        tireInterBtn: '🟢 インター Inter',
+        tireWetBtn: '🔵 ウェット Wet',
+        tireInterDesc: '小雨〜セミウェット路面 (湿度 20%~65%) で最高のグリップを発揮。ドライでは早期摩耗',
+        tireWetDesc: '豪雨・ヘビーウェット路面 (湿度 >55%) 専用。ハイドロプレーニングを完全防止',
+        singaporeBadge: '★★★ ナイトレース NIGHT',
+        singaporeName: 'シンガポール · Singapore',
+        singaporeDesc: 'F1名物マリーナベイ市街地ナイトレース！ネオン照明、アンダーソン橋と連続90°コーナー。',
+        rainAlertTitle: '🌧️ 降雨警報 · ウェット路面！',
+        rainAlertSub: 'スリックでは滑ります！PITボタンで 🟢I / 🔵W を選び右側PITレーンへ！',
+        dryTrackAlertTitle: '☀️ 天候回復 · レコードライン乾燥！',
+        dryTrackAlertSub: '路面が乾き始めました。🔴ソフト / 🟡ミディアムへの交換チャンス！',
+        distSprint3: '3周',
+        distShort: 'ショート',
+        distMedium: 'ミディアム',
+        distLong: 'ロング',
+        lapUnitShort: '周',
+        boxReqOff: '🔧ピット予約',
+        boxReqOn: '🔧予約中:ON',
+        pitAutoTitle: '自動ピット走行中 · 交換タイヤを選択',
+        pitAutoEntering: '🤖 ピットレーンへ自動進入中...',
+        pitAutoServicing: '🔧 タイヤ交換作業中',
+        pitAutoExiting: '🟢 交換完了 · コースへ自動合流中',
+        pitShortSoft: 'グリップ+8%',
+        pitShortMed: '標準バランス',
+        pitShortHard: '高耐久',
+        pitShortInter: '小雨・半濡',
+        pitShortWet: '豪雨排水',
+        careerWeatherLockedDesc: '🏆 キャリアモードは常に「変動天候（各コースの現実の降雨確率）」が適用されます',
+        toastBoxReqOn: '🔧 今周の自動ピットインを予約しました',
+        toastBoxReqOnSub: '最終コーナー出口で自動的にピットへ入りタイヤ選択画面が開きます！',
+        toastBoxReqOff: 'ピット予約を解除しました',
+        toastBoxReqOffSub: '手動で右側 🔧 PIT IN へ寄っても自動ピットが作動します',
       },
       en: {
         langBtn: '🌐 EN',
@@ -1122,7 +1619,90 @@
         pauseTitle: 'GAME PAUSED',
         resumeBtn: 'Resume Race',
         restartBtn: 'Restart Race',
-
+        rdCenterTitle: '🔧 R&D GARAGE UPGRADE CENTER',
+        rdCenterSub: 'Upgrades apply directly to your Career car (Max Lv.5)',
+        rdEngineTitle: '⚡ Engine Unit',
+        rdEngineDesc: 'Boosts straight-line top speed',
+        rdAeroTitle: '🌀 Aerodynamics',
+        rdAeroDesc: 'Increases high-speed corner grip',
+        rdChassisTitle: '🪶 Lightweight',
+        rdChassisDesc: 'Improves acceleration & braking',
+        rdSteeringTitle: '🔥 Drift & Steer',
+        rdSteeringDesc: 'Sharper turn-in & drift momentum',
+        rdUpgradeVerb: '⬆️ Upgrade',
+        rdMaxLabel: '✔ MAX LEVEL',
+        standingsTitle: '🏆 SEASON DRIVER STANDINGS',
+        resPointsEarnedLabel: 'Points & Season Rank:',
+        toastUpgraded: '🔧 R&D Upgraded: ',
+        steerModeBtn: '🎮Steer:Btn',
+        steerModeSwipe: '🧭Steer:Direct',
+        steerModeLabel: '📱 Touch Steer:',
+        menuSteerButtons: '🎮 L/R Buttons',
+        menuSteerSwipe: '🧭 360° Direct Point',
+        menuSteerButtonsDesc: 'Classic large Left/Right buttons for crisp tap steering',
+        menuSteerSwipeDesc: 'Hot Slide style! Point your finger in any 360° direction to aim the car nose',
+        swipePadTitle: '👆 SWIPE STEER',
+        swipePadSub: 'Slide L/R for fine analog steering angle',
+        toastSteerButtons: 'Steering Mode: 🎮 L/R Buttons',
+        toastSteerSwipe: 'Steering Mode: 🧭 360° Direct Point',
+        lightsReady: '🏁 GRID READY · STAND BY',
+        lights1: '🔴 ○ ○ · RED LIGHT 1',
+        lights2: '🔴 🔴 ○ · RED LIGHT 2',
+        lights3: '🔴 🔴 🔴 · HOLD THROTTLE!',
+        lightsGo: '🟢 LIGHTS OUT · GO!',
+        tireCompoundLabel: '🛞 Starting Tire:',
+        tireSoftBtn: '🔴 Soft (S)',
+        tireMedBtn: '🟡 Medium (M)',
+        tireHardBtn: '⚪ Hard (H)',
+        tireSoftDesc: '+8% Grip & +4% Accel, faster wear. Best for sprints or undercut pit stops (Pit Lane on main straight right)',
+        tireMedDesc: 'Balanced grip & durability for 3-5 lap Grand Prix (Drive into right-side Pit Lane on main straight)',
+        tireHardDesc: 'Ultra-durable (-42% wear) with slightly firmer grip for 0-stop endurance runs',
+        carHybridName: 'Hybrid · Apex Hybrid',
+        carHybridDesc: 'Turbo V6 + ERS electric torque with -18% tire wear rate. Built for strategic GP racing.',
+        pitStopToastTitle: '🔧 PIT STOP COMPLETE!',
+        pitStopToastSub: 'Mounted fresh 100% tires: ',
+        pitTireChangedToast: '🔧 Next Pit Compound set to: ',
+        boxBoxWarnTitle: '⚠️ BOX BOX! TIRES WORN OUT',
+        boxBoxWarnSub: 'Pull right into the PIT LANE on the main straight for fresh tires!',
+        weatherModeLabel: '🌦️ Weather:',
+        weatherDryBtn: '☀️ Dry',
+        weatherDynBtn: '🌦️ Dynamic',
+        weatherWetBtn: '🌧️ Heavy Rain',
+        weatherDryDesc: 'Bone-dry tarmac (0% wetness) for maximum slick tire performance',
+        weatherDynDesc: 'Live changing weather! Watch track wetness and pit for 🟢Inter or 🔵Wet tires when rain hits',
+        weatherWetDesc: 'Starts in heavy rain (80% wetness). 🟢Inter or 🔵Full Wet tires strongly recommended',
+        tireInterBtn: '🟢 Inter (I)',
+        tireWetBtn: '🔵 Wet (W)',
+        tireInterDesc: 'Built for damp/light rain (20%~65% wetness). Overheats if used on a dry track',
+        tireWetDesc: 'Maximum water dispersal for heavy rain (>55% wetness). Prevents aquaplaning',
+        singaporeBadge: '★★★ NIGHT STREET',
+        singaporeName: 'Singapore · Marina Bay',
+        singaporeDesc: 'Iconic F1 night street circuit! Floodlit boulevards, Anderson Bridge & harbourfront 90° turns.',
+        rainAlertTitle: '🌧️ RAIN FALLING · TRACK WET!',
+        rainAlertSub: 'Slicks losing grip! Select 🟢I or 🔵W and box on the main straight right!',
+        dryTrackAlertTitle: '☀️ TRACK DRYING · SLICK WINDOW!',
+        dryTrackAlertSub: 'Standing water clearing! Pit for 🔴Soft or 🟡Medium slicks!',
+        distSprint3: '3 Laps',
+        distShort: 'Short',
+        distMedium: 'Medium',
+        distLong: 'Long',
+        lapUnitShort: 'L',
+        boxReqOff: '🔧Box Request',
+        boxReqOn: '🔧Box:ARMED',
+        pitAutoTitle: 'PIT AUTOPILOT · SELECT NEXT TIRE',
+        pitAutoEntering: '🤖 Auto-Driving into Pit Lane...',
+        pitAutoServicing: '🔧 Pit Crew Changing Tires',
+        pitAutoExiting: '🟢 Done! Auto-Merging onto Track',
+        pitShortSoft: '+8% Grip',
+        pitShortMed: 'Balanced',
+        pitShortHard: 'Long Life',
+        pitShortInter: 'Damp/Light',
+        pitShortWet: 'Heavy Rain',
+        careerWeatherLockedDesc: '🏆 Career Mode enforces Dynamic Weather based on each circuit real-world rain probability',
+        toastBoxReqOn: '🔧 Pit Stop Armed (BOX THIS LAP)',
+        toastBoxReqOnSub: 'Autopilot will steer into the Pit Lane at the final turn exit!',
+        toastBoxReqOff: 'Pit Stop Request Cancelled',
+        toastBoxReqOffSub: 'You can still steer right into 🔧 PIT IN to trigger Pit Autopilot',
       }
     };
 
@@ -1186,6 +1766,17 @@
       document.getElementById('cardBadge-spa').textContent = dict.spaBadge;
       document.getElementById('cardName-spa').textContent = dict.spaName;
       document.getElementById('cardDesc-spa').textContent = dict.spaDesc;
+      if (document.getElementById('cardName-singapore')) {
+        document.getElementById('cardBadge-singapore').textContent = dict.singaporeBadge || '★★★ 夜賽 NIGHT';
+        document.getElementById('cardName-singapore').textContent = dict.singaporeName || '新加坡 · Singapore';
+        document.getElementById('cardDesc-singapore').textContent = dict.singaporeDesc || '';
+      }
+      if (document.getElementById('weatherBtn-dry')) {
+        document.getElementById('weatherBtn-dry').textContent = dict.weatherDryBtn || '☀️ 晴朗乾地';
+        document.getElementById('weatherBtn-dynamic').textContent = dict.weatherDynBtn || '🌦️ 動態天氣';
+        document.getElementById('weatherBtn-wet').textContent = dict.weatherWetBtn || '🌧️ 傾盆大雨';
+      }
+      if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
 
       // Localize Car Cards
       document.getElementById('carName-balanced').textContent = dict.carBalancedName;
@@ -1194,6 +1785,11 @@
       document.getElementById('carDesc-speed').textContent = dict.carSpeedDesc;
       document.getElementById('carName-drift').textContent = dict.carDriftName;
       document.getElementById('carDesc-drift').textContent = dict.carDriftDesc;
+      if (document.getElementById('carName-hybrid')) {
+        document.getElementById('carName-hybrid').textContent = dict.carHybridName || '混動型 · Apex Hybrid';
+        document.getElementById('carDesc-hybrid').textContent = dict.carHybridDesc || '';
+      }
+      if (typeof updateTireSelectionUI === 'function') updateTireSelectionUI();
 
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
@@ -1201,10 +1797,14 @@
       });
 
       updateAutoGasUI();
+      if (typeof updateSteerModeUI === 'function') updateSteerModeUI();
+      if (typeof updateStartLightsUI === 'function') updateStartLightsUI();
       updatePadHeightUI();
       updateMuteUI();
       updateGhostUI();
       updateAiDiffUI();
+      if (typeof updateDistanceButtonsUI === 'function') updateDistanceButtonsUI();
+      if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
       updateMenuSummary();
     }
 
@@ -1320,8 +1920,25 @@
       }
     };
 
-    const SEASON_CALENDAR = ['imola', 'monaco', 'silverstone', 'spa', 'suzuka', 'interlagos'];
+    const SEASON_CALENDAR = ['imola', 'monaco', 'silverstone', 'spa', 'suzuka', 'singapore', 'interlagos'];
     const CAREER_STORAGE_KEY = 'pixel_gp_career_v1';
+
+    const RD_UPGRADE_COSTS = [15000, 25000, 40000, 60000, 85000];
+    const RD_MAX_LEVEL = 5;
+    const F1_POINTS_SCALE = [25, 18, 15, 12, 10, 8, 6, 4];
+
+    function getDefaultStandings() {
+      return {
+        player: 0,
+        'Silver Arrow': 0,
+        'Verde Bull': 0,
+        'Papaya GT': 0,
+        'Alpine Blue': 0,
+        'Viola Stealth': 0,
+        'Carbon Apex': 0,
+        'Scuderia Corsa': 0
+      };
+    }
 
     let careerData = {
       teamId: 'tier3_stealth',
@@ -1330,7 +1947,16 @@
       winsCount: 0,
       podiumsCount: 0,
       currentRoundIdx: 0,
-      signedTeams: ['tier3_stealth']
+      seasonRacesCompleted: 0,
+      championshipsCount: 0,
+      signedTeams: ['tier3_stealth'],
+      upgrades: {
+        engine: 0,
+        aero: 0,
+        chassis: 0,
+        steering: 0
+      },
+      standings: getDefaultStandings()
     };
 
     function loadCareerData() {
@@ -1339,7 +1965,21 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && typeof parsed.cash === 'number') {
-            careerData = { ...careerData, ...parsed };
+            careerData = {
+              ...careerData,
+              ...parsed,
+              upgrades: {
+                engine: 0,
+                aero: 0,
+                chassis: 0,
+                steering: 0,
+                ...(parsed.upgrades || {})
+              },
+              standings: {
+                ...getDefaultStandings(),
+                ...(parsed.standings || {})
+              }
+            };
           }
         }
       } catch (e) {}
@@ -1356,7 +1996,18 @@
     function getPlayerSpec() {
       if (selectedGameMode === 'career') {
         const team = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
-        return team.spec;
+        const base = team.spec;
+        const upg = careerData.upgrades || { engine: 0, aero: 0, chassis: 0, steering: 0 };
+        return {
+          ...base,
+          maxSpeed: base.maxSpeed + (upg.engine || 0) * 14,
+          accel: base.accel + (upg.chassis || 0) * 18,
+          brake: base.brake + (upg.chassis || 0) * 15,
+          gripTraction: base.gripTraction + (upg.aero || 0) * 0.45,
+          turnSpeed: base.turnSpeed + (upg.steering || 0) * 0.10,
+          driftTraction: base.driftTraction + (upg.steering || 0) * 0.12,
+          driftRetention: Math.min(0.999, base.driftRetention + (upg.steering || 0) * 0.0008)
+        };
       }
       return CAR_SPECS[selectedCarKey];
     }
@@ -1411,9 +2062,264 @@
         gripTraction: 8.5,
         driftTraction: 2.95,
         driftThreshold: 295,
-        driftRetention: 0.997
+        driftRetention: 0.997,
+        tireWearMod: 1.05
+      },
+      hybrid: {
+        id: 'hybrid',
+        name: '混動型 · Apex Hybrid',
+        shortName: '混動型',
+        colorMain: '#06b6d4',
+        colorStripe: '#fde047',
+        colorSpoiler: '#0e7490',
+        maxSpeed: 675,
+        accel: 505,
+        brake: 665,
+        turnSpeed: 3.30,
+        gripTraction: 11.2,
+        driftTraction: 2.55,
+        driftThreshold: 365,
+        driftRetention: 0.994,
+        tireWearMod: 0.82
       }
     };
+
+    // v0.9.0 Tire Compounds & Pit Stop Strategy Config
+    const TIRE_COMPOUNDS = {
+      soft: {
+        id: 'soft',
+        code: 'S',
+        icon: '🔴',
+        color: '#ef4444',
+        badgeClass: 'px-1 py-0.5 rounded bg-red-500/25 text-red-300 border border-red-400/70 font-black',
+        gripMult: 1.08,
+        accelMult: 1.04,
+        speedMult: 1.01,
+        wearRate: 1.05,
+        isWetTire: false
+      },
+      medium: {
+        id: 'medium',
+        code: 'M',
+        icon: '🟡',
+        color: '#facc15',
+        badgeClass: 'px-1 py-0.5 rounded bg-amber-500/25 text-amber-300 border border-amber-400/70 font-black',
+        gripMult: 1.00,
+        accelMult: 1.00,
+        speedMult: 1.00,
+        wearRate: 0.74,
+        isWetTire: false
+      },
+      hard: {
+        id: 'hard',
+        code: 'H',
+        icon: '⚪',
+        color: '#f8fafc',
+        badgeClass: 'px-1 py-0.5 rounded bg-slate-200/20 text-slate-100 border border-slate-300/70 font-black',
+        gripMult: 0.94,
+        accelMult: 0.97,
+        speedMult: 0.99,
+        wearRate: 0.46,
+        isWetTire: false
+      },
+      inter: {
+        id: 'inter',
+        code: 'I',
+        icon: '🟢',
+        color: '#22c55e',
+        badgeClass: 'px-1 py-0.5 rounded bg-emerald-500/25 text-emerald-300 border border-emerald-400/70 font-black',
+        gripMult: 0.96,
+        accelMult: 0.98,
+        speedMult: 0.98,
+        wearRate: 0.92,
+        isWetTire: true
+      },
+      wet: {
+        id: 'wet',
+        code: 'W',
+        icon: '🔵',
+        color: '#38bdf8',
+        badgeClass: 'px-1 py-0.5 rounded bg-sky-500/25 text-sky-300 border border-sky-400/70 font-black',
+        gripMult: 0.91,
+        accelMult: 0.95,
+        speedMult: 0.96,
+        wearRate: 0.78,
+        isWetTire: true
+      }
+    };
+    const TIRE_ORDER = ['soft', 'medium', 'hard', 'inter', 'wet'];
+    let selectedTireCompound = 'medium';
+    let selectedWeatherMode = 'dynamic'; // 'dry', 'dynamic', 'wet'
+
+    const weatherState = {
+      mode: 'dynamic',
+      condition: 'clear',     // 'clear', 'overcast', 'light_rain', 'heavy_rain'
+      nextForecast: 'overcast',
+      trackWetness: 0.0,      // 0 to 100 (%)
+      phaseTimer: 14.0,
+      rainIntensity: 0.0,     // 0.0 to 1.0
+      targetRainIntensity: 0.0,
+      wettingRate: 3.5,
+      dryingRate: 2.2,
+      warnedWetTrack: false,
+      warnedDryTrack: true,
+      raindrops: []
+    };
+
+    // Real-World Historical F1 Circuit Rain Probabilities
+    const TRACK_RAIN_PROB = {
+      spa: 0.45,         // 45% Ardennes microclimate (highest rain frequency in F1)
+      interlagos: 0.40,  // 40% São Paulo tropical afternoon thunderstorms
+      silverstone: 0.35, // 35% British changeable showers
+      suzuka: 0.30,      // 30% Japanese Pacific autumn rain fronts
+      imola: 0.22,       // 22% Emilia-Romagna spring showers
+      singapore: 0.18,   // 18% Equatorial night humidity & passing showers
+      monaco: 0.12       // 12% Mediterranean Côte d'Azur sunny climate
+    };
+
+    function getActiveTrackRainProb() {
+      return TRACK_RAIN_PROB[selectedTrackKey] || 0.25;
+    }
+
+    function pickNextRandomWeather(curCond) {
+      const rainProb = getActiveTrackRainProb(); // 0.12 (Monaco) to 0.45 (Spa)
+      const r = Math.random();
+      if (curCond === 'clear') {
+        // Higher rainProb -> higher chance to cloud over or start raining
+        if (r < (1.0 - rainProb * 1.35)) return 'clear';
+        if (r < (1.0 - rainProb * 0.45)) return 'overcast';
+        return 'light_rain';
+      } else if (curCond === 'overcast') {
+        if (r < (1.0 - rainProb * 1.55)) return 'clear';
+        if (r < (1.0 - rainProb * 0.55)) return 'overcast';
+        if (r < (1.0 - rainProb * 0.18)) return 'light_rain';
+        return 'heavy_rain';
+      } else if (curCond === 'light_rain') {
+        if (r < (0.48 - rainProb * 0.45)) return 'overcast';
+        if (r < (0.82 - rainProb * 0.35)) return 'light_rain';
+        return 'heavy_rain';
+      } else {
+        // heavy_rain
+        if (r < 0.28) return 'overcast';
+        if (r < (0.78 - rainProb * 0.30)) return 'light_rain';
+        return 'heavy_rain';
+      }
+    }
+
+    function applyWeatherConditionParams(cond) {
+      weatherState.condition = cond;
+      weatherState.nextForecast = pickNextRandomWeather(cond);
+      weatherState.phaseTimer = 9.0 + Math.random() * 15.0; // Random 9s ~ 24s per phase
+      weatherState.wettingRate = 2.4 + Math.random() * 3.2;
+      weatherState.dryingRate = 1.6 + Math.random() * 2.4;
+      if (cond === 'clear') {
+        weatherState.targetRainIntensity = 0.0;
+      } else if (cond === 'overcast') {
+        weatherState.targetRainIntensity = Math.random() < 0.35 ? 0.12 : 0.0;
+      } else if (cond === 'light_rain') {
+        weatherState.targetRainIntensity = 0.32 + Math.random() * 0.30;
+      } else {
+        weatherState.targetRainIntensity = 0.75 + Math.random() * 0.25;
+      }
+    }
+
+    for (let r = 0; r < 95; r++) {
+      weatherState.raindrops.push({
+        x: Math.random() * 640,
+        y: Math.random() * 360,
+        len: 9 + Math.random() * 8,
+        speed: 420 + Math.random() * 180
+      });
+    }
+
+    function computeTireWeatherPerformance(compoundKey, wetnessPct) {
+      const w = wetnessPct / 100; // 0.0 (bone dry) to 1.0 (monsoon)
+      if (compoundKey === 'inter') {
+        // Inter peaks between 20% and 65% wetness
+        const distFromSweet = Math.abs(w - 0.42);
+        const wetGripMod = Math.max(0.78, 1.10 - distFromSweet * 0.48);
+        const wetSpeedMod = w > 0.15 ? 1.02 : 0.96;
+        // Overheats on bone-dry tarmac (<15%)
+        const tempWearMod = w < 0.15 ? 1.65 : 0.88;
+        return { gripMod: wetGripMod, speedMod: wetSpeedMod, wearMod: tempWearMod };
+      }
+      if (compoundKey === 'wet') {
+        // Full Wet excels at >55% wetness; sluggish & overheats when dry
+        const wetGripMod = w >= 0.50 ? (1.06 + (w - 0.50) * 0.14) : (0.76 + w * 0.55);
+        const wetSpeedMod = w >= 0.50 ? 1.03 : 0.93;
+        const tempWearMod = w < 0.25 ? 1.85 : 0.75;
+        return { gripMod: wetGripMod, speedMod: wetSpeedMod, wearMod: tempWearMod };
+      }
+      // Slick tires (Soft, Medium, Hard): optimal at 0~20% wetness, aquaplane above 30%
+      if (w <= 0.18) {
+        return { gripMod: 1.0 - w * 0.25, speedMod: 1.0 - w * 0.10, wearMod: 1.0 };
+      } else if (w <= 0.50) {
+        // Crossover zone where slicks lose grip rapidly
+        const t = (w - 0.18) / 0.32;
+        return { gripMod: 0.955 - t * 0.28, speedMod: 0.98 - t * 0.10, wearMod: 0.92 };
+      } else {
+        // Heavy standing water aquaplaning on slicks
+        const t = (w - 0.50) / 0.50;
+        return { gripMod: Math.max(0.48, 0.675 - t * 0.195), speedMod: Math.max(0.78, 0.88 - t * 0.10), wearMod: 0.85 };
+      }
+    }
+
+    function updateWeatherHudUI() {
+      const badge = document.getElementById('hudWeatherBadge');
+      if (!badge) return;
+      const wetPct = Math.round(weatherState.trackWetness);
+      const forecastIcons = { clear: '☀️', overcast: '⛅', light_rain: '🌦️', heavy_rain: '⛈️' };
+      const nextIcon = weatherState.mode === 'dynamic' ? ` →${forecastIcons[weatherState.nextForecast] || '⛅'}` : '';
+      if (weatherState.condition === 'heavy_rain' || wetPct >= 58) {
+        badge.textContent = `⛈️ WET ${wetPct}%${nextIcon}`;
+        badge.className = 'px-1.5 py-0.5 rounded font-extrabold bg-sky-500/30 text-sky-200 border border-sky-400 truncate w-full text-center';
+      } else if (weatherState.condition === 'light_rain' || wetPct >= 20) {
+        badge.textContent = `🌦️ DAMP ${wetPct}%${nextIcon}`;
+        badge.className = 'px-1.5 py-0.5 rounded font-extrabold bg-emerald-500/25 text-emerald-200 border border-emerald-400/70 truncate w-full text-center';
+      } else if (weatherState.condition === 'overcast') {
+        badge.textContent = `⛅ CLOUD ${wetPct}%${nextIcon}`;
+        badge.className = 'px-1.5 py-0.5 rounded font-bold bg-slate-700/60 text-slate-200 border border-slate-500 truncate w-full text-center';
+      } else {
+        badge.textContent = `☀️ DRY ${wetPct}%${nextIcon}`;
+        badge.className = 'px-1.5 py-0.5 rounded font-bold bg-amber-500/15 text-amber-200 border border-amber-400/40 truncate w-full text-center';
+      }
+    }
+
+    function updateWeatherSelectionUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      if (selectedGameMode === 'career') {
+        selectedWeatherMode = 'dynamic';
+      }
+      const rainPct = Math.round(getActiveTrackRainProb() * 100);
+      document.querySelectorAll('.weather-mode-btn').forEach(btn => {
+        const wKey = btn.getAttribute('data-weather');
+        const isSel = wKey === selectedWeatherMode;
+        const isLockedByCareer = (selectedGameMode === 'career' && wKey !== 'dynamic');
+        const activeStyle = wKey === 'dry'
+          ? 'border-amber-400 bg-amber-500 text-slate-950'
+          : (wKey === 'dynamic' ? 'border-cyan-300 bg-cyan-400 text-slate-950' : 'border-sky-400 bg-sky-500 text-white');
+        if (isLockedByCareer) {
+          btn.className = 'weather-mode-btn px-2.5 py-0.5 rounded bg-slate-900/60 text-slate-600 text-xs font-bold mono border border-slate-800 cursor-not-allowed whitespace-nowrap';
+        } else {
+          btn.className = isSel
+            ? `weather-mode-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono border ${activeStyle} shadow transition whitespace-nowrap`
+            : 'weather-mode-btn px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 transition whitespace-nowrap';
+        }
+      });
+      const descEl = document.getElementById('weatherModeDesc');
+      if (descEl) {
+        const probTag = currentLang === 'en'
+          ? ` [Real Track Rain Chance: ${rainPct}%]`
+          : (currentLang === 'ja' ? ` [コース現実降雨確率: ${rainPct}%]` : ` [本賽道現實降雨率: ${rainPct}%]`);
+        if (selectedGameMode === 'career') {
+          descEl.textContent = (dict.careerWeatherLockedDesc || '🏆 生涯模式固定採用動態天氣') + probTag;
+        } else {
+          descEl.textContent = (selectedWeatherMode === 'dry'
+            ? (dict.weatherDryDesc || '')
+            : (selectedWeatherMode === 'dynamic' ? (dict.weatherDynDesc || '') + probTag : (dict.weatherWetDesc || '')));
+        }
+      }
+    }
 
     // 7 Distinct AI Opponents for 8-Car Grid
     const AI_OPPONENTS_DATA = [
@@ -1691,6 +2597,44 @@
           { x: 1760, y: 1860, sector: 3, drs: false, turnTag: 'T18 CHICANE', chevron: 'R', name: 'T18 · Bus Stop Chicane Entry (Hard Right)' },
           { x: 1520, y: 1680, sector: 3, drs: true,  turnTag: 'T19',    chevron: 'L', name: 'T19 · Bus Stop Chicane Exit (To Finish!)' }
         ])
+      },
+
+      singapore: {
+        id: 'singapore',
+        shortTitle: 'SINGAPORE',
+        badgeText: 'SINGAPORE',
+        badgeColor: 'bg-fuchsia-600',
+        name: '新加坡賽道 Singapore',
+        fullName: 'Marina Bay Street Circuit · Singapore Night GP',
+        difficultyLabel: '夜賽 NIGHT',
+        trackWidth: 304,
+        curbWidth: 26,
+        groundBg: '#070b19',
+        groundTile: '#0b1124',
+        runoffColor: '#1e1b4b',
+        sceneryType: 'singapore',
+        waypoints: scaleWaypoints([
+          { x: 2400, y: 420,  sector: 1, drs: true,  turnTag: 'FINISH', name: 'Republic Boulevard Pit Straight (Night DRS)' },
+          { x: 1480, y: 420,  sector: 1, drs: true,  turnTag: 'T1 SHEARES', chevron: 'L', name: 'T1 · Sheares (Braking 90° Left)' },
+          { x: 1180, y: 760,  sector: 1, drs: false, turnTag: 'T2',     chevron: 'R', name: 'T2 · Turn 2 Switchback (Right)' },
+          { x: 680,  y: 820,  sector: 1, drs: false, turnTag: 'T3',     chevron: 'L', name: 'T3 · Turn 3 Hairpin Exit (Left)' },
+          { x: 420,  y: 1350, sector: 1, drs: true,  turnTag: 'T4',     name: 'T4 · Republic Blvd Approach' },
+          { x: 460,  y: 1980, sector: 1, drs: true,  turnTag: 'T5 RAFFLES', chevron: 'L', name: 'T5 · Raffles Boulevard Entry (DRS Zone 1)' },
+          { x: 1150, y: 2380, sector: 1, drs: true,  turnTag: 'T6',     name: 'T6 · Raffles High-Speed Kink (Full Throttle)' },
+          { x: 1950, y: 2650, sector: 2, drs: false, turnTag: 'T7 MEMORIAL', chevron: 'L', name: 'T7 · Memorial Corner (Hard Brake 90° Left)' },
+          { x: 2580, y: 2220, sector: 2, drs: false, turnTag: 'T8',     chevron: 'R', name: 'T8 · Nicoll Highway Entry (90° Right)' },
+          { x: 3250, y: 2560, sector: 2, drs: false, turnTag: 'T9 PADANG', chevron: 'L', name: 'T9 · St Andrews Road / Padang (90° Left)' },
+          { x: 3980, y: 2620, sector: 2, drs: false, turnTag: 'T10 SLING', chevron: 'L', name: 'T10 · Singapore Sling Chicane' },
+          { x: 4520, y: 2240, sector: 2, drs: false, turnTag: 'T11',    chevron: 'L', name: 'T11 · Fullerton Approach (Left)' },
+          { x: 4480, y: 1620, sector: 2, drs: false, turnTag: 'T12 BRIDGE', chevron: 'L', name: 'T12 · Anderson Bridge Entry' },
+          { x: 3820, y: 1520, sector: 2, drs: false, turnTag: 'T13 HAIRPIN', chevron: 'R', name: 'T13 · Fullerton Hairpin (180° Right)' },
+          { x: 3180, y: 1680, sector: 3, drs: true,  turnTag: 'T14 ESPLANADE', chevron: 'R', name: 'T14 · Esplanade Drive (DRS Zone 2)' },
+          { x: 2180, y: 1620, sector: 3, drs: false, turnTag: 'T15 BAY', chevron: 'R', name: 'T15 · Marina Bay Sands Approach' },
+          { x: 1720, y: 1220, sector: 3, drs: false, turnTag: 'T16 FLOAT', chevron: 'R', name: 'T16 · The Float Chicane Entry (90° Right)' },
+          { x: 2480, y: 1060, sector: 3, drs: false, turnTag: 'T17',    chevron: 'L', name: 'T17 · Bay Grandstand Tunnel Exit' },
+          { x: 3480, y: 960,  sector: 3, drs: false, turnTag: 'T18',    chevron: 'L', name: 'T18 · Flyer Sweep Entry (Left)' },
+          { x: 3380, y: 460,  sector: 3, drs: true,  turnTag: 'T19 FLYER', chevron: 'L', name: 'T19 · Singapore Flyer Last Corner (To Finish!)' }
+        ])
       }
     };
 
@@ -1755,12 +2699,88 @@
       return { pts, bounds: { minX, maxX, minY, maxY } };
     }
 
+    // Build a real, physically separated Branched Pit Lane alongside the main straight
+    // (Pit Entry ramp -> Separated Pit Lane road behind Pit Wall with Team Garages & Pit Crew Box -> Pit Exit ramp)
+    function buildPitLaneForTrack(pts, trackWidth) {
+      const N = pts.length;
+      const pitPts = [];
+      const startOffsetIdx = -30; // Branches off 30 spline steps before Start/Finish line
+      const endOffsetIdx = 24;    // Merges back 24 spline steps after Start/Finish line
+      const totalSteps = endOffsetIdx - startOffsetIdx; // 54 steps
+      const laneLateralOffset = trackWidth * 0.86; // Separated ~270px to the right of main centerline!
+      const edgeOffset = trackWidth * 0.26;
+
+      for (let step = 0; step <= totalSteps; step++) {
+        const k = startOffsetIdx + step;
+        const trackIdx = (k + N) % N;
+        const tp = pts[trackIdx];
+
+        let lat = laneLateralOffset;
+        let zone = 'lane'; // 'entry', 'lane', 'box', 'exit'
+        if (step < 12) {
+          const u = step / 12;
+          const smooth = 0.5 - 0.5 * Math.cos(Math.PI * u);
+          lat = edgeOffset + (laneLateralOffset - edgeOffset) * smooth;
+          zone = 'entry';
+        } else if (step > totalSteps - 12) {
+          const u = (totalSteps - step) / 12;
+          const smooth = 0.5 - 0.5 * Math.cos(Math.PI * u);
+          lat = edgeOffset + (laneLateralOffset - edgeOffset) * smooth;
+          zone = 'exit';
+        } else if (step >= 23 && step <= 34) {
+          zone = 'box';
+        }
+
+        pitPts.push({
+          x: tp.x + tp.nx * lat,
+          y: tp.y + tp.ny * lat,
+          tx: tp.tx,
+          ty: tp.ty,
+          nx: tp.nx,
+          ny: tp.ny,
+          trackIdx,
+          step,
+          zone,
+          lat
+        });
+      }
+      // Compute exact tangent vectors along the curved Pit Entry / Exit ramps
+      for (let i = 0; i < pitPts.length; i++) {
+        const pPrev = pitPts[Math.max(0, i - 1)];
+        const pNext = pitPts[Math.min(pitPts.length - 1, i + 1)];
+        const dx = pNext.x - pPrev.x;
+        const dy = pNext.y - pPrev.y;
+        const len = Math.hypot(dx, dy) || 1;
+        pitPts[i].ptx = dx / len;
+        pitPts[i].pty = dy / len;
+      }
+      return pitPts;
+    }
+
+    // Track-Length-Proportional Laps Configuration (3圈 / 短程 Short / 中程 Medium / 長程 Long)
+    const TRACK_PROPORTIONAL_LAPS = {
+      imola:       { sprint3: 3, short: 6, medium: 10, long: 15 },
+      interlagos:  { sprint3: 3, short: 5, medium: 9,  long: 13 },
+      monaco:      { sprint3: 3, short: 5, medium: 8,  long: 12 },
+      suzuka:      { sprint3: 3, short: 5, medium: 8,  long: 12 },
+      singapore:   { sprint3: 3, short: 4, medium: 7,  long: 11 },
+      silverstone: { sprint3: 3, short: 4, medium: 7,  long: 11 },
+      spa:         { sprint3: 3, short: 4, medium: 6,  long: 10 }
+    };
+    let selectedDistanceMode = 'sprint3'; // 'sprint3', 'short', 'medium', 'long'
+
+    function getTrackProportionalLaps(trackKey, distMode) {
+      const table = TRACK_PROPORTIONAL_LAPS[trackKey] || TRACK_PROPORTIONAL_LAPS.imola;
+      return table[distMode] || 3;
+    }
+
     const compiledTracks = {};
     Object.keys(TRACKS).forEach(key => {
       const cfg = TRACKS[key];
       const { pts, bounds } = buildSplineTrack(cfg.waypoints, 22);
+      const pitPts = buildPitLaneForTrack(pts, cfg.trackWidth);
       const scenery = [];
-      const seedMap = { imola: 108, suzuka: 204, monaco: 309, interlagos: 415, silverstone: 522, spa: 637 };
+      const seedMap = { imola: 108, suzuka: 204, monaco: 309, interlagos: 415, silverstone: 522, spa: 637, singapore: 749 };
       let seed = seedMap[key] || 108;
       function rand() {
         seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -1774,15 +2794,23 @@
           const d = Math.hypot(rx - pts[j].x, ry - pts[j].y);
           if (d < minDist) minDist = d;
         }
-        if (minDist > cfg.trackWidth * 0.92) {
+        // Also ensure scenery never spawns on top of the branched Pit Lane & Pit Garages!
+        let minPitDist = Infinity;
+        for (let j = 0; j < pitPts.length; j += 2) {
+          const d = Math.hypot(rx - pitPts[j].x, ry - pitPts[j].y);
+          if (d < minPitDist) minPitDist = d;
+        }
+        if (minDist > cfg.trackWidth * 0.92 && minPitDist > 195) {
           scenery.push({
             x: rx,
             y: ry,
             type: rand() > 0.22 ? 'primary' : 'grandstand',
             size: 18 + Math.floor(rand() * 16),
-            shade: cfg.sceneryType === 'monaco'
-              ? (rand() > 0.5 ? '#e2e8f0' : '#94a3b8')
-              : (rand() > 0.5 ? '#15803d' : '#166534')
+            shade: cfg.sceneryType === 'singapore'
+              ? (rand() > 0.5 ? '#c026d3' : '#06b6d4')
+              : (cfg.sceneryType === 'monaco'
+                ? (rand() > 0.5 ? '#e2e8f0' : '#94a3b8')
+                : (rand() > 0.5 ? '#15803d' : '#166534'))
           });
         }
       }
@@ -1793,7 +2821,7 @@
           bridgeEnd = Math.min(pts.length - 1, i + 14);
         }
       }
-      compiledTracks[key] = { cfg, pts, bounds, scenery, bridgeStart, bridgeEnd, bestLapMs: null, ghostData: null };
+      compiledTracks[key] = { cfg, pts, pitPts, bounds, scenery, bridgeStart, bridgeEnd, bestLapMs: null, ghostData: null };
     });
 
     function isCarOnOverpassBridge(splineIdx, activeTrack) {
@@ -1943,8 +2971,229 @@
       lap: 1,
       totalProgress: 0,
       finished: false,
-      totalTimeMs: 0
+      totalTimeMs: 0,
+      tireCompound: 'medium',
+      nextTireCompound: 'soft',
+      tireWear: 100.0,
+      pitStopTimer: 0,
+      pitCooldown: 0,
+      pitStopsCount: 0,
+      warnedBoxBox: false
     };
+
+    function getInitialTireAllocation() {
+      // Standard F1 Grand Prix weekend tire allocation (in sets):
+      // Starting tire consumes 1 set at race start, leaving the rest in the Pit Garage for Pit Stops!
+      const isLong = (selectedDistanceMode === 'long');
+      return {
+        soft: isLong ? 4 : 3,
+        medium: 3,
+        hard: 2,
+        inter: 3,
+        wet: 2
+      };
+    }
+
+    function getRecommendedTireForCurrentWeather() {
+      const inv = car.tireSetsLeft || { soft: 2, medium: 2, hard: 2, inter: 3, wet: 2 };
+      let preferred = 'medium';
+      if (weatherState.trackWetness >= 56) preferred = 'wet';
+      else if (weatherState.trackWetness >= 22) preferred = 'inter';
+      else {
+        const remainingLaps = Math.max(1, (raceState.totalLaps || 3) - (car.lap || 1) + 1);
+        if (remainingLaps <= 4) preferred = 'soft';
+        else if (remainingLaps <= 8) preferred = 'medium';
+        else preferred = 'hard';
+      }
+      if ((inv[preferred] || 0) > 0) return preferred;
+      // Fallback to any available compound with sets > 0
+      for (const k of ['medium', 'soft', 'hard', 'inter', 'wet']) {
+        if ((inv[k] || 0) > 0) return k;
+      }
+      return preferred;
+    }
+
+    function formatRemainingSetsText(count) {
+      if (currentLang === 'en') return count > 0 ? `${count} Left` : '0 Used Up';
+      if (currentLang === 'ja') return count > 0 ? `残 ${count} セット` : '残 0 (在庫切)';
+      return count > 0 ? `剩 ${count} 套` : '剩 0 套';
+    }
+
+    function applyPitTireMount(chosenKey) {
+      if (!TIRE_COMPOUNDS[chosenKey]) return false;
+      if (!car.tireSetsLeft) car.tireSetsLeft = getInitialTireAllocation();
+      // If we already mounted a tire during this exact pit stop, refund that 1 set before deducting the newly chosen set!
+      if (car.pitMountedThisStop && car.pitMountedCompoundKey) {
+        car.tireSetsLeft[car.pitMountedCompoundKey] = (car.tireSetsLeft[car.pitMountedCompoundKey] || 0) + 1;
+        car.pitMountedThisStop = false;
+      }
+      if ((car.tireSetsLeft[chosenKey] || 0) <= 0) {
+        return false;
+      }
+      car.tireSetsLeft[chosenKey] -= 1;
+      car.tireCompound = chosenKey;
+      car.nextTireCompound = chosenKey;
+      car.tireWear = 100.0; // Brand-new 100% fresh set (even when swapping Red Soft -> Red Soft!)
+      car.warnedBoxBox = false;
+      car.pitMountedThisStop = true;
+      car.pitMountedCompoundKey = chosenKey;
+      return true;
+    }
+
+    function updatePitAutopilotOverlayUI() {
+      const overlay = document.getElementById('pitTireSelectOverlay');
+      if (!overlay) return;
+      if (!car.inPitAutopilot) {
+        overlay.classList.add('hidden');
+        return;
+      }
+      overlay.classList.remove('hidden');
+      const dict = I18N[currentLang] || I18N.zh;
+      const titleEl = document.getElementById('pitOverlayTitle');
+      if (titleEl) titleEl.textContent = dict.pitAutoTitle || '自動進站駕駛中 · 請點選要換裝的輪胎';
+
+      const statusEl = document.getElementById('pitOverlayStatus');
+      const progBar = document.getElementById('pitOverlayProgressBar');
+      if (car.pitStopTimer > 0) {
+        if (statusEl) statusEl.textContent = `${dict.pitAutoServicing || '🔧 技師換胎作業中'} ${(car.pitStopTimer).toFixed(1)}s`;
+        if (progBar) progBar.style.width = `${Math.max(5, Math.min(100, (car.pitStopTimer / 2.2) * 100))}%`;
+      } else if (car.pitAutoPhase === 'exit') {
+        if (statusEl) statusEl.textContent = dict.pitAutoExiting || '🟢 換胎 100% 完成 · 自動駛出匯入賽道';
+        if (progBar) progBar.style.width = '100%';
+      } else {
+        if (statusEl) statusEl.textContent = dict.pitAutoEntering || '🤖 自動駛入 PIT LANE...';
+        if (progBar) progBar.style.width = '100%';
+      }
+
+      const recKey = getRecommendedTireForCurrentWeather();
+      const recComp = TIRE_COMPOUNDS[recKey] || TIRE_COMPOUNDS.medium;
+      const wetPct = Math.round(weatherState.trackWetness);
+      const hintEl = document.getElementById('pitOverlayWeatherHint');
+      if (hintEl) {
+        hintEl.textContent = currentLang === 'en'
+          ? `🌦️ Track Wetness: ${wetPct}% · ★ Recommended: ${recComp.icon} ${recComp.id.toUpperCase()} (Fresh 100%)`
+          : (currentLang === 'ja'
+            ? `🌦️ 現在の路面湿度: ${wetPct}% · ★ 推奨タイヤ: ${recComp.icon} ${recComp.id.toUpperCase()} (新品 100%)`
+            : `🌦️ 當前路面濕度: ${wetPct}% · ★ 技師推薦換裝: ${recComp.icon} ${recComp.id.toUpperCase()} (換上即恢復 100% 耐久)`);
+      }
+
+      const inv = car.tireSetsLeft || { soft: 2, medium: 2, hard: 2, inter: 3, wet: 2 };
+      document.querySelectorAll('.pit-live-tire-btn').forEach(btn => {
+        const tKey = btn.getAttribute('data-pit-select');
+        const isSel = (tKey === car.nextTireCompound);
+        // If already mounted during this stop, display the remaining sets AFTER this stop, or available sets before stop
+        const setsLeft = inv[tKey] ?? 0;
+        const countBadge = document.getElementById('pitCount-' + tKey);
+        if (countBadge) {
+          countBadge.textContent = formatRemainingSetsText(setsLeft);
+          if (setsLeft > 0) {
+            countBadge.className = isSel
+              ? 'mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500 text-slate-950 border border-emerald-200 mono whitespace-nowrap'
+              : 'mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-slate-800 text-emerald-300 border border-slate-600 mono whitespace-nowrap';
+          } else {
+            countBadge.className = 'mt-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-950/80 text-red-400 border border-red-800/70 mono whitespace-nowrap';
+          }
+        }
+        const recBadge = document.getElementById('pitRec-' + tKey);
+        if (recBadge) {
+          if (tKey === recKey && setsLeft > 0) recBadge.classList.remove('hidden');
+          else recBadge.classList.add('hidden');
+        }
+        if (setsLeft <= 0 && !isSel) {
+          btn.className = 'pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-950/60 border-2 border-slate-800 opacity-50 cursor-not-allowed flex flex-col items-center justify-between';
+        } else {
+          btn.className = isSel
+            ? 'pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-sky-500/30 border-2 border-amber-400 shadow-[0_0_12px_rgba(250,204,21,0.5)] flex flex-col items-center justify-between transition scale-105'
+            : 'pit-live-tire-btn rounded-xl p-1.5 sm:p-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-700 flex flex-col items-center justify-between transition active:scale-95';
+        }
+      });
+    }
+
+    function updateTireHudUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const comp = TIRE_COMPOUNDS[car.tireCompound] || TIRE_COMPOUNDS.medium;
+      const wearPct = Math.max(0, Math.min(100, Math.round(car.tireWear)));
+      const badgeEl = document.getElementById('hudTireBadge');
+      const barEl = document.getElementById('hudTireBar');
+      const nextBtnEl = document.getElementById('btnCyclePitTire');
+
+      if (badgeEl) {
+        if (car.inPitAutopilot) {
+          badgeEl.textContent = car.pitStopTimer > 0 ? `🔧 PIT ${(car.pitStopTimer).toFixed(1)}s` : '🤖 AUTO PIT';
+          badgeEl.className = 'px-1 py-0.5 rounded bg-sky-500/30 text-sky-200 border border-sky-400 font-black animate-pulse';
+        } else {
+          badgeEl.textContent = `${comp.icon} ${comp.code} ${wearPct}%`;
+          badgeEl.className = comp.badgeClass;
+        }
+      }
+      if (barEl) {
+        barEl.style.width = `${wearPct}%`;
+        if (wearPct > 50) {
+          barEl.className = 'h-full bg-emerald-400 transition-all duration-100';
+        } else if (wearPct > 25) {
+          barEl.className = 'h-full bg-amber-400 transition-all duration-100';
+        } else {
+          barEl.className = 'h-full bg-red-500 animate-pulse transition-all duration-100';
+        }
+      }
+      if (nextBtnEl) {
+        if (car.boxThisLap) {
+          nextBtnEl.textContent = dict.boxReqOn || '🔧本圈進站:開';
+          nextBtnEl.className = 'px-1.5 py-0.5 rounded bg-emerald-500 text-slate-950 text-[9px] font-black border border-emerald-300 shadow transition whitespace-nowrap animate-pulse';
+        } else {
+          nextBtnEl.textContent = dict.boxReqOff || '🔧預約進站';
+          nextBtnEl.className = 'px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-sky-300 border border-sky-700/70 transition whitespace-nowrap';
+        }
+      }
+      updatePitAutopilotOverlayUI();
+    }
+
+    function toggleBoxThisLapRequest() {
+      if (car.inPitAutopilot) {
+        // If already in Pit Autopilot, pressing C cycles the selected tire in the Pit Overlay!
+        const idx = TIRE_ORDER.indexOf(car.nextTireCompound);
+        car.nextTireCompound = TIRE_ORDER[(idx + 1) % TIRE_ORDER.length];
+        playCheckpointBeep(660);
+        updateTireHudUI();
+        return;
+      }
+      car.boxThisLap = !car.boxThisLap;
+      playCheckpointBeep(car.boxThisLap ? 740 : 440);
+      updateTireHudUI();
+      const dict = I18N[currentLang] || I18N.zh;
+      showToast(
+        car.boxThisLap ? (dict.toastBoxReqOn || '🔧 已預約本圈自動進站') : (dict.toastBoxReqOff || '已取消預約進站'),
+        car.boxThisLap ? (dict.toastBoxReqOnSub || '抵達最後一彎出彎時將自動駛入 Pit Lane 並彈出選胎選單！') : (dict.toastBoxReqOffSub || '')
+      );
+    }
+
+    function updateTireSelectionUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      document.querySelectorAll('.tire-compound-btn').forEach(btn => {
+        const compKey = btn.getAttribute('data-tire');
+        const isSel = compKey === selectedTireCompound;
+        let borderCol = 'border-amber-400 bg-amber-500 text-slate-950';
+        if (compKey === 'soft') borderCol = 'border-red-500 bg-red-600/90 text-white';
+        else if (compKey === 'hard') borderCol = 'border-slate-200 bg-slate-200 text-slate-950';
+        else if (compKey === 'inter') borderCol = 'border-emerald-400 bg-emerald-500 text-slate-950';
+        else if (compKey === 'wet') borderCol = 'border-sky-400 bg-sky-500 text-white';
+
+        btn.className = isSel
+          ? `tire-compound-btn px-2 py-0.5 rounded text-xs font-extrabold mono border ${borderCol} shadow transition whitespace-nowrap`
+          : 'tire-compound-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 transition whitespace-nowrap';
+      });
+      const descEl = document.getElementById('tireCompoundDesc');
+      if (descEl) {
+        const descMap = {
+          soft: dict.tireSoftDesc,
+          medium: dict.tireMedDesc,
+          hard: dict.tireHardDesc,
+          inter: dict.tireInterDesc,
+          wet: dict.tireWetDesc
+        };
+        descEl.textContent = descMap[selectedTireCompound] || dict.tireMedDesc || '';
+      }
+    }
 
     const skidMarks = [];
     const MAX_SKID_MARKS = 420;
@@ -1974,8 +3223,73 @@
       s3Time: null,
       maxSplineIdxReached: 0,
       finished: false,
-      playerRank: 8
+      playerRank: 8,
+      countdownActive: false,
+      countdownTimer: 0,
+      countdownStage: 0,
+      goFlashTimer: 0
     };
+
+    function updateStartLightsUI() {
+      const overlay = document.getElementById('startLightsOverlay');
+      const l1 = document.getElementById('startLight1');
+      const l2 = document.getElementById('startLight2');
+      const l3 = document.getElementById('startLight3');
+      const txt = document.getElementById('startLightsText');
+      if (!overlay || !l1 || !l2 || !l3 || !txt) return;
+
+      const dict = I18N[currentLang] || I18N.zh;
+      if (!raceState.countdownActive && raceState.goFlashTimer <= 0) {
+        overlay.classList.add('hidden');
+        return;
+      }
+      overlay.classList.remove('hidden');
+
+      const offClass = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-800 border-2 border-slate-700 transition-all duration-75';
+      const redClass = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-600 border-2 border-red-200 shadow-[0_0_20px_#ef4444] scale-105 transition-all duration-75';
+      const goOutClass = 'w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-slate-900 border-2 border-emerald-400/80 shadow-[0_0_14px_rgba(52,211,153,0.45)] transition-all duration-75';
+
+      const st = raceState.countdownStage;
+      if (raceState.countdownActive) {
+        l1.className = st >= 1 ? redClass : offClass;
+        l2.className = st >= 2 ? redClass : offClass;
+        l3.className = st >= 3 ? redClass : offClass;
+        if (st === 0) {
+          txt.textContent = dict.lightsReady || '🏁 準備起跑 · GET READY';
+          txt.className = 'text-xs sm:text-sm font-black mono tracking-wider text-amber-300 uppercase whitespace-nowrap';
+        } else if (st === 1) {
+          txt.textContent = dict.lights1 || '🔴 ○ ○ · RED LIGHT 1';
+          txt.className = 'text-xs sm:text-sm font-black mono tracking-wider text-red-400 uppercase whitespace-nowrap';
+        } else if (st === 2) {
+          txt.textContent = dict.lights2 || '🔴 🔴 ○ · RED LIGHT 2';
+          txt.className = 'text-xs sm:text-sm font-black mono tracking-wider text-red-400 uppercase whitespace-nowrap';
+        } else {
+          txt.textContent = dict.lights3 || '🔴 🔴 🔴 · HOLD THROTTLE!';
+          txt.className = 'text-xs sm:text-sm font-black mono tracking-wider text-red-300 uppercase whitespace-nowrap';
+        }
+      } else {
+        // Lights Out! All 3 red lights extinguish simultaneously
+        l1.className = goOutClass;
+        l2.className = goOutClass;
+        l3.className = goOutClass;
+        txt.textContent = dict.lightsGo || '🟢 LIGHTS OUT · GO! 起跑！';
+        txt.className = 'text-xs sm:text-sm font-black mono tracking-wider text-emerald-300 uppercase whitespace-nowrap';
+      }
+    }
+
+    function startRaceCountdown() {
+      raceState.countdownActive = true;
+      raceState.countdownTimer = 2.60;
+      raceState.countdownStage = 0;
+      raceState.goFlashTimer = 0;
+      raceState.curLapTime = 0;
+      raceState.lapStartTime = performance.now();
+      const curTimeEl = document.getElementById('hudCurTime');
+      if (curTimeEl) curTimeEl.textContent = '00:00.00';
+      const toast = document.getElementById('centerToast');
+      if (toast) toast.classList.add('hidden');
+      updateStartLightsUI();
+    }
 
     function getActiveTrack() {
       return compiledTracks[selectedTrackKey];
@@ -2096,7 +3410,11 @@
           totalTimeMs: 0,
           passedSector1: false,
           passedSector2: false,
-          maxSplineIdxReached: 0
+          maxSplineIdxReached: 0,
+          tireCompound: (weatherState.trackWetness >= 55) ? 'wet' : ((weatherState.trackWetness >= 22) ? 'inter' : ((idx % 3 === 0) ? 'soft' : ((idx % 3 === 1) ? 'medium' : 'hard'))),
+          tireWear: 100.0,
+          pitStopTimer: 0,
+          pitCooldown: 0
         };
         aiObj.totalProgress = computeContinuousProgress(aiObj, N);
         aiCars.push(aiObj);
@@ -2158,9 +3476,7 @@
     if (btnPauseRestart) {
       btnPauseRestart.addEventListener('click', () => {
         resumeGame();
-        resetCarToStart();
-        const active = getActiveTrack();
-        showToast('RESTARTED', active ? active.cfg.name : '');
+        resetCarToStart(true);
       });
     }
     if (btnPauseToMenu) {
@@ -2172,7 +3488,7 @@
       });
     }
 
-    function resetCarToStart() {
+    function resetCarToStart(withCountdown = true) {
       isGamePaused = false;
       if (pauseModal) pauseModal.classList.add('hidden');
       const active = getActiveTrack();
@@ -2199,6 +3515,79 @@
       car.passedSector2 = false;
       car.finished = false;
       car.totalTimeMs = 0;
+      selectedLaps = getTrackProportionalLaps(selectedTrackKey, selectedDistanceMode);
+      weatherState.mode = selectedWeatherMode || 'dynamic';
+      if (weatherState.mode === 'dry') {
+        weatherState.condition = 'clear';
+        weatherState.nextForecast = 'clear';
+        weatherState.trackWetness = 0.0;
+        weatherState.rainIntensity = 0.0;
+        weatherState.targetRainIntensity = 0.0;
+        weatherState.phaseTimer = 999;
+      } else if (weatherState.mode === 'wet') {
+        weatherState.condition = 'heavy_rain';
+        weatherState.nextForecast = 'heavy_rain';
+        weatherState.trackWetness = 82.0;
+        weatherState.rainIntensity = 0.95;
+        weatherState.targetRainIntensity = 0.95;
+        weatherState.phaseTimer = 999;
+      } else {
+        // Real-world circuit rain probability determines starting sky & wetness!
+        const rainProb = getActiveTrackRainProb(); // e.g., Spa 0.45, Interlagos 0.40, Monaco 0.12
+        const startRoll = Math.random();
+        if (startRoll < (1.0 - rainProb * 1.45)) {
+          // Sunny / Clear start
+          weatherState.trackWetness = 0.0;
+          weatherState.rainIntensity = 0.0;
+          applyWeatherConditionParams('clear');
+        } else if (startRoll < (1.0 - rainProb * 0.72)) {
+          // Overcast threatening clouds
+          weatherState.trackWetness = Math.round(Math.random() * 8);
+          weatherState.rainIntensity = 0.05;
+          applyWeatherConditionParams('overcast');
+        } else if (startRoll < (1.0 - rainProb * 0.30)) {
+          // Damp track after pre-race shower (24% ~ 44% wetness)
+          weatherState.trackWetness = 24 + Math.round(Math.random() * 20);
+          weatherState.rainIntensity = 0.22;
+          applyWeatherConditionParams(Math.random() < 0.5 ? 'overcast' : 'light_rain');
+        } else {
+          // Wet rain start proportional to track rainProb (48% ~ 74% wetness)
+          weatherState.trackWetness = 48 + Math.round(Math.random() * 26);
+          weatherState.rainIntensity = 0.65;
+          applyWeatherConditionParams('light_rain');
+        }
+      }
+      weatherState.warnedWetTrack = false;
+      weatherState.warnedDryTrack = (weatherState.trackWetness < 20);
+      updateWeatherHudUI();
+
+      car.tireCompound = selectedTireCompound || 'medium';
+      if (selectedGameMode === 'career' && weatherState.trackWetness >= 26) {
+        // In Career Mode, if the grid starts wet/damp, mount matching wet/inter tires at start
+        car.tireCompound = weatherState.trackWetness >= 55 ? 'wet' : 'inter';
+      }
+      car.tireSetsLeft = getInitialTireAllocation();
+      // Deduct the 1 starting tire set mounted on the grid
+      if (car.tireSetsLeft[car.tireCompound] > 0) {
+        car.tireSetsLeft[car.tireCompound] -= 1;
+      }
+      car.nextTireCompound = (weatherState.mode === 'dynamic') ? 'inter' : 'soft';
+      car.tireWear = 100.0;
+      car.pitStopTimer = 0;
+      car.pitCooldown = 0;
+      car.pitStopsCount = 0;
+      car.inPitLane = false;
+      car.inPitAutopilot = false;
+      car.pitAutoStep = 0;
+      car.pitAutoPhase = 'entry';
+      car.pitMountedThisStop = false;
+      car.pitMountedCompoundKey = null;
+      car.boxThisLap = false;
+      car.drsGapSec = null;
+      car.warnedBoxBox = false;
+      raceState.passedHalfway = false;
+      raceState.passedLateLap = false;
+      updateTireHudUI();
       car.totalProgress = computeContinuousProgress(car, N);
 
       raceState.lap = 1;
@@ -2239,6 +3628,17 @@
       skidMarks.length = 0;
       smokeParticles.length = 0;
       currentLapRecording = [];
+      document.getElementById('hudCurTime').textContent = '00:00.00';
+      document.getElementById('hudSpeed').textContent = '0';
+      document.getElementById('hudSpeedBar').style.width = '0%';
+
+      if (withCountdown) {
+        startRaceCountdown();
+      } else {
+        raceState.countdownActive = false;
+        raceState.goFlashTimer = 0;
+        updateStartLightsUI();
+      }
     }
 
     // =========================================================================
@@ -2299,6 +3699,19 @@
       }
       if (code === 'ArrowDown' || code === 'KeyS') input.brake = true;
       if (code === 'Space') input.handbrake = true;
+      if (code === 'KeyC' || code === 'KeyB') toggleBoxThisLapRequest();
+      if (car.inPitAutopilot) {
+        const digitMap = { Digit1: 'soft', Digit2: 'medium', Digit3: 'hard', Digit4: 'inter', Digit5: 'wet' };
+        const tKey = digitMap[code];
+        if (tKey && ((car.tireSetsLeft && car.tireSetsLeft[tKey] > 0) || (car.pitMountedThisStop && car.pitMountedCompoundKey === tKey))) {
+          car.nextTireCompound = tKey;
+          if (car.pitStopTimer > 0 || car.pitAutoPhase === 'exit') {
+            applyPitTireMount(tKey);
+          }
+          playCheckpointBeep(740);
+          updateTireHudUI();
+        }
+      }
     });
 
     window.addEventListener('keyup', (e) => {
@@ -2338,6 +3751,190 @@
     bindTouchButton('btnSteerRight', 'right');
     bindTouchButton('btnPedalGas', 'gas');
     bindTouchButton('btnPedalBrake', 'brake');
+
+    // =========================================================================
+    // 6.2. HOT SLIDE STYLE 360° DIRECT TARGET-HEADING STEERING MODE (v0.8.1)
+    // =========================================================================
+    const STEER_MODE_STORAGE_KEY = 'pixel_gp_steer_mode_v1';
+    let steerControlMode = 'buttons'; // 'buttons' | 'swipe' (360° Direct Point Mode)
+    try {
+      const savedMode = localStorage.getItem(STEER_MODE_STORAGE_KEY);
+      if (savedMode === 'swipe' || savedMode === 'buttons') {
+        steerControlMode = savedMode;
+      }
+    } catch (e) {}
+
+    let directSteerActive = false;
+    let directHasDirection = false;
+    let directTargetAngle = 0;   // 2D angle (in radians) the finger is pointing toward
+    let directDragRatio = 0;     // [0..1] how far the finger is pulled from the ring center
+    let directPointerId = null;
+    let directOriginX = 0;
+    let directOriginY = 0;
+
+    const btnToggleSteerMode = document.getElementById('btnToggleSteerMode');
+    const menuSteerButtons = document.getElementById('menuSteerButtons');
+    const menuSteerSwipe = document.getElementById('menuSteerSwipe');
+    const menuSteerDesc = document.getElementById('menuSteerDesc');
+    const steerButtonsCluster = document.getElementById('steerButtonsCluster');
+    const directSteerRing = document.getElementById('directSteerRing');
+    const directSteerRingArrow = document.getElementById('directSteerRingArrow');
+
+    function updateDirectRingVisual() {
+      if (!directSteerRing || !directSteerRingArrow) return;
+      if (steerControlMode !== 'swipe' || !directSteerActive) {
+        directSteerRing.classList.add('hidden');
+        return;
+      }
+      directSteerRing.classList.remove('hidden');
+      directSteerRing.style.left = `${Math.round(directOriginX)}px`;
+      directSteerRing.style.top = `${Math.round(directOriginY)}px`;
+
+      if (directHasDirection) {
+        directSteerRingArrow.classList.remove('hidden');
+        const deg = (directTargetAngle * 180) / Math.PI;
+        directSteerRingArrow.style.transform = `rotate(${deg.toFixed(1)}deg)`;
+      } else {
+        directSteerRingArrow.classList.add('hidden');
+      }
+    }
+
+    function updateSteerModeUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const isDirect = (steerControlMode === 'swipe');
+
+      if (btnToggleSteerMode) {
+        btnToggleSteerMode.textContent = isDirect ? (dict.steerModeSwipe || '🧭操控:指向') : (dict.steerModeBtn || '🎮操控:按鍵');
+        btnToggleSteerMode.className = isDirect
+          ? 'flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-amber-500 hover:bg-amber-400 text-[10px] sm:text-[11px] font-extrabold text-slate-950 border border-amber-300 shadow transition text-center whitespace-nowrap'
+          : 'flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-amber-950/90 hover:bg-amber-900 text-[10px] sm:text-[11px] font-semibold text-amber-200 border border-amber-700/80 transition text-center whitespace-nowrap';
+      }
+
+      if (menuSteerButtons && menuSteerSwipe) {
+        menuSteerButtons.textContent = dict.menuSteerButtons || '🎮 左右按鍵 (Buttons)';
+        menuSteerSwipe.textContent = dict.menuSteerSwipe || '🧭 360°車頭指向 (Direct)';
+        menuSteerButtons.className = !isDirect
+          ? 'px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+        menuSteerSwipe.className = isDirect
+          ? 'px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      }
+      if (menuSteerDesc) {
+        menuSteerDesc.textContent = isDirect ? (dict.menuSteerSwipeDesc || '') : (dict.menuSteerButtonsDesc || '');
+      }
+
+      if (steerButtonsCluster) {
+        if (isDirect) {
+          steerButtonsCluster.classList.add('hidden');
+        } else {
+          steerButtonsCluster.classList.remove('hidden');
+          directSteerActive = false;
+          directHasDirection = false;
+          updateDirectRingVisual();
+        }
+      }
+    }
+
+    function setSteerControlMode(mode, notify = true) {
+      initAudio();
+      steerControlMode = (mode === 'swipe') ? 'swipe' : 'buttons';
+      input.left = false;
+      input.right = false;
+      directSteerActive = false;
+      directHasDirection = false;
+      try {
+        localStorage.setItem(STEER_MODE_STORAGE_KEY, steerControlMode);
+      } catch (e) {}
+      updateSteerModeUI();
+      updateDirectRingVisual();
+      if (notify) {
+        const dict = I18N[currentLang] || I18N.zh;
+        showToast(
+          steerControlMode === 'swipe' ? (dict.toastSteerSwipe || '🧭 360°車頭指向操控') : (dict.toastSteerButtons || '🎮 左右按鍵轉向'),
+          steerControlMode === 'swipe' ? (dict.menuSteerSwipeDesc || '') : (dict.menuSteerButtonsDesc || '')
+        );
+      }
+    }
+
+    if (btnToggleSteerMode) {
+      btnToggleSteerMode.addEventListener('click', () => {
+        setSteerControlMode(steerControlMode === 'buttons' ? 'swipe' : 'buttons', true);
+      });
+    }
+    if (menuSteerButtons) {
+      menuSteerButtons.addEventListener('click', () => setSteerControlMode('buttons', true));
+    }
+    if (menuSteerSwipe) {
+      menuSteerSwipe.addEventListener('click', () => setSteerControlMode('swipe', true));
+    }
+
+    // Compute 360° target heading from finger offset (dx, dy) relative to touch ring center (Hot Slide style!)
+    function updateDirectHeadingFromFinger(clientX, clientY) {
+      const deadzoneRadius = 7.0;
+      const maxLeashRadius = 48.0;
+      let dx = clientX - directOriginX;
+      let dy = clientY - directOriginY;
+      let dist = Math.hypot(dx, dy);
+
+      // Floating ring leash: if finger drags beyond 48px, the ring smoothly follows behind the finger
+      // so changing direction at any moment is instant!
+      if (dist > maxLeashRadius) {
+        const angle = Math.atan2(dy, dx);
+        directOriginX = clientX - Math.cos(angle) * maxLeashRadius;
+        directOriginY = clientY - Math.sin(angle) * maxLeashRadius;
+        dx = clientX - directOriginX;
+        dy = clientY - directOriginY;
+        dist = maxLeashRadius;
+      }
+
+      if (dist >= deadzoneRadius) {
+        directTargetAngle = Math.atan2(dy, dx);
+        directHasDirection = true;
+        directDragRatio = Math.min(1, (dist - deadzoneRadius) / (maxLeashRadius - deadzoneRadius));
+      }
+      updateDirectRingVisual();
+    }
+
+    const gameCanvasEl = document.getElementById('gameCanvas');
+    if (gameCanvasEl) {
+      gameCanvasEl.addEventListener('pointerdown', (e) => {
+        if (steerControlMode !== 'swipe') return;
+        if (!garageModal.classList.contains('hidden') || !resultModal.classList.contains('hidden') || isGamePaused) return;
+        e.preventDefault();
+        initAudio();
+        if (usingKeyboardGas && autoAccelerate) {
+          usingKeyboardGas = false;
+          updateAutoGasUI();
+        }
+        directPointerId = e.pointerId;
+        try { gameCanvasEl.setPointerCapture(e.pointerId); } catch (err) {}
+        directOriginX = e.clientX;
+        directOriginY = e.clientY;
+        directSteerActive = true;
+        directTargetAngle = car.angle;
+        directHasDirection = true;
+        directDragRatio = 0;
+        updateDirectRingVisual();
+      });
+
+      gameCanvasEl.addEventListener('pointermove', (e) => {
+        if (steerControlMode !== 'swipe' || !directSteerActive || e.pointerId !== directPointerId) return;
+        e.preventDefault();
+        updateDirectHeadingFromFinger(e.clientX, e.clientY);
+      });
+
+      const endDirectSteer = (e) => {
+        if (e.pointerId !== directPointerId) return;
+        directSteerActive = false;
+        directHasDirection = false;
+        directDragRatio = 0;
+        directPointerId = null;
+        updateDirectRingVisual();
+      };
+      gameCanvasEl.addEventListener('pointerup', endDirectSteer);
+      gameCanvasEl.addEventListener('pointercancel', endDirectSteer);
+    }
 
     const padPresetKeys = ['padLow', 'padMid', 'padHigh'];
     const padClasses = ['thumb-zone-low', 'thumb-zone-mid', 'thumb-zone-high'];
@@ -2393,21 +3990,49 @@
     const btnResultNextGP = document.getElementById('btnResultNextGP');
     const resCareerSummary = document.getElementById('resCareerSummary');
 
+    function updateDistanceButtonsUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const u = dict.lapUnitShort || '圈';
+      const labels = {
+        sprint3: `${dict.distSprint3 || '3圈'}`,
+        short: `${dict.distShort || '短程'} (${getTrackProportionalLaps(selectedTrackKey, 'short')}${u})`,
+        medium: `${dict.distMedium || '中程'} (${getTrackProportionalLaps(selectedTrackKey, 'medium')}${u})`,
+        long: `${dict.distLong || '長程'} (${getTrackProportionalLaps(selectedTrackKey, 'long')}${u})`
+      };
+      document.querySelectorAll('.lap-btn').forEach(btn => {
+        const dMode = btn.getAttribute('data-dist');
+        if (labels[dMode]) btn.textContent = labels[dMode];
+        const isSel = dMode === selectedDistanceMode;
+        btn.className = isSel
+          ? 'lap-btn px-2 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow whitespace-nowrap'
+          : 'lap-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 whitespace-nowrap';
+      });
+      selectedLaps = getTrackProportionalLaps(selectedTrackKey, selectedDistanceMode);
+    }
+
     function updateMenuSummary() {
       const dict = I18N[currentLang] || I18N.zh;
+      selectedLaps = getTrackProportionalLaps(selectedTrackKey, selectedDistanceMode);
       const nameMap = {
         imola: dict.imolaName,
         suzuka: dict.suzukaName,
         monaco: dict.monacoName,
         interlagos: dict.interlagosName,
         silverstone: dict.silverstoneName,
-        spa: dict.spaName
+        spa: dict.spaName,
+        singapore: dict.singaporeName || '新加坡 · Singapore'
       };
       const trackName = nameMap[selectedTrackKey] || dict.imolaName;
       const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+      const carNameMap = {
+        balanced: dict.carBalancedName,
+        speed: dict.carSpeedName,
+        drift: dict.carDriftName,
+        hybrid: dict.carHybridName || '混動型 · Apex Hybrid'
+      };
       const carName = (selectedGameMode === 'career')
         ? activeTeam.name + ' (' + activeTeam.carName + ')'
-        : (selectedCarKey === 'balanced' ? dict.carBalancedName : (selectedCarKey === 'speed' ? dict.carSpeedName : dict.carDriftName));
+        : (carNameMap[selectedCarKey] || dict.carBalancedName);
       const modeText = selectedGameMode === 'arcade'
         ? dict.arcadeModeBtn
         : (selectedGameMode === 'career' ? (dict.careerModeBtn || '🏆 生涯車隊') : dict.timeTrialModeBtn);
@@ -2415,7 +4040,7 @@
       
       if (selectedGameMode === 'career') {
         document.getElementById('menuSummaryText').innerHTML =
-          `<strong class="text-amber-300">${modeText}</strong> · <strong class="text-white">${trackName}</strong> · <strong class="text-emerald-400">${activeTeam.name}</strong> · <span class="text-slate-300">目標: ${activeTeam.targetText}</span>`;
+          `<strong class="text-amber-300">${modeText}</strong> · <strong class="text-white">${trackName} (${selectedLaps} ${lapUnit})</strong> · <strong class="text-emerald-400">${activeTeam.name}</strong> · <span class="text-slate-300">目標: ${activeTeam.targetText}</span>`;
       } else {
         document.getElementById('menuSummaryText').innerHTML =
           `<strong class="text-white">${trackName}</strong> · <strong class="text-emerald-400">${modeText}</strong> · <strong class="text-amber-300">${selectedLaps} ${lapUnit}</strong> · <strong class="text-red-400">${carName}</strong>`;
@@ -2460,8 +4085,127 @@
       });
 
       const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
+      const upg = careerData.upgrades || { engine: 0, aero: 0, chassis: 0, steering: 0 };
+      const totalUpgLv = (upg.engine || 0) + (upg.aero || 0) + (upg.chassis || 0) + (upg.steering || 0);
       const noticeBadge = document.getElementById('careerActiveTeamCarBadge');
-      if (noticeBadge) noticeBadge.textContent = activeTeam.name + ' (' + activeTeam.carName + ')';
+      if (noticeBadge) noticeBadge.textContent = `${activeTeam.name} (${activeTeam.carName} · R&D +${totalUpgLv})`;
+
+      // Render R&D Upgrade Cards (Engine, Aero, Chassis, Steering)
+      const rdConfigs = [
+        { key: 'engine', statPrefix: currentLang === 'en' ? 'Top Speed: ' : (currentLang === 'ja' ? '最高速: ' : '極速加成: '), unit: (lv) => `+${Math.round(lv * 6.6)} km/h` },
+        { key: 'aero', statPrefix: currentLang === 'en' ? 'Corner Grip: ' : (currentLang === 'ja' ? 'グリップ: ' : '抓地加成: '), unit: (lv) => `+${lv * 5}%` },
+        { key: 'chassis', statPrefix: currentLang === 'en' ? 'Accel & Brake: ' : (currentLang === 'ja' ? '加速・制動: ' : '加速與制動: '), unit: (lv) => `+${lv * 4}%` },
+        { key: 'steering', statPrefix: currentLang === 'en' ? 'Turn & Drift: ' : (currentLang === 'ja' ? '旋回・ドリフト: ' : '轉向與飄移: '), unit: (lv) => `+${lv * 4}%` }
+      ];
+
+      rdConfigs.forEach(cfg => {
+        const lv = upg[cfg.key] || 0;
+        const lvlEl = document.getElementById('rdLvl-' + cfg.key);
+        if (lvlEl) lvlEl.textContent = `Lv.${lv}/${RD_MAX_LEVEL}`;
+
+        const barsEl = document.getElementById('rdBars-' + cfg.key);
+        if (barsEl) {
+          barsEl.innerHTML = Array.from({ length: RD_MAX_LEVEL }, (_, idx) =>
+            `<div class="h-1.5 rounded ${idx < lv ? 'bg-emerald-400 shadow-sm' : 'bg-slate-800'}"></div>`
+          ).join('');
+        }
+
+        const statEl = document.getElementById('rdStat-' + cfg.key);
+        if (statEl) statEl.textContent = cfg.statPrefix + cfg.unit(lv);
+
+        const btnEl = document.getElementById('btnUpgrade-' + cfg.key);
+        if (btnEl) {
+          if (lv >= RD_MAX_LEVEL) {
+            btnEl.textContent = dict.rdMaxLabel || '✔ 已滿級 MAX';
+            btnEl.className = 'mt-2 w-full py-1 rounded-lg text-[11px] font-black mono bg-emerald-900/60 text-emerald-300 border border-emerald-600/50 cursor-default';
+          } else {
+            const cost = RD_UPGRADE_COSTS[lv];
+            const canAfford = careerData.cash >= cost;
+            btnEl.textContent = `${dict.rdUpgradeVerb || '⬆️ 升級'} ($${cost.toLocaleString()})`;
+            btnEl.className = canAfford
+              ? 'mt-2 w-full py-1 rounded-lg text-[11px] font-black mono transition bg-sky-600 hover:bg-sky-500 active:scale-95 text-white shadow'
+              : 'mt-2 w-full py-1 rounded-lg text-[11px] font-bold mono transition bg-slate-800 text-slate-400 border border-slate-700';
+          }
+        }
+      });
+
+      // Render Season Driver Championship Standings
+      const progBadge = document.getElementById('careerSeasonProgressBadge');
+      if (progBadge) {
+        const done = careerData.seasonRacesCompleted || 0;
+        progBadge.textContent = currentLang === 'en'
+          ? `Season: ${done} / ${SEASON_CALENDAR.length} Races`
+          : (currentLang === 'ja' ? `シーズン進行: ${done} / ${SEASON_CALENDAR.length} 戦` : `賽季進度: ${done} / ${SEASON_CALENDAR.length} 站`);
+      }
+      const titlesBadge = document.getElementById('careerTitlesBadge');
+      if (titlesBadge) {
+        const tCount = careerData.championshipsCount || 0;
+        titlesBadge.textContent = currentLang === 'en'
+          ? `👑 Titles: ${tCount}`
+          : (currentLang === 'ja' ? `👑 王者回数: ${tCount}` : `👑 總冠軍: ${tCount} 冠`);
+      }
+
+      const standingsGrid = document.getElementById('careerStandingsGrid');
+      if (standingsGrid) {
+        const st = careerData.standings || getDefaultStandings();
+        const entries = Object.keys(st).map(k => {
+          const isPlayer = (k === 'player');
+          const aiProfile = AI_OPPONENTS_DATA.find(a => a.name === k);
+          return {
+            key: k,
+            isPlayer,
+            displayName: isPlayer ? `YOU (${activeTeam.name})` : k,
+            color: isPlayer ? activeTeam.colorMain : (aiProfile ? aiProfile.colorMain : '#94a3b8'),
+            pts: st[k] || 0
+          };
+        });
+        entries.sort((a, b) => b.pts - a.pts || (a.isPlayer ? -1 : 1));
+
+        standingsGrid.innerHTML = entries.map((e, idx) => {
+          const pos = idx + 1;
+          const posStyle = pos === 1 ? 'text-amber-300 font-black' : (pos <= 3 ? 'text-sky-300 font-bold' : 'text-slate-400');
+          const rowStyle = e.isPlayer ? 'bg-amber-500/20 border border-amber-400/60 text-white font-bold' : 'bg-slate-900/70 border border-slate-800/80 text-slate-300';
+          return `
+            <div class="flex items-center justify-between px-2 py-1 rounded ${rowStyle}">
+              <div class="flex items-center gap-1.5 truncate">
+                <span class="${posStyle} w-5">P${pos}</span>
+                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${e.color}"></span>
+                <span class="truncate">${e.displayName}</span>
+              </div>
+              <span class="font-extrabold ${e.isPlayer ? 'text-amber-300' : 'text-slate-200'} shrink-0 ml-2">${e.pts} PTS</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function upgradeCareerPart(partKey) {
+      initAudio();
+      const dict = I18N[currentLang] || I18N.zh;
+      if (!careerData.upgrades) careerData.upgrades = { engine: 0, aero: 0, chassis: 0, steering: 0 };
+      const curLv = careerData.upgrades[partKey] || 0;
+      if (curLv >= RD_MAX_LEVEL) {
+        showToast(dict.rdMaxLabel || '✔ 已達最高等級', `Lv.${RD_MAX_LEVEL}/${RD_MAX_LEVEL}`);
+        return;
+      }
+      const cost = RD_UPGRADE_COSTS[curLv];
+      if (careerData.cash < cost) {
+        showToast('⚠️ ' + (dict.toastNoCash || '資金不足！需要：') + `$${cost.toLocaleString()}`, `$${careerData.cash.toLocaleString()}`);
+        return;
+      }
+      careerData.cash -= cost;
+      careerData.upgrades[partKey] = curLv + 1;
+      saveCareerData();
+      updateCareerUI();
+      updateMenuSummary();
+      playCheckpointBeep(880);
+      const partNames = {
+        engine: dict.rdEngineTitle || '引擎動力',
+        aero: dict.rdAeroTitle || '空力下壓力',
+        chassis: dict.rdChassisTitle || '輕量化傳動',
+        steering: dict.rdSteeringTitle || '轉向與飄移'
+      };
+      showToast(`${dict.toastUpgraded || '🔧 研發升級：'}${partNames[partKey]} Lv.${curLv + 1}`, `-$${cost.toLocaleString()}`);
     }
 
     function signCareerTeam(teamKey) {
@@ -2527,6 +4271,11 @@
         if (careerHubSection) careerHubSection.classList.add('hidden');
         if (careerCarNotice) careerCarNotice.classList.add('hidden');
       }
+      if (mode === 'career') {
+        selectedWeatherMode = 'dynamic';
+      }
+      if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      if (typeof updateDistanceButtonsUI === 'function') updateDistanceButtonsUI();
       updateMenuSummary();
     }
 
@@ -2553,6 +4302,14 @@
       }
     });
 
+    // Bind R&D Garage Upgrade buttons
+    ['engine', 'aero', 'chassis', 'steering'].forEach(partKey => {
+      const btn = document.getElementById('btnUpgrade-' + partKey);
+      if (btn) {
+        btn.addEventListener('click', () => upgradeCareerPart(partKey));
+      }
+    });
+
     const btnResetCareer = document.getElementById('btnResetCareer');
     if (btnResetCareer) {
       btnResetCareer.addEventListener('click', () => {
@@ -2565,7 +4322,11 @@
           winsCount: 0,
           podiumsCount: 0,
           currentRoundIdx: 0,
-          signedTeams: ['tier3_stealth']
+          seasonRacesCompleted: 0,
+          championshipsCount: 0,
+          signedTeams: ['tier3_stealth'],
+          upgrades: { engine: 0, aero: 0, chassis: 0, steering: 0 },
+          standings: getDefaultStandings()
         };
         saveCareerData();
         updateCareerUI();
@@ -2606,20 +4367,18 @@
           ? `track-card cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 ${borderCol} transition flex flex-col justify-between shadow-lg`
           : 'track-card cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between';
       });
-      resetCarToStart();
+      updateDistanceButtonsUI();
+      if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      resetCarToStart(false);
       camX = car.x - viewW / 2;
       camY = car.y - viewH / 2;
       updateMenuSummary();
     }
 
-    function selectLaps(lapsCount) {
-      selectedLaps = lapsCount;
-      document.querySelectorAll('.lap-btn').forEach(btn => {
-        const isSel = Number(btn.getAttribute('data-laps')) === lapsCount;
-        btn.className = isSel
-          ? 'lap-btn px-2.5 py-1 rounded bg-amber-500 text-slate-950 text-xs font-extrabold mono border border-amber-400 shadow'
-          : 'lap-btn px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700';
-      });
+    function selectDistanceMode(distMode) {
+      if (!['sprint3', 'short', 'medium', 'long'].includes(distMode)) return;
+      selectedDistanceMode = distMode;
+      updateDistanceButtonsUI();
       updateMenuSummary();
     }
 
@@ -2646,7 +4405,78 @@
     document.querySelectorAll('.lap-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         initAudio();
-        selectLaps(Number(btn.getAttribute('data-laps')));
+        selectDistanceMode(btn.getAttribute('data-dist') || 'sprint3');
+      });
+    });
+
+    document.querySelectorAll('.weather-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        if (selectedGameMode === 'career') {
+          selectedWeatherMode = 'dynamic';
+          updateWeatherSelectionUI();
+          return;
+        }
+        const wKey = btn.getAttribute('data-weather');
+        if (wKey) {
+          selectedWeatherMode = wKey;
+          if (wKey === 'wet' && !TIRE_COMPOUNDS[selectedTireCompound].isWetTire) {
+            selectedTireCompound = 'wet';
+            car.tireCompound = 'wet';
+            updateTireSelectionUI();
+          } else if (wKey === 'dry' && TIRE_COMPOUNDS[selectedTireCompound].isWetTire) {
+            selectedTireCompound = 'medium';
+            car.tireCompound = 'medium';
+            updateTireSelectionUI();
+          }
+          updateWeatherSelectionUI();
+          updateMenuSummary();
+        }
+      });
+    });
+
+    document.querySelectorAll('.tire-compound-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        const tKey = btn.getAttribute('data-tire');
+        if (TIRE_COMPOUNDS[tKey]) {
+          selectedTireCompound = tKey;
+          car.tireCompound = tKey;
+          car.nextTireCompound = tKey === 'soft' ? 'medium' : 'soft';
+          updateTireSelectionUI();
+          updateTireHudUI();
+        }
+      });
+    });
+
+    const btnCyclePitTire = document.getElementById('btnCyclePitTire');
+    if (btnCyclePitTire) {
+      btnCyclePitTire.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initAudio();
+        toggleBoxThisLapRequest();
+      });
+    }
+
+    document.querySelectorAll('.pit-live-tire-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initAudio();
+        const tKey = btn.getAttribute('data-pit-select');
+        if (!TIRE_COMPOUNDS[tKey]) return;
+        const canSelect = (car.tireSetsLeft && car.tireSetsLeft[tKey] > 0) || (car.pitMountedThisStop && car.pitMountedCompoundKey === tKey);
+        if (!canSelect) {
+          playCheckpointBeep(240);
+          showToast('⚠️ 該配方輪胎已用罄 (0 套)', '請選擇其他尚有庫存的輪胎配方！');
+          return;
+        }
+        car.nextTireCompound = tKey;
+        // If car is already at the Pit Box or exiting, mount the fresh 100% set immediately upon tap!
+        if (car.pitStopTimer > 0 || car.pitAutoPhase === 'exit') {
+          applyPitTireMount(tKey);
+        }
+        playCheckpointBeep(740);
+        updateTireHudUI();
       });
     });
 
@@ -2670,13 +4500,11 @@
       initAudio();
       garageModal.classList.add('hidden');
       resultModal.classList.add('hidden');
-      resetCarToStart();
-      showToast(`${TRACKS[selectedTrackKey].shortTitle} START!`, selectedGameMode === 'arcade' ? '8-Car Arcade Race' : 'Time Trial');
+      resetCarToStart(true);
     });
     btnResetCar.addEventListener('click', () => {
-      resetCarToStart();
-      const dict = I18N[currentLang] || I18N.zh;
-      showToast(dict.toastReset, `${TRACKS[selectedTrackKey].name}`);
+      initAudio();
+      resetCarToStart(true);
     });
 
     function updateMuteUI() {
@@ -2699,32 +4527,45 @@
       showToast('Ghost Car', ghostEnabled ? 'Enabled' : 'Disabled');
     });
 
+    let resultsModalOpenedAt = 0;
+
     btnResultToMenu.addEventListener('click', () => {
+      if (performance.now() - resultsModalOpenedAt < 650) return;
       resultModal.classList.add('hidden');
       btnCloseGarage.classList.add('hidden');
       garageModal.classList.remove('hidden');
     });
     btnResultRaceAgain.addEventListener('click', () => {
+      if (performance.now() - resultsModalOpenedAt < 650) return;
       initAudio();
       resultModal.classList.add('hidden');
-      resetCarToStart();
-      showToast('NEW RACE START!', 'Good luck!');
+      resetCarToStart(true);
     });
 
     if (btnResultNextGP) {
       btnResultNextGP.addEventListener('click', () => {
+        if (performance.now() - resultsModalOpenedAt < 650) return;
         initAudio();
         resultModal.classList.add('hidden');
         const nextTrackKey = SEASON_CALENDAR[careerData.currentRoundIdx] || 'imola';
         selectTrack(nextTrackKey);
-        resetCarToStart();
-        const active = getActiveTrack();
-        showToast('🏆 ' + (active ? active.cfg.shortTitle : 'NEXT') + ' GP START!', `Round ${careerData.currentRoundIdx + 1} / 6`);
+        resetCarToStart(true);
       });
     }
 
     function showRaceResultsModal() {
       raceState.finished = true;
+      car.finished = true;
+      resultsModalOpenedAt = performance.now();
+      // Immediately release any active touch/pointer steering so a held finger doesn't dismiss the modal!
+      directSteerActive = false;
+      directHasDirection = false;
+      directPointerId = null;
+      if (typeof updateDirectRingVisual === 'function') updateDirectRingVisual();
+      input.left = false;
+      input.right = false;
+      input.gas = false;
+      input.brake = false;
       updateAudio(0, false, false);
       const active = getActiveTrack();
       const totalMs = raceState.lapTimes.reduce((a, b) => a + b, 0);
@@ -2761,20 +4602,74 @@
       document.getElementById('resTotalTime').textContent = formatTime(totalMs);
       document.getElementById('resBestLap').textContent = formatTime(bestSingleMs);
 
-      // Handle Career Financial Calculation and Contract Rewards
+      // Handle Career Financial Calculation, Championship Points & Season Finale
       if (selectedGameMode === 'career') {
         const PRIZE_SCALE = [50000, 38000, 28000, 20000, 15000, 10000, 7000, 5000];
         const basePrize = PRIZE_SCALE[playerPos - 1] || 5000;
         const metTarget = playerPos <= activeTeam.targetMaxPos;
         const bonusPrize = metTarget ? activeTeam.targetBonus : 0;
-        const totalEarned = basePrize + bonusPrize;
+        let totalEarned = basePrize + bonusPrize;
 
-        careerData.cash += totalEarned;
+        // Award Championship Points (25-18-15-12-10-8-6-4) to all 8 drivers
+        if (!careerData.standings) careerData.standings = getDefaultStandings();
+        allCars.forEach((c, idx) => {
+          const pts = F1_POINTS_SCALE[idx] || 0;
+          const k = c.isPlayer ? 'player' : c.name;
+          careerData.standings[k] = (careerData.standings[k] || 0) + pts;
+        });
+
+        const earnedPts = F1_POINTS_SCALE[playerPos - 1] || 0;
+        const sortedStandings = Object.keys(careerData.standings)
+          .map(k => ({ key: k, pts: careerData.standings[k] || 0 }))
+          .sort((a, b) => b.pts - a.pts || (a.key === 'player' ? -1 : 1));
+        const champRank = sortedStandings.findIndex(s => s.key === 'player') + 1;
+        const playerSeasonPts = careerData.standings.player || 0;
+
         careerData.racesCount += 1;
         if (playerPos === 1) careerData.winsCount += 1;
         if (playerPos <= 3) careerData.podiumsCount += 1;
+        careerData.seasonRacesCompleted = (careerData.seasonRacesCompleted || 0) + 1;
         careerData.currentRoundIdx = (careerData.currentRoundIdx + 1) % SEASON_CALENDAR.length;
+
+        const finaleBox = document.getElementById('resSeasonFinaleBox');
+        if (careerData.seasonRacesCompleted >= SEASON_CALENDAR.length) {
+          // 6-Race Season Finale!
+          let seasonBonus = 10000;
+          let finaleTitle = `🏁 6站賽季收官結算 · 年度第 ${champRank} 名 (P${champRank})`;
+          let finaleDesc = `完成完整賽季！獲發賽季完賽獎金 +$10,000，新賽季積分已重置！`;
+
+          if (champRank === 1) {
+            careerData.championshipsCount = (careerData.championshipsCount || 0) + 1;
+            seasonBonus = 100000;
+            finaleTitle = `👑 賽季收官總決算 · WORLD CHAMPION (年度總冠軍)!`;
+            finaleDesc = `恭喜以 ${playerSeasonPts} PTS 奪得世界車手總冠軍！獲發冠軍獎金 +$100,000！`;
+          } else if (champRank === 2) {
+            seasonBonus = 50000;
+            finaleTitle = `🥈 賽季收官總決算 · 年度亞軍 (2ND IN CHAMPIONSHIP)!`;
+            finaleDesc = `賽季累積 ${playerSeasonPts} PTS 奪得年度亞軍！獲發獎金 +$50,000！`;
+          } else if (champRank === 3) {
+            seasonBonus = 30000;
+            finaleTitle = `🥉 賽季收官總決算 · 年度季軍 (3RD IN CHAMPIONSHIP)!`;
+            finaleDesc = `賽季累積 ${playerSeasonPts} PTS 奪得年度季軍！獲發獎金 +$30,000！`;
+          }
+
+          totalEarned += seasonBonus;
+          if (finaleBox) {
+            finaleBox.classList.remove('hidden');
+            document.getElementById('resSeasonFinaleTitle').textContent = finaleTitle;
+            document.getElementById('resSeasonFinaleDesc').textContent = finaleDesc;
+          }
+          // Reset season standings for the new season while keeping cash, upgrades & titles
+          careerData.seasonRacesCompleted = 0;
+          careerData.currentRoundIdx = 0;
+          careerData.standings = getDefaultStandings();
+        } else {
+          if (finaleBox) finaleBox.classList.add('hidden');
+        }
+
+        careerData.cash += totalEarned;
         saveCareerData();
+        updateCareerUI();
 
         if (resCareerSummary) {
           resCareerSummary.classList.remove('hidden');
@@ -2790,6 +4685,10 @@
           }
           document.getElementById('resCareerTotalEarned').textContent = `+$${totalEarned.toLocaleString()}`;
           document.getElementById('resCareerNewBalance').textContent = `$${careerData.cash.toLocaleString()}`;
+          const ptsEl = document.getElementById('resCareerPointsEarned');
+          if (ptsEl) {
+            ptsEl.textContent = `+${earnedPts} PTS (總計 ${playerSeasonPts} PTS · 積分榜 P${champRank})`;
+          }
         }
         if (btnResultNextGP) btnResultNextGP.classList.remove('hidden');
       } else {
@@ -2858,9 +4757,38 @@
     // =========================================================================
     // 8. ADVANCED AI STEERING, CURVATURE THROTTLING & COLLISION PHYSICS
     // =========================================================================
+    // Real F1 DRS Rule: Only cars trailing within 1.00 second of a car ahead on track can activate DRS!
+    // (In solo Time Trial mode, DRS is freely available in DRS zones like F1 Qualifying)
+    function evaluateCarDrsStatus(targetCar, allCars, trackSpline, N) {
+      if (weatherState.trackWetness >= 45) {
+        return { canUseDrs: false, gapSec: null, wetDisabled: true };
+      }
+      if (selectedGameMode === 'timetrial') {
+        return { canUseDrs: true, gapSec: 0.0, wetDisabled: false };
+      }
+      // Find minimum positive spline distance ahead to any other car on track
+      let minSplineStepsAhead = Infinity;
+      const myPos = (targetCar.closestSplineIdx || 0) + (targetCar.splineFrac || 0);
+      for (let i = 0; i < allCars.length; i++) {
+        const other = allCars[i];
+        if (other === targetCar) continue;
+        const otherPos = (other.closestSplineIdx || 0) + (other.splineFrac || 0);
+        let diffSteps = (otherPos - myPos + N) % N;
+        if (diffSteps > 0.35 && diffSteps < minSplineStepsAhead) {
+          minSplineStepsAhead = diffSteps;
+        }
+      }
+      // Also check race leader condition: if P1 and the car ahead on spline is a lapped backmarker >18 steps away, only allow if truly within 1.0s ahead
+      // Convert spline steps (~48px per step) to time gap in seconds at racing speed (~540 px/s -> ~11.2 steps = 1.0s)
+      const gapSec = minSplineStepsAhead / 11.5;
+      const withinOneSecond = (gapSec <= 1.00);
+      return { canUseDrs: withinOneSecond, gapSec, wetDisabled: false };
+    }
+
     function updateAiPhysics(ai, dt, allCars) {
       const active = getActiveTrack();
       const trackSpline = active.pts;
+      const pitPts = active.pitPts;
       const N = trackSpline.length;
 
       const prevSplineIdx = ai.closestSplineIdx;
@@ -2914,24 +4842,83 @@
       let angleDiff = Math.abs(futDir - curDir);
       while (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
 
-      // Lateral target position with lane offset
+      // AI Tire Wear, Weather Crossover & Branched Pit Lane Decision
+      const aiComp = TIRE_COMPOUNDS[ai.tireCompound] || TIRE_COMPOUNDS.medium;
+      const aiWeatherPerf = computeTireWeatherPerformance(ai.tireCompound, weatherState.trackWetness);
+      if (!ai.finished) {
+        const aiWearDelta = (ai.speed / 650) * 1.15 * aiComp.wearRate * aiWeatherPerf.wearMod * dt;
+        ai.tireWear = Math.max(0, (ai.tireWear ?? 100) - aiWearDelta);
+        if (ai.pitCooldown > 0) ai.pitCooldown = Math.max(0, ai.pitCooldown - dt);
+
+        const wrongTireForWet = (weatherState.trackWetness > 36 && !aiComp.isWetTire);
+        const wrongTireForDry = (weatherState.trackWetness < 14 && aiComp.isWetTire);
+        const approachingPitEntry = (bestIdx >= N - 36 && bestIdx <= N - 18);
+        if (approachingPitEntry && (ai.tireWear < 28 || wrongTireForWet || wrongTireForDry) && ai.lap < raceState.totalLaps && ai.pitCooldown <= 0 && !ai.inPitLane) {
+          ai.inPitLane = true;
+          ai.pitStepIdx = 0;
+        }
+      }
+
+      // Lateral target position: if AI is in the branched Pit Lane, follow pitPts!
       let targetX = targetPt.x + targetPt.nx * ai.laneOffset;
       let targetY = targetPt.y + targetPt.ny * ai.laneOffset;
+
+      if (ai.inPitLane && pitPts && pitPts.length > 0) {
+        // Find nearest point on pitPts
+        let bestPitIdx = ai.pitStepIdx || 0;
+        let minPD = Infinity;
+        for (let pi = 0; pi < pitPts.length; pi++) {
+          const pd = Math.hypot(ai.x - pitPts[pi].x, ai.y - pitPts[pi].y);
+          if (pd < minPD) {
+            minPD = pd;
+            bestPitIdx = pi;
+          }
+        }
+        ai.pitStepIdx = bestPitIdx;
+        const lookPitIdx = Math.min(pitPts.length - 1, bestPitIdx + 4);
+        targetX = pitPts[lookPitIdx].x;
+        targetY = pitPts[lookPitIdx].y;
+
+        if (pitPts[bestPitIdx].zone === 'box' && ai.pitCooldown <= 0 && ai.pitStopTimer <= 0) {
+          ai.pitStopTimer = 1.50;
+          ai.pitCooldown = 14.0;
+        }
+        if (bestPitIdx >= pitPts.length - 2) {
+          ai.inPitLane = false;
+        }
+      }
+
+      if (ai.pitStopTimer > 0) {
+        ai.pitStopTimer -= dt;
+        ai.speed = 0;
+        ai.vx = 0;
+        ai.vy = 0;
+        if (ai.pitStopTimer <= 0) {
+          ai.pitStopTimer = 0;
+          ai.tireWear = 100.0;
+          if (weatherState.trackWetness >= 58) ai.tireCompound = 'wet';
+          else if (weatherState.trackWetness >= 22) ai.tireCompound = 'inter';
+          else ai.tireCompound = (raceState.totalLaps - ai.lap <= 2) ? 'soft' : 'medium';
+        }
+        return;
+      }
 
       ai.onBridge = isCarOnOverpassBridge(bestIdx, active);
 
       // Obstacle & Opponent Avoidance (Only avoid cars on the same vertical level: bridge vs underpass)
-      allCars.forEach(other => {
-        if (other === ai) return;
-        if (Boolean(other.onBridge) !== Boolean(ai.onBridge)) return;
-        const dist = Math.hypot(other.x - ai.x, other.y - ai.y);
-        if (dist < 48 && dist > 1) {
-          const repX = (ai.x - other.x) / dist;
-          const repY = (ai.y - other.y) / dist;
-          targetX += repX * 28;
-          targetY += repY * 28;
-        }
-      });
+      if (!ai.inPitLane) {
+        allCars.forEach(other => {
+          if (other === ai || other.inPitLane) return;
+          if (Boolean(other.onBridge) !== Boolean(ai.onBridge)) return;
+          const dist = Math.hypot(other.x - ai.x, other.y - ai.y);
+          if (dist < 48 && dist > 1) {
+            const repX = (ai.x - other.x) / dist;
+            const repY = (ai.y - other.y) / dist;
+            targetX += repX * 28;
+            targetY += repY * 28;
+          }
+        });
+      }
 
       // Steer toward target point with sharper apex responsiveness
       const toTargetAngle = Math.atan2(targetY - ai.y, targetX - ai.x);
@@ -2942,8 +4929,9 @@
       const steerDir = Math.max(-1, Math.min(1, steerDiff * 3.15));
       ai.angle += steerDir * ai.spec.turnSpeed * 1.14 * dt;
 
-      // Balanced AI DRS activation on DRS straights (Midpoint boost: +3% Easy/Normal, +5% Hard)
-      ai.drsActive = Boolean(curTrackPt.drs && angleDiff < 0.25 && ai.speed > 250);
+      // Authentic F1 DRS Rule for AI: Only active in DRS zone when trailing a car ahead within 1.0s!
+      const aiDrsEval = evaluateCarDrsStatus(ai, allCars, trackSpline, N);
+      ai.drsActive = Boolean(!ai.inPitLane && curTrackPt.drs && aiDrsEval.canUseDrs && angleDiff < 0.25 && ai.speed > 250);
       const aiDrsBoost = ai.drsActive ? (selectedAiDiff === 'hard' ? 1.05 : 1.03) : 1.0;
 
       // Subtle slipstream catch-up only on Hard difficulty (+2%)
@@ -2952,9 +4940,12 @@
         catchupBoost = 1.02;
       }
 
+      const aiWearPenalty = (ai.tireWear < 35) ? (0.86 + (ai.tireWear / 35) * 0.14) : 1.0;
+      const aiPitLimiter = ai.inPitLane ? 0.42 : 1.0;
+
       // Balanced midpoint cornering throttle & braking
       const cooldownMod = ai.finished ? 0.75 : 1.0;
-      const baseMaxSpeed = ai.spec.maxSpeed * ai.skillSpeedMod * aiDrsBoost * catchupBoost * cooldownMod;
+      const baseMaxSpeed = ai.spec.maxSpeed * ai.skillSpeedMod * aiComp.speedMult * aiWeatherPerf.speedMod * aiWearPenalty * aiPitLimiter * aiDrsBoost * catchupBoost * cooldownMod;
       const minCornerRatio = selectedAiDiff === 'hard' ? 0.68 : (selectedAiDiff === 'normal' ? 0.63 : 0.58);
       const cornerSlowdownFactor = Math.max(minCornerRatio, 1 - (angleDiff / Math.PI) * 0.98);
       const targetSpeed = baseMaxSpeed * cornerSlowdownFactor;
@@ -3062,6 +5053,46 @@
 
     function updatePhysics(dt) {
       if (raceState.finished) return;
+
+      // Handle 3-Red-Lights-Out Race Start Countdown before releasing cars
+      if (raceState.countdownActive) {
+        raceState.countdownTimer -= dt;
+        let newStage = 0;
+        if (raceState.countdownTimer <= 0) {
+          raceState.countdownActive = false;
+          raceState.countdownStage = 4;
+          raceState.goFlashTimer = 0.75;
+          raceState.lapStartTime = performance.now();
+          raceState.curLapTime = 0;
+          playCheckpointBeep(880);
+          updateStartLightsUI();
+        } else {
+          if (raceState.countdownTimer <= 0.65) newStage = 3;
+          else if (raceState.countdownTimer <= 1.30) newStage = 2;
+          else if (raceState.countdownTimer <= 1.95) newStage = 1;
+          else newStage = 0;
+
+          if (newStage !== raceState.countdownStage) {
+            raceState.countdownStage = newStage;
+            if (newStage >= 1 && newStage <= 3) {
+              playCheckpointBeep(440);
+            }
+            updateStartLightsUI();
+          }
+          raceState.curLapTime = 0;
+          document.getElementById('hudCurTime').textContent = '00:00.00';
+          const revving = input.gas || (autoAccelerate && !usingKeyboardGas && !input.brake);
+          updateAudio(revving ? 0.16 : 0.02, false, false);
+          return;
+        }
+      } else if (raceState.goFlashTimer > 0) {
+        raceState.goFlashTimer -= dt;
+        if (raceState.goFlashTimer <= 0) {
+          raceState.goFlashTimer = 0;
+          updateStartLightsUI();
+        }
+      }
+
       const spec = getPlayerSpec();
       const active = getActiveTrack();
       const trackSpline = active.pts;
@@ -3074,8 +5105,22 @@
       const minDist = nearestBeforeMove.minDist;
       const curTrackPt = trackSpline[nearestBeforeMove.bestIdx];
 
+      // Check if player car is on the Branched Pit Lane road (`active.pitPts`)
+      const pitPts = active.pitPts || [];
+      let minPitDist = Infinity;
+      let nearestPitPt = null;
+      for (let pi = 0; pi < pitPts.length; pi++) {
+        const pd = Math.hypot(car.x - pitPts[pi].x, car.y - pitPts[pi].y);
+        if (pd < minPitDist) {
+          minPitDist = pd;
+          nearestPitPt = pitPts[pi];
+        }
+      }
+      const onPitLaneRoad = (minPitDist <= 64);
+      car.inPitLane = onPitLaneRoad;
+
       const halfRoad = trackWidth * 0.5;
-      if (minDist <= halfRoad - curbWidth * 0.5) {
+      if (onPitLaneRoad || minDist <= halfRoad - curbWidth * 0.5) {
         car.surface = 'asphalt';
       } else if (minDist <= halfRoad + curbWidth * 0.65) {
         car.surface = 'curb';
@@ -3092,70 +5137,315 @@
       car.speed = absSpeed;
 
       const effectiveGas = input.gas || (autoAccelerate && !usingKeyboardGas && !input.brake);
-      car.drsActive = Boolean(curTrackPt.drs && effectiveGas && !input.brake && car.surface !== 'grass' && absSpeed > 260);
+      const allRaceCarsForDrs = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? [car, ...aiCars] : [car];
+      const playerDrsEval = evaluateCarDrsStatus(car, allRaceCarsForDrs, trackSpline, N);
+      car.drsCanActivate = playerDrsEval.canUseDrs;
+      car.drsGapSec = playerDrsEval.gapSec;
+      car.drsWetDisabled = playerDrsEval.wetDisabled;
+      car.drsActive = Boolean(!onPitLaneRoad && curTrackPt.drs && playerDrsEval.canUseDrs && effectiveGas && !input.brake && car.surface !== 'grass' && absSpeed > 240);
 
-      const steerInput = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      const digitalSteer = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+      const usingDirectNow = (steerControlMode === 'swipe' && directSteerActive && directHasDirection && digitalSteer === 0);
+
+      let steerInput = digitalSteer;
+      let angleErr = 0;
+      if (usingDirectNow) {
+        angleErr = directTargetAngle - car.angle;
+        while (angleErr > Math.PI) angleErr -= Math.PI * 2;
+        while (angleErr < -Math.PI) angleErr += Math.PI * 2;
+        // Proportional target-heading control: small angle difference smoothly aligns with zero overshoot;
+        // larger angle difference (>25 deg) turns at full rate until the car nose matches your finger direction!
+        if (Math.abs(angleErr) < 0.015) {
+          steerInput = 0;
+        } else {
+          steerInput = Math.max(-1, Math.min(1, angleErr / 0.44));
+        }
+      }
+
+      const absSteer = Math.abs(steerInput);
       const speedFactor = Math.min(1, absSpeed / 120);
       const reverseSign = forwardVel >= -10 ? 1 : -1;
       const curbTurnBonus = car.surface === 'curb' ? 1.14 : 1.0;
 
-      const wantsToDrift =
-        (steerInput !== 0 && absSpeed > spec.driftThreshold) ||
-        (steerInput !== 0 && (input.brake || input.handbrake) && absSpeed > 180) ||
-        Math.abs(lateralVel) > 105;
+      // In Hot Slide direct mode, pointing >28 deg away from current car heading at high speed triggers smooth drift,
+      // and as soon as the car nose catches up to your finger angle, it automatically locks into Grip!
+      const wantsToDrift = usingDirectNow
+        ? ((Math.abs(angleErr) > 0.48 && absSpeed > spec.driftThreshold) || (Math.abs(angleErr) > 0.20 && (input.brake || input.handbrake) && absSpeed > 180) || Math.abs(lateralVel) > 105)
+        : ((absSteer > 0.60 && absSpeed > spec.driftThreshold) || (absSteer > 0.22 && (input.brake || input.handbrake) && absSpeed > 180) || Math.abs(lateralVel) > 105);
 
       car.isDrifting = wantsToDrift;
 
-      const effectiveTurnRate = spec.turnSpeed * curbTurnBonus * (car.isDrifting ? 1.2 : 1.0);
-      car.angle += steerInput * effectiveTurnRate * speedFactor * reverseSign * dt;
-
-      const drsBoost = car.drsActive ? 1.07 : 1.0;
-      if (effectiveGas) forwardVel += spec.accel * drsBoost * dt;
-      if (input.brake) {
-        if (forwardVel > 20) forwardVel -= spec.brake * dt;
-        else forwardVel -= spec.accel * 0.5 * dt;
+      if (!car.inPitAutopilot) {
+        const effectiveTurnRate = spec.turnSpeed * (usingDirectNow ? 1.12 : 1.0) * curbTurnBonus * (car.isDrifting ? 1.20 : 1.0);
+        const maxStep = effectiveTurnRate * speedFactor * dt;
+        if (usingDirectNow && Math.abs(angleErr) <= maxStep) {
+          car.angle = directTargetAngle; // Exact lock-on without any oscillation!
+        } else {
+          car.angle += steerInput * effectiveTurnRate * speedFactor * reverseSign * dt;
+        }
       }
 
-      let maxAllowedSpeed = spec.maxSpeed * drsBoost;
-      let rollingDrag = 0.65;
-      if (car.surface === 'grass') {
-        maxAllowedSpeed = spec.maxSpeed * 0.52;
-        rollingDrag = 3.2;
-      } else if (car.surface === 'curb') {
-        rollingDrag = 0.85;
+      // v1.0.1 Stochastic Dynamic Weather Evolution & Track Wetness Physics
+      if (weatherState.mode === 'dynamic') {
+        weatherState.phaseTimer -= dt;
+        if (weatherState.phaseTimer <= 0) {
+          applyWeatherConditionParams(weatherState.nextForecast || pickNextRandomWeather(weatherState.condition));
+        }
+        // Smoothly interpolate rainIntensity toward targetRainIntensity
+        weatherState.rainIntensity += (weatherState.targetRainIntensity - weatherState.rainIntensity) * Math.min(1, dt * 1.5);
+      }
+      if (weatherState.condition === 'heavy_rain') {
+        weatherState.trackWetness = Math.min(98, weatherState.trackWetness + weatherState.wettingRate * 1.35 * dt);
+      } else if (weatherState.condition === 'light_rain') {
+        const targetW = 38 + weatherState.targetRainIntensity * 35;
+        if (weatherState.trackWetness < targetW) weatherState.trackWetness = Math.min(targetW, weatherState.trackWetness + weatherState.wettingRate * 0.85 * dt);
+        else weatherState.trackWetness = Math.max(targetW, weatherState.trackWetness - weatherState.dryingRate * 0.5 * dt);
+      } else if (weatherState.condition === 'overcast') {
+        weatherState.trackWetness = Math.max(0, weatherState.trackWetness - weatherState.dryingRate * 0.65 * dt);
+      } else {
+        weatherState.trackWetness = Math.max(0, weatherState.trackWetness - weatherState.dryingRate * 1.15 * dt);
+      }
+      updateWeatherHudUI();
+
+      // v0.9.0 / v1.0.0 Tire Compound, Weather Crossover & Real-Time Tire Wear Physics
+      const tireComp = TIRE_COMPOUNDS[car.tireCompound] || TIRE_COMPOUNDS.medium;
+      const weatherPerf = computeTireWeatherPerformance(car.tireCompound, weatherState.trackWetness);
+      const carWearMod = spec.tireWearMod || 1.0;
+
+      // Alert player when rain makes track wet while on slicks, or when track dries while on wets
+      if (weatherState.trackWetness >= 28 && !tireComp.isWetTire && !weatherState.warnedWetTrack) {
+        weatherState.warnedWetTrack = true;
+        weatherState.warnedDryTrack = false;
+        car.nextTireCompound = weatherState.trackWetness >= 58 ? 'wet' : 'inter';
+        updateTireHudUI();
+        const dict = I18N[currentLang] || I18N.zh;
+        showToast(dict.rainAlertTitle || '🌧️ 降雨警報 · 路面轉濕！', dict.rainAlertSub || '已為您自動預選雨胎，請駛入主直線右側 PIT 換胎！');
+      } else if (weatherState.trackWetness <= 14 && tireComp.isWetTire && !weatherState.warnedDryTrack) {
+        weatherState.warnedDryTrack = true;
+        weatherState.warnedWetTrack = false;
+        car.nextTireCompound = 'soft';
+        updateTireHudUI();
+        const dict = I18N[currentLang] || I18N.zh;
+        showToast(dict.dryTrackAlertTitle || '☀️ 天氣放晴 · 路面漸乾！', dict.dryTrackAlertSub || '已預選軟胎 Soft，可進站換回乾胎衝刺！');
+      }
+      if (car.pitCooldown > 0) car.pitCooldown = Math.max(0, car.pitCooldown - dt);
+
+      if (absSpeed > 60 && !car.inPitAutopilot && car.pitStopTimer <= 0) {
+        const speedNorm = absSpeed / 650;
+        const driftMult = car.isDrifting ? 1.28 : 1.0;
+        const surfMult = car.surface === 'grass' ? 1.35 : (car.surface === 'curb' ? 1.10 : 1.0);
+        const steerLoad = 1.0 + absSteer * 0.25;
+        // Buffed durability: Soft lasts ~4.5-6 laps, Medium ~7-9 laps, Hard ~12+ laps
+        const wearPerSec = 0.68 * speedNorm * driftMult * surfMult * steerLoad * tireComp.wearRate * weatherPerf.wearMod * carWearMod;
+        car.tireWear = Math.max(0, car.tireWear - wearPerSec * dt);
+
+        if (car.tireWear <= 25 && !car.warnedBoxBox) {
+          car.warnedBoxBox = true;
+          const dict = I18N[currentLang] || I18N.zh;
+          showToast(dict.boxBoxWarnTitle || '⚠️ BOX BOX! 輪胎嚴重磨損', dict.boxBoxWarnSub || '請點擊左上角「🔧預約進站」或靠右駛入 PIT IN 自動換胎！');
+          playCheckpointBeep(330);
+        }
       }
 
-      if (!effectiveGas && !input.brake) forwardVel *= Math.max(0, 1 - rollingDrag * dt);
-      if (car.surface === 'grass' && forwardVel > maxAllowedSpeed) forwardVel -= 450 * dt;
-      forwardVel = Math.max(-180, Math.min(maxAllowedSpeed, forwardVel));
+      // v1.0.2 FULL PIT LANE AUTO-PILOT (Auto-Entry -> Tire Selection Overlay -> Pit Stop -> Auto-Exit)
+      // Trigger 1: Player armed "🔧預約進站 (Box This Lap)" and reaches the Pit Entry window (N-35 to N-22)
+      // Trigger 2: Player manually steers to the right side at the "🔧 PIT IN ▶" entrance (N-35 to N-16)
+      const relToTrackX = car.x - curTrackPt.x;
+      const relToTrackY = car.y - curTrackPt.y;
+      const rightSideOffset = relToTrackX * curTrackPt.nx + relToTrackY * curTrackPt.ny;
+      const inPitEntrySplineWindow = (nearestBeforeMove.bestIdx >= N - 35 && nearestBeforeMove.bestIdx <= N - 15);
+      const nearPitEntryRamp = Boolean(nearestPitPt && nearestPitPt.step <= 14 && minPitDist <= 78);
 
-      const traction = car.isDrifting ? spec.driftTraction : (car.surface === 'grass' ? spec.gripTraction * 0.45 : spec.gripTraction);
-      if (car.isDrifting && steerInput !== 0) {
-        lateralVel += -steerInput * 145 * dt;
-        forwardVel *= Math.pow(spec.driftRetention, dt * 60);
+      if (!car.inPitAutopilot && car.pitCooldown <= 0 && inPitEntrySplineWindow) {
+        if (car.boxThisLap || rightSideOffset > trackWidth * 0.22 || nearPitEntryRamp) {
+          car.inPitAutopilot = true;
+          car.boxThisLap = false;
+          car.pitAutoPhase = 'entry';
+          car.pitAutoStep = nearestPitPt ? Math.min(10, nearestPitPt.step) : 0;
+          car.pitMountedThisStop = false;
+          car.pitMountedCompoundKey = null;
+          car.isDrifting = false;
+          car.drsActive = false;
+          // Default to the current tire compound if sets remain (or weather-recommended compound)
+          const curHasSets = (car.tireSetsLeft && car.tireSetsLeft[car.tireCompound] > 0);
+          car.nextTireCompound = (weatherState.trackWetness >= 22)
+            ? getRecommendedTireForCurrentWeather()
+            : (curHasSets ? car.tireCompound : getRecommendedTireForCurrentWeather());
+          // Release any held touch steering so player's hands are free to tap the tire picker modal!
+          directSteerActive = false;
+          directHasDirection = false;
+          directPointerId = null;
+          if (typeof updateDirectRingVisual === 'function') updateDirectRingVisual();
+          playCheckpointBeep(587.33);
+          updateTireHudUI();
+        }
       }
-      lateralVel *= Math.max(0, 1 - traction * dt);
 
-      const newCos = Math.cos(car.angle);
-      const newSin = Math.sin(car.angle);
-      car.vx = forwardVel * newCos - lateralVel * newSin;
-      car.vy = forwardVel * newSin + lateralVel * newCos;
+      if (car.inPitAutopilot && pitPts.length > 4) {
+        car.surface = 'asphalt';
+        car.isDrifting = false;
+        car.drsActive = false;
+
+        if (car.pitStopTimer > 0) {
+          // Stationary in [🔧 PIT BOX] while 6 mechanics swap the tires
+          car.pitStopTimer -= dt;
+          forwardVel = 0;
+          lateralVel = 0;
+          car.vx = 0;
+          car.vy = 0;
+          car.speed = 0;
+          if (car.pitStopTimer <= 0) {
+            car.pitStopTimer = 0;
+            car.pitAutoPhase = 'exit';
+            car.pitAutoStep = 29;
+            // Mount the selected fresh 100% tire set and deduct 1 set from inventory!
+            if (!car.pitMountedThisStop || car.pitMountedCompoundKey !== car.nextTireCompound) {
+              applyPitTireMount(car.nextTireCompound || car.tireCompound);
+            }
+            car.tireWear = 100.0;
+            car.warnedBoxBox = false;
+            car.pitStopsCount = (car.pitStopsCount || 0) + 1;
+            const mountedComp = TIRE_COMPOUNDS[car.tireCompound] || TIRE_COMPOUNDS.medium;
+            const remSets = (car.tireSetsLeft && car.tireSetsLeft[car.tireCompound] !== undefined) ? car.tireSetsLeft[car.tireCompound] : 0;
+            const dict = I18N[currentLang] || I18N.zh;
+            showToast(
+              dict.pitStopToastTitle || '🔧 PIT STOP 完成！',
+              `${dict.pitStopToastSub || '已換裝 100% 全新輪胎：'}${mountedComp.icon} ${mountedComp.id.toUpperCase()} (${formatRemainingSetsText(remSets)})`
+            );
+            playCheckpointBeep(880);
+          }
+          updateTireHudUI();
+        } else {
+          // Autopilot smoothly drives along pitPts[pitAutoStep] -> Pit Box (step 28) -> Pit Exit (end)
+          const targetIdx = Math.min(pitPts.length - 1, Math.floor(car.pitAutoStep));
+          const targetPt = pitPts[targetIdx];
+          const dx = targetPt.x - car.x;
+          const dy = targetPt.y - car.y;
+          const distToWp = Math.hypot(dx, dy);
+
+          // IMPORTANT: During 'entry' phase, clamp waypoint progression at step 28 so the car NEVER skips the Pit Box!
+          if (car.pitAutoPhase === 'entry' && targetIdx >= 28 && distToWp < 54) {
+            // Arrived at [🔧 PIT BOX]! Lock into box, immediately mount fresh 100% tire set, and start 2.15s service
+            car.x = pitPts[28].x;
+            car.y = pitPts[28].y;
+            car.angle = Math.atan2(pitPts[28].pty, pitPts[28].ptx);
+            car.vx = 0;
+            car.vy = 0;
+            car.speed = 0;
+            forwardVel = 0;
+            lateralVel = 0;
+            applyPitTireMount(car.nextTireCompound || car.tireCompound);
+            car.pitStopTimer = 2.15;
+            car.pitCooldown = 12.0;
+            playCheckpointBeep(523.25);
+            updateTireHudUI();
+          } else {
+            const maxStepAllowed = (car.pitAutoPhase === 'entry') ? 28 : (pitPts.length - 1);
+            if (distToWp < 50 && car.pitAutoStep < maxStepAllowed) {
+              car.pitAutoStep += 1;
+            }
+            const steerTarget = pitPts[Math.min(maxStepAllowed, Math.floor(car.pitAutoStep))];
+            const desiredAngle = Math.atan2(steerTarget.y - car.y, steerTarget.x - car.x);
+            let aDiff = desiredAngle - car.angle;
+            while (aDiff > Math.PI) aDiff -= Math.PI * 2;
+            while (aDiff < -Math.PI) aDiff += Math.PI * 2;
+            car.angle += aDiff * Math.min(1, dt * 12.0);
+
+            const autoSpeed = (car.pitAutoPhase === 'exit') ? 395 : 285;
+            car.speed = autoSpeed;
+            forwardVel = autoSpeed;
+            lateralVel = 0;
+            car.vx = Math.cos(car.angle) * autoSpeed;
+            car.vy = Math.sin(car.angle) * autoSpeed;
+
+            if (car.pitAutoPhase === 'exit' && car.pitAutoStep >= pitPts.length - 1 && distToWp < 46) {
+              // Completed Pit Exit merge! Hand control back to player on main straight!
+              car.inPitAutopilot = false;
+              car.inPitLane = false;
+              car.pitMountedThisStop = false;
+              updateTireHudUI();
+            }
+          }
+        }
+      }
+
+      // Tire Wear Grip Cliff Curve (>40% healthy, 20~40% graining, <20% severe cliff)
+      let tireWearGripFactor = 1.0;
+      let tireWearSpeedFactor = 1.0;
+      if (car.tireWear < 40) {
+        if (car.tireWear >= 20) {
+          tireWearGripFactor = 0.85 + ((car.tireWear - 20) / 20) * 0.15;
+          tireWearSpeedFactor = 0.95 + ((car.tireWear - 20) / 20) * 0.05;
+        } else {
+          tireWearGripFactor = 0.62 + (car.tireWear / 20) * 0.23;
+          tireWearSpeedFactor = 0.86 + (car.tireWear / 20) * 0.09;
+        }
+      }
+
+      if (!car.inPitAutopilot) {
+        const drsBoost = (car.drsActive && weatherState.trackWetness < 45) ? 1.08 : 1.0;
+        const effectiveAccel = spec.accel * tireComp.accelMult * weatherPerf.speedMod * tireWearSpeedFactor;
+        if (effectiveGas) forwardVel += effectiveAccel * drsBoost * dt;
+        if (input.brake) {
+          if (forwardVel > 20) forwardVel -= spec.brake * dt;
+          else forwardVel -= effectiveAccel * 0.5 * dt;
+        }
+
+        let maxAllowedSpeed = spec.maxSpeed * tireComp.speedMult * weatherPerf.speedMod * tireWearSpeedFactor * drsBoost;
+        let rollingDrag = 0.65;
+        if (car.surface === 'grass') {
+          maxAllowedSpeed = spec.maxSpeed * 0.52;
+          rollingDrag = 3.2;
+        } else if (car.surface === 'curb') {
+          rollingDrag = 0.85;
+        }
+
+        if (!effectiveGas && !input.brake) forwardVel *= Math.max(0, 1 - rollingDrag * dt);
+        if (car.surface === 'grass' && forwardVel > maxAllowedSpeed) {
+          forwardVel -= 520 * dt;
+        }
+        forwardVel = Math.max(-180, Math.min(maxAllowedSpeed, forwardVel));
+
+        const baseTraction = car.isDrifting ? spec.driftTraction : (car.surface === 'grass' ? spec.gripTraction * 0.45 : spec.gripTraction);
+        const traction = baseTraction * tireComp.gripMult * weatherPerf.gripMod * tireWearGripFactor;
+        if (car.isDrifting && steerInput !== 0) {
+          lateralVel += -steerInput * 145 * dt;
+          forwardVel *= Math.pow(spec.driftRetention, dt * 60);
+        }
+        lateralVel *= Math.max(0, 1 - traction * dt);
+
+        const newCos = Math.cos(car.angle);
+        const newSin = Math.sin(car.angle);
+        car.vx = forwardVel * newCos - lateralVel * newSin;
+        car.vy = forwardVel * newSin + lateralVel * newCos;
+      }
 
       car.x += car.vx * dt;
       car.y += car.vy * dt;
 
-      // Barrier containment
-      if (minDist > trackWidth * 1.18) {
+      // Barrier containment (allows wider corridor when driving inside the branched Pit Lane!)
+      const maxBarrierDist = (onPitLaneRoad || nearestBeforeMove.bestIdx > N - 34 || nearestBeforeMove.bestIdx < 28) ? trackWidth * 1.38 : trackWidth * 1.18;
+      if (minDist > maxBarrierDist && !onPitLaneRoad) {
         const pullX = curTrackPt.x - car.x;
         const pullY = curTrackPt.y - car.y;
         const plen = Math.hypot(pullX, pullY) || 1;
-        car.x += (pullX / plen) * (minDist - trackWidth * 1.18);
-        car.y += (pullY / plen) * (minDist - trackWidth * 1.18);
+        car.x += (pullX / plen) * (minDist - maxBarrierDist);
+        car.y += (pullY / plen) * (minDist - maxBarrierDist);
         car.vx *= 0.68;
         car.vy *= 0.68;
       }
 
-      // Re-evaluate player spline position AFTER movement
+      // Update AI cars & Collisions BEFORE evaluating final player spline index & lap completion
+      // so collision resolution never skips a finish-line wrap in Arcade / Career mode!
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        const allCars = [car, ...aiCars];
+        aiCars.forEach(ai => updateAiPhysics(ai, dt, allCars));
+        // Only collide cars that are not stationary in the Pit Box
+        const activeCollisionCars = allCars.filter(c => !(c.pitStopTimer > 0) && !c.inPitAutopilot && !c.inPitLane);
+        resolveCollisions(activeCollisionCars);
+      }
+
+      // Re-evaluate player spline position AFTER movement AND collisions
       const nearestAfter = findNearestSplinePoint(car.x, car.y, trackSpline, nearestBeforeMove.bestIdx);
       const bestIdx = nearestAfter.bestIdx;
       car.closestSplineIdx = bestIdx;
@@ -3163,33 +5453,39 @@
       car.onBridge = isCarOnOverpassBridge(bestIdx, active);
       const postTrackPt = trackSpline[bestIdx];
 
-      // Timing & Sector Checkpoints for Player
+      // Timing & Sector Checkpoints for Player (robust against high speed or pit lane entry)
       const now = performance.now();
       raceState.curLapTime = now - raceState.lapStartTime;
 
-      if (postTrackPt.sector === 2 && !raceState.passedSector1) {
+      if ((postTrackPt.sector === 2 || (bestIdx > N * 0.28 && bestIdx < N * 0.70)) && !raceState.passedSector1) {
         raceState.passedSector1 = true;
         car.passedSector1 = true;
         raceState.s1Time = (raceState.curLapTime / 1000).toFixed(1);
         document.getElementById('hudSector1').textContent = `S1:${raceState.s1Time}`;
         playCheckpointBeep(587.33);
       }
-      if (postTrackPt.sector === 3 && raceState.passedSector1 && !raceState.passedSector2) {
+      if ((postTrackPt.sector === 3 || bestIdx >= N * 0.65) && raceState.passedSector1 && !raceState.passedSector2) {
         raceState.passedSector2 = true;
         car.passedSector2 = true;
         raceState.s2Time = (raceState.curLapTime / 1000).toFixed(1);
         document.getElementById('hudSector2').textContent = `S2:${raceState.s2Time}`;
         playCheckpointBeep(659.25);
       }
+      if (bestIdx > N * 0.30 && bestIdx < N * 0.75) {
+        raceState.passedHalfway = true;
+      }
+      if (raceState.passedHalfway && bestIdx >= N * 0.68) {
+        raceState.passedLateLap = true;
+      }
       if (raceState.passedSector1 && bestIdx > raceState.maxSplineIdxReached) {
         raceState.maxSplineIdxReached = bestIdx;
       }
 
-      // Finish line wrap detection for Player (requires Sector 1 & Sector 2 passed!)
-      const wrappedAroundFinish = (prevSplineIdx > N * 0.75 && bestIdx < 45);
-      const inFinishZoneAfterFullLap = (bestIdx < 32 && raceState.passedSector1 && raceState.passedSector2 && raceState.maxSplineIdxReached > N * 0.72);
+      // Bulletproof Finish Line Wrap Detection for Player (works on both Main Straight and Pit Lane!)
+      const wrappedAroundFinish = (prevSplineIdx > N * 0.70 && bestIdx < N * 0.22);
+      const inFinishZoneAfterFullLap = (bestIdx < N * 0.16 && (raceState.passedLateLap || (raceState.passedSector1 && raceState.passedSector2 && raceState.maxSplineIdxReached > N * 0.68)));
 
-      if ((wrappedAroundFinish || inFinishZoneAfterFullLap) && raceState.passedSector1 && raceState.passedSector2 && raceState.curLapTime > 5000) {
+      if ((wrappedAroundFinish || inFinishZoneAfterFullLap) && (raceState.passedHalfway || raceState.passedSector1) && raceState.curLapTime > 3500) {
         const finishedLapMs = raceState.curLapTime;
         raceState.s3Time = (finishedLapMs / 1000).toFixed(1);
         document.getElementById('hudSector3').textContent = `S3:${raceState.s3Time}`;
@@ -3212,6 +5508,15 @@
           car.passedSector1 = false;
           car.passedSector2 = false;
           car.totalProgress = computeContinuousProgress(car, N);
+          // Also update AI progress before showing classification table
+          if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+            aiCars.forEach(ai => {
+              const near = findNearestSplinePoint(ai.x, ai.y, trackSpline, ai.closestSplineIdx);
+              ai.closestSplineIdx = near.bestIdx;
+              ai.splineFrac = near.frac;
+              ai.totalProgress = computeContinuousProgress(ai, N);
+            });
+          }
           showRaceResultsModal();
           return;
         } else {
@@ -3223,27 +5528,23 @@
           raceState.lapStartTime = now;
           raceState.passedSector1 = false;
           raceState.passedSector2 = false;
+          raceState.passedHalfway = false;
+          raceState.passedLateLap = false;
           raceState.maxSplineIdxReached = 0;
           currentLapRecording = [];
         }
       }
 
-      // Compute continuous player progress AFTER lap & spline updates
+      // Compute continuous progress & live P1~P8 rank
       car.totalProgress = computeContinuousProgress(car, N);
-
-      // Update AI cars, Collisions & Real-Time Live Position (POS P1/8 ~ P8/8)
       if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
         const allCars = [car, ...aiCars];
-        aiCars.forEach(ai => updateAiPhysics(ai, dt, allCars));
-        resolveCollisions(allCars);
-
-        // Recompute continuous progress after collision separation so POS is 100% live every frame
-        allCars.forEach(c => {
-          const near = findNearestSplinePoint(c.x, c.y, trackSpline, c.closestSplineIdx);
-          c.closestSplineIdx = near.bestIdx;
-          c.splineFrac = near.frac;
-          c.onBridge = isCarOnOverpassBridge(c.closestSplineIdx, active);
-          c.totalProgress = computeContinuousProgress(c, N);
+        aiCars.forEach(ai => {
+          const near = findNearestSplinePoint(ai.x, ai.y, trackSpline, ai.closestSplineIdx);
+          ai.closestSplineIdx = near.bestIdx;
+          ai.splineFrac = near.frac;
+          ai.onBridge = isCarOnOverpassBridge(ai.closestSplineIdx, active);
+          ai.totalProgress = computeContinuousProgress(ai, N);
         });
 
         allCars.sort((a, b) => b.totalProgress - a.totalProgress);
@@ -3255,6 +5556,24 @@
         posEl.className = myRank === 1
           ? 'font-black text-amber-300 ml-0.5 text-xs sm:text-sm'
           : (myRank <= 3 ? 'font-bold text-sky-400 ml-0.5 text-xs sm:text-sm' : 'font-bold text-white ml-0.5 text-xs sm:text-sm');
+      }
+
+      // Wet-track water rooster-tail spray particles behind car & AI
+      if (weatherState.trackWetness > 22 && absSpeed > 150) {
+        const rx = car.x + Math.cos(car.angle) * -16;
+        const ry = car.y + Math.sin(car.angle) * -16;
+        if (Math.random() < 0.75) {
+          smokeParticles.push({
+            x: rx + (Math.random() - 0.5) * 12,
+            y: ry + (Math.random() - 0.5) * 12,
+            vx: (Math.random() - 0.5) * 24,
+            vy: (Math.random() - 0.5) * 24,
+            size: 5 + Math.random() * 6,
+            alpha: 0.65,
+            onBridge: Boolean(car.onBridge),
+            color: '#bae6fd'
+          });
+        }
       }
 
       // Skid marks & smoke
@@ -3314,15 +5633,24 @@
       const kmh = Math.round(absSpeed * 0.47);
       document.getElementById('hudSpeed').textContent = kmh;
       document.getElementById('hudSpeedBar').style.width = `${Math.min(100, (kmh / 345) * 100)}%`;
+      updateTireHudUI();
       document.getElementById('hudCurTime').textContent = formatTime(raceState.curLapTime);
 
       const drsBadge = document.getElementById('hudDrsBadge');
-      if (car.drsActive) {
-        drsBadge.textContent = 'DRS ON';
-        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-emerald-500/30 text-emerald-300 border border-emerald-400';
-      } else if (postTrackPt.drs) {
-        drsBadge.textContent = 'DRS ZONE';
-        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-emerald-950 text-emerald-400 border border-emerald-700';
+      if (car.drsWetDisabled) {
+        drsBadge.textContent = '🌧️DRS WET OFF';
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-sky-950 text-sky-300 border border-sky-700';
+      } else if (car.drsActive) {
+        const gapStr = (car.drsGapSec !== null && selectedGameMode !== 'timetrial') ? ` ${car.drsGapSec.toFixed(1)}s` : '';
+        drsBadge.textContent = `🟢DRS ON${gapStr}`;
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-emerald-500/30 text-emerald-300 border border-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.4)]';
+      } else if (postTrackPt.drs && !car.drsCanActivate) {
+        drsBadge.textContent = '⚪DRS >1.0s';
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-slate-800 text-slate-400 border border-slate-600';
+      } else if (car.drsCanActivate && selectedGameMode !== 'timetrial') {
+        const gapStr = car.drsGapSec !== null ? ` ${car.drsGapSec.toFixed(1)}s` : '';
+        drsBadge.textContent = `🟡DRS <1s${gapStr}`;
+        drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-amber-500/25 text-amber-300 border border-amber-400/70';
       } else {
         drsBadge.textContent = 'DRS OFF';
         drsBadge.className = 'px-1.5 py-0.5 rounded text-[9px] font-extrabold mono bg-slate-800/90 text-slate-400 border border-slate-700';
@@ -3463,6 +5791,172 @@
       }
     }
 
+    function drawRealPitLane(active) {
+      const pitPts = active.pitPts;
+      if (!pitPts || pitPts.length < 4) return;
+      const trackSpline = active.pts;
+      const trackWidth = active.cfg.trackWidth;
+
+      ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // 1. Pit Lane Outer Apron / Border
+      ctx.beginPath();
+      for (let i = 0; i < pitPts.length; i++) {
+        if (i === 0) ctx.moveTo(pitPts[i].x, pitPts[i].y);
+        else ctx.lineTo(pitPts[i].x, pitPts[i].y);
+      }
+      ctx.lineWidth = 114;
+      ctx.strokeStyle = '#0f172a';
+      ctx.stroke();
+
+      // 2. Pit Lane Blue/White Side Curbs
+      ctx.lineWidth = 104;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.setLineDash([16, 16]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 3. Pit Lane Smooth Asphalt Road Surface
+      ctx.lineWidth = 92;
+      ctx.strokeStyle = '#1e293b';
+      ctx.stroke();
+
+      // 4. Center Speed Limit Guide Line & Directional Chevrons
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+      ctx.setLineDash([12, 10]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 5. Concrete Pit Wall separating Main Straight from Pit Lane (steps 10 to 44)
+      ctx.beginPath();
+      for (let i = 10; i <= 44; i++) {
+        const p = pitPts[i];
+        const wx = p.x - p.nx * 58;
+        const wy = p.y - p.ny * 58;
+        if (i === 10) ctx.moveTo(wx, wy);
+        else ctx.lineTo(wx, wy);
+      }
+      ctx.lineWidth = 12;
+      ctx.strokeStyle = '#334155';
+      ctx.stroke();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = '#f8fafc';
+      ctx.setLineDash([14, 14]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 6. Team Pit Garage Buildings along the outer side of the Pit Lane (steps 15 to 41)
+      const garageColors = ['#dc2626', '#f97316', '#10b981', '#06b6d4'];
+      const garageIndices = [16, 22, 28, 35];
+      garageIndices.forEach((gIdx, idx) => {
+        const gp = pitPts[gIdx];
+        if (!gp) return;
+        const gx = gp.x + gp.nx * 88;
+        const gy = gp.y + gp.ny * 88;
+        const ang = Math.atan2(gp.ty, gp.tx);
+        ctx.save();
+        ctx.translate(gx, gy);
+        ctx.rotate(ang);
+        // Garage shadow & roof
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+        ctx.fillRect(-38, -20, 76, 44);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-36, -22, 72, 40);
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-36, -22, 72, 40);
+        // Team color awning facing the Pit Lane
+        ctx.fillStyle = garageColors[idx % garageColors.length];
+        ctx.fillRect(-34, -22, 68, 10);
+        ctx.restore();
+      });
+
+      // 7. Highlighted [🔧 PIT STOP BOX] & 6 Pixel Pit Crew Mechanics at step 28
+      const boxPt = pitPts[28];
+      if (boxPt) {
+        const boxAngle = Math.atan2(boxPt.pty, boxPt.ptx);
+        ctx.save();
+        ctx.translate(boxPt.x, boxPt.y);
+        ctx.rotate(boxAngle);
+
+        const needPitAlert = (car.tireWear < 35) || (weatherState.trackWetness > 30 && !TIRE_COMPOUNDS[car.tireCompound].isWetTire);
+        ctx.fillStyle = needPitAlert ? 'rgba(239, 68, 68, 0.28)' : 'rgba(56, 189, 248, 0.25)';
+        ctx.fillRect(-52, -30, 104, 60);
+        ctx.strokeStyle = needPitAlert ? '#ef4444' : '#facc15';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-52, -30, 104, 60);
+
+        ctx.fillStyle = '#facc15';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔧 PIT BOX', 0, 0);
+
+        // Draw 6 Pixel Pit Crew Mechanics (3 on left, 3 on right of the car box; step inward when car is pitting!)
+        const crewOffset = (car.pitStopTimer > 0) ? 16 : 25;
+        const crewXPositions = [-22, 0, 22];
+        crewXPositions.forEach(cx => {
+          [-crewOffset, crewOffset].forEach(cy => {
+            // Mechanic suit & helmet
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(cx - 4, cy - 4, 8, 8);
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(cx - 2, cy - 2, 4, 4);
+            // Spare wheel or wrench sparks
+            if (car.pitStopTimer > 0 && Math.random() < 0.65) {
+              ctx.fillStyle = '#fef08a';
+              ctx.fillRect(cx + (Math.random() - 0.5) * 8, cy + (cy > 0 ? -6 : 6), 3, 3);
+            }
+          });
+        });
+        ctx.restore();
+      }
+
+      // 8. Pit Entry Sign Board (at step 2) & Pit Exit Sign Board (at step 51)
+      const entryPt = pitPts[2];
+      if (entryPt) {
+        const eAngle = Math.atan2(entryPt.ty, entryPt.tx);
+        ctx.save();
+        ctx.translate(entryPt.x + entryPt.nx * 56, entryPt.y + entryPt.ny * 56);
+        ctx.rotate(eAngle);
+        ctx.fillStyle = '#064e3b';
+        ctx.fillRect(-48, -12, 96, 24);
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-48, -12, 96, 24);
+        ctx.fillStyle = '#6ee7b7';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔧 PIT IN ▶', 0, 0);
+        ctx.restore();
+      }
+
+      const exitPt = pitPts[pitPts.length - 3];
+      if (exitPt) {
+        const xAngle = Math.atan2(exitPt.ty, exitPt.tx);
+        ctx.save();
+        ctx.translate(exitPt.x + exitPt.nx * 56, exitPt.y + exitPt.ny * 56);
+        ctx.rotate(xAngle);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-48, -12, 96, 24);
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-48, -12, 96, 24);
+        ctx.fillStyle = '#7dd3fc';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('◀ PIT OUT', 0, 0);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
     function drawCornerMarkersAndFinishGantry(trackSpline, trackWidth) {
       const N = trackSpline.length;
 
@@ -3512,11 +6006,13 @@
         }
       }
 
-      // Checkered Finish Line & Gantry
+      // Checkered Finish Line, Pit Lane Bay & Gantry
       const sf = trackSpline[0];
       ctx.save();
       ctx.translate(sf.x, sf.y);
       ctx.rotate(Math.atan2(sf.ty, sf.tx));
+
+      // Pit Lane is now rendered as a true branched road via drawRealPitLane(active)!
 
       const checkerRows = 16;
       const boxSize = (trackWidth - 10) / checkerRows;
@@ -3532,10 +6028,15 @@
       ctx.strokeStyle = '#facc15';
       ctx.lineWidth = 2;
       ctx.strokeRect(-8, -trackWidth * 0.54, 16, trackWidth * 1.08);
-      for (let l = -2; l <= 2; l++) {
-        ctx.fillStyle = '#22c55e';
+      for (let l = -1; l <= 1; l++) {
+        const lightIdx = l + 2; // 1, 2, 3
+        if (raceState.countdownActive) {
+          ctx.fillStyle = (raceState.countdownStage >= lightIdx) ? '#ef4444' : '#334155';
+        } else {
+          ctx.fillStyle = '#22c55e';
+        }
         ctx.beginPath();
-        ctx.arc(0, l * 28, 5, 0, Math.PI * 2);
+        ctx.arc(0, l * 36, 6, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -3602,7 +6103,7 @@
       const trackSpline = active.pts;
       const trackWidth = active.cfg.trackWidth;
       const curbWidth = active.cfg.curbWidth;
-      const curbAltColor = active.cfg.sceneryType === 'monaco' ? '#0284c7' : '#dc2626';
+      const curbAltColor = active.cfg.sceneryType === 'singapore' ? '#d946ef' : (active.cfg.sceneryType === 'monaco' ? '#0284c7' : '#dc2626');
 
       ctx.fillStyle = active.cfg.groundBg;
       ctx.fillRect(0, 0, viewW, viewH);
@@ -3624,7 +6125,10 @@
       ctx.translate(-Math.floor(camX), -Math.floor(camY));
 
       const N = trackSpline.length;
+      drawRealPitLane(active);
       drawTrackSegmentRange(trackSpline, 0, N, trackWidth, curbWidth, active.cfg.runoffColor, curbAltColor, false);
+      // Draw Pit Entry & Exit transition ramps over the curb edge so the branch looks seamless
+      drawRealPitLane(active);
 
       const bridgeStart = active.bridgeStart;
       const bridgeEnd = active.bridgeEnd;
@@ -3743,6 +6247,24 @@
         drawPixelCar(car.x, car.y, car.angle, playerSpec.colorMain, playerSpec.colorStripe, playerSpec.colorSpoiler, car.isDrifting, car.drsActive, true);
       }
 
+      // Draw Hot-Slide style yellow target-direction pointer arrow in front of player car when touching in 360° Direct Mode
+      if (steerControlMode === 'swipe' && directSteerActive && directHasDirection) {
+        ctx.save();
+        ctx.translate(Math.floor(car.x), Math.floor(car.y));
+        ctx.rotate(directTargetAngle);
+        ctx.fillStyle = '#facc15';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(36, 0);
+        ctx.lineTo(24, -7);
+        ctx.lineTo(24, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
       // Scenery items
       const sceneryItems = active.scenery;
       for (let i = 0; i < sceneryItems.length; i++) {
@@ -3777,6 +6299,34 @@
       }
 
       ctx.restore();
+
+      // v1.0.0 Pixel Rain & Wet Glaze Screen-Space Overlay
+      if (weatherState.trackWetness > 15 || weatherState.rainIntensity > 0.05) {
+        const wetAlpha = Math.min(0.22, (weatherState.trackWetness / 100) * 0.18);
+        if (wetAlpha > 0.01) {
+          ctx.fillStyle = `rgba(14, 116, 144, ${wetAlpha.toFixed(3)})`;
+          ctx.fillRect(0, 0, viewW, viewH);
+        }
+        if (weatherState.rainIntensity > 0.05) {
+          const dropCount = Math.floor(weatherState.raindrops.length * weatherState.rainIntensity);
+          ctx.strokeStyle = 'rgba(186, 230, 253, 0.68)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let i = 0; i < dropCount; i++) {
+            const d = weatherState.raindrops[i];
+            d.x -= d.speed * 0.006;
+            d.y += d.speed * 0.016;
+            if (d.y > viewH) {
+              d.y = -10;
+              d.x = Math.random() * viewW;
+            }
+            if (d.x < 0) d.x = viewW;
+            ctx.moveTo(d.x, d.y);
+            ctx.lineTo(d.x - 3, d.y + d.len);
+          }
+          ctx.stroke();
+        }
+      }
     }
 
     function drawMinimap() {
@@ -3806,6 +6356,19 @@
         if (p1.sector === 1) miniCtx.strokeStyle = 'rgba(239, 68, 68, 0.92)';
         else if (p1.sector === 2) miniCtx.strokeStyle = 'rgba(56, 189, 248, 0.92)';
         else miniCtx.strokeStyle = 'rgba(250, 204, 21, 0.92)';
+        miniCtx.stroke();
+      }
+
+      // Draw branched Pit Lane on minimap
+      if (active.pitPts && active.pitPts.length > 2) {
+        miniCtx.beginPath();
+        for (let i = 0; i < active.pitPts.length; i++) {
+          const pp = active.pitPts[i];
+          if (i === 0) miniCtx.moveTo(pp.x * scale + offsetX, pp.y * scale + offsetY);
+          else miniCtx.lineTo(pp.x * scale + offsetX, pp.y * scale + offsetY);
+        }
+        miniCtx.lineWidth = 1.6;
+        miniCtx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
         miniCtx.stroke();
       }
 
@@ -3869,15 +6432,23 @@
       requestAnimationFrame(gameLoop);
     }
 
-    window.onload = () => {
+    let appInitialized = false;
+    function initGameApp() {
+      if (appInitialized) return;
+      appInitialized = true;
       resizeCanvas();
       applyLanguage('zh');
       selectGameMode('arcade');
-      resetCarToStart();
+      resetCarToStart(false);
       camX = car.x - viewW / 2;
       camY = car.y - viewH / 2;
+      lastFrameTime = performance.now();
       requestAnimationFrame(gameLoop);
-    };
+    }
+    window.addEventListener('load', initGameApp);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(initGameApp, 0);
+    }
   </script>
 </body>
 </html>
