@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Pixel GP - 2D 俯視角像素賽車 (v1.0.3)</title>
+  <title>Pixel GP - 2D 俯視角像素賽車 (v1.3.0)</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -99,31 +99,19 @@
         </div>
       </div>
 
-      <!-- Quick Action Buttons: Roomy 4+4 grid on Mobile (80px+ per button so JA/EN text never overflows!), 8-col on sm/md, flex on lg -->
-      <div class="w-full lg:w-auto flex flex-wrap sm:grid sm:grid-cols-8 lg:flex items-center gap-1 shrink-0">
-        <button id="btnToggleLang" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-sky-950/90 hover:bg-sky-900 text-[10px] sm:text-[11px] font-bold text-sky-200 border border-sky-700/80 transition text-center whitespace-nowrap">
+      <!-- Clean 4-Button Quick Action Bar (Settings, Language, Main Menu, Reset) -->
+      <div class="w-full lg:w-auto grid grid-cols-4 lg:flex items-center gap-1.5 shrink-0">
+        <button id="btnToggleLang" type="button" class="px-2.5 py-1 rounded bg-sky-950/90 hover:bg-sky-900 text-[10px] sm:text-xs font-bold text-sky-200 border border-sky-700/80 transition text-center whitespace-nowrap">
           🌐 繁中
         </button>
-        <button id="btnToggleAutoGas" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-emerald-950/90 hover:bg-emerald-900 text-[10px] sm:text-[11px] font-semibold text-emerald-200 border border-emerald-700/80 transition text-center whitespace-nowrap">
-          ⚡自動:開
+        <button id="btnOpenSettings" type="button" class="px-2.5 py-1 rounded bg-amber-950/90 hover:bg-amber-900 text-[10px] sm:text-xs font-extrabold text-amber-200 border border-amber-600/80 transition text-center whitespace-nowrap" data-i18n="settingsBtn">
+          ⚙️ 設定
         </button>
-        <button id="btnToggleSteerMode" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-amber-950/90 hover:bg-amber-900 text-[10px] sm:text-[11px] font-semibold text-amber-200 border border-amber-700/80 transition text-center whitespace-nowrap">
-          🎮操控:按鍵
-        </button>
-        <button id="btnTogglePadHeight" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-indigo-950/90 hover:bg-indigo-900 text-[10px] sm:text-[11px] font-semibold text-indigo-200 border border-indigo-700/80 transition text-center whitespace-nowrap">
-          📱高度:中
-        </button>
-        <button id="btnToggleGhost" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-cyan-300 border border-cyan-800/80 transition text-center whitespace-nowrap">
-          👻殘影:開
-        </button>
-        <button id="btnCarSelect" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+        <button id="btnCarSelect" type="button" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-xs font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
           🏠主選單
         </button>
-        <button id="btnResetCar" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+        <button id="btnResetCar" type="button" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-xs font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
           🔄重置
-        </button>
-        <button id="btnToggleMute" type="button" class="flex-1 basis-[22%] sm:basis-auto px-1.5 sm:px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] sm:text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
-          🔊音效:開
         </button>
       </div>
     </div>
@@ -187,17 +175,34 @@
           <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
             <div id="hudTireBar" class="h-full bg-emerald-400 w-full transition-all duration-150"></div>
           </div>
+          <!-- v1.3.0 ERS Energy Recovery & Overtake Boost Deployment Bar -->
+          <div class="mt-1 pt-1 border-t border-slate-800/90 flex items-center justify-between gap-1 text-[10px] mono">
+            <span id="hudErsBadge" class="px-1.5 py-0.5 rounded font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-400/50">
+              🔋 100%
+            </span>
+            <button id="btnCycleErsMode" type="button" class="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-cyan-300 border border-cyan-700/70 transition whitespace-nowrap" title="切換 ERS 電能輸出模式 (Key: E / Shift)">
+              ⚖️ERS:均衡
+            </button>
+          </div>
+          <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+            <div id="hudErsBar" class="h-full bg-cyan-400 w-full transition-all duration-150"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Top-Center Pause Button (Placed directly between Top-Left Speedometer & Top-Right Mini-Map) -->
-    <div class="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-auto z-20">
+    <!-- Top-Center Pause Button + v1.2.0 VSC Caution Banner -->
+    <div class="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-auto z-20 flex flex-col items-center gap-1.5">
       <button id="btnPauseGame" type="button" aria-label="暫停比賽" class="px-3 sm:px-4 py-1.5 rounded-xl bg-slate-900/85 hover:bg-slate-800 active:scale-95 text-amber-300 hover:text-amber-200 border-2 border-amber-500/70 shadow-lg backdrop-blur-sm transition flex items-center gap-1.5 mono font-extrabold text-xs sm:text-sm">
         <span class="text-sm sm:text-base leading-none">⏸️</span>
         <span id="btnPauseText" data-i18n="pauseBtn">暫停</span>
         <span class="hidden md:inline text-[10px] text-slate-400 font-normal">(ESC/P)</span>
       </button>
+      <div id="vscCautionBanner" class="hidden pointer-events-none px-3 py-1 rounded-xl bg-amber-500/95 text-slate-950 border-2 border-yellow-200 shadow-[0_0_20px_rgba(245,158,11,0.75)] flex items-center gap-1.5 mono font-black text-[10px] sm:text-xs whitespace-nowrap animate-pulse">
+        <span>⚠️ VSC 虛擬安全車</span>
+        <span id="vscTimerText" class="px-1.5 py-0.5 rounded bg-slate-950 text-amber-300">7.0s</span>
+        <span id="vscSubHint" class="hidden sm:inline">全場限速 · 進站換胎黃金窗口!</span>
+      </div>
     </div>
 
     <!-- 3-Red-Lights-Out F1 Race Start Countdown Gantry Overlay -->
@@ -226,25 +231,75 @@
       </div>
     </div>
 
-    <!-- Pause Overlay Modal -->
-    <div id="pauseModal" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 z-40">
-      <div class="bg-slate-900 border-2 border-amber-500/80 rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl text-center flex flex-col items-center">
-        <div class="w-12 h-12 rounded-full bg-amber-500/20 border-2 border-amber-400/60 flex items-center justify-center text-2xl mb-2 text-amber-300">
-          ⏸️
+    <!-- Pause & Settings Overlay Modal (v1.2.1 Unified Settings & Pause Menu) -->
+    <div id="pauseModal" class="hidden absolute inset-0 bg-slate-950/88 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 z-40">
+      <div class="modal-scroll bg-slate-900 border-2 border-amber-500/80 rounded-2xl max-w-md w-full p-4 sm:p-5 shadow-2xl text-center flex flex-col items-center max-h-[92dvh] overflow-y-auto">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">⚙️</span>
+          <h3 id="pauseTitle" class="text-lg sm:text-xl font-extrabold text-white mono" data-i18n="pauseTitle">暫停與設定 · PAUSE & SETTINGS</h3>
         </div>
-        <h3 id="pauseTitle" class="text-xl sm:text-2xl font-extrabold text-white mono" data-i18n="pauseTitle">遊戲暫停 · PAUSED</h3>
-        <p id="pauseTrackInfo" class="text-xs text-slate-400 mono mt-1">Autodromo Enzo e Dino Ferrari</p>
+        <p id="pauseTrackInfo" class="text-[11px] text-slate-400 mono mt-0.5">Autodromo Enzo e Dino Ferrari</p>
 
         <!-- Current Status Highlights in Pause -->
-        <div class="grid grid-cols-2 gap-2 w-full my-4 text-xs mono">
-          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-2 text-center">
+        <div class="grid grid-cols-2 gap-2 w-full my-2.5 text-xs mono">
+          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-1.5 text-center">
             <span class="text-slate-400 text-[10px]" data-i18n="posLabel">POS</span>
-            <div id="pausePosText" class="font-extrabold text-amber-400 text-sm mt-0.5">P1/8</div>
+            <div id="pausePosText" class="font-extrabold text-amber-400 text-sm">P1/8</div>
           </div>
-          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-2 text-center">
+          <div class="bg-slate-800/80 border border-slate-700 rounded-lg p-1.5 text-center">
             <span class="text-slate-400 text-[10px]" data-i18n="lapLabel">LAP</span>
-            <div id="pauseLapText" class="font-extrabold text-white text-sm mt-0.5">1/3</div>
+            <div id="pauseLapText" class="font-extrabold text-white text-sm">1/3</div>
           </div>
+        </div>
+
+        <!-- Unified Settings Panel inside Pause Modal -->
+        <div class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3 text-left space-y-2.5 mb-3 text-xs mono">
+          <!-- 1. Steering Method (Buttons vs 360 Direct) -->
+          <div>
+            <div class="text-[11px] font-bold text-sky-300 mb-1" data-i18n="steerModeLabel">📱 觸控轉向模式:</div>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button id="pauseSteerButtons" type="button" class="py-1.5 px-2 rounded-lg font-extrabold text-xs bg-amber-500 text-slate-950 border border-amber-400 transition whitespace-nowrap">
+                🎮 左右按鍵
+              </button>
+              <button id="pauseSteerSwipe" type="button" class="py-1.5 px-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🧭 360°車頭指向
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Left/Right Button Position Layout (Left / Split / Right) -->
+          <div id="pauseBtnLayoutRow">
+            <div class="text-[11px] font-bold text-amber-300 mb-1" data-i18n="btnLayoutLabel">↔️ 左右按鍵位置 (Button Layout):</div>
+            <div class="grid grid-cols-3 gap-1.5">
+              <button type="button" data-btn-layout="left" class="btn-layout-opt py-1.5 px-1.5 rounded-lg font-extrabold text-[11px] bg-amber-500 text-slate-950 border border-amber-400 transition whitespace-nowrap" data-i18n="layoutLeftBtn">
+                ⬅️ 放左邊
+              </button>
+              <button type="button" data-btn-layout="split" class="btn-layout-opt py-1.5 px-1.5 rounded-lg font-bold text-[11px] bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="layoutSplitBtn">
+                ↔️ 一左一右
+              </button>
+              <button type="button" data-btn-layout="right" class="btn-layout-opt py-1.5 px-1.5 rounded-lg font-bold text-[11px] bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="layoutRightBtn">
+                ➡️ 放右邊
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. Toggles Grid: Pad Height, Sound, Ghost, Auto-Gas -->
+          <div class="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-800">
+            <button id="btnTogglePadHeight" type="button" class="py-1.5 px-2 rounded-lg bg-indigo-950/90 hover:bg-indigo-900 text-[11px] font-semibold text-indigo-200 border border-indigo-700/80 transition text-center whitespace-nowrap">
+              📱高度:中
+            </button>
+            <button id="btnToggleMute" type="button" class="py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">
+              🔊音效:開
+            </button>
+            <button id="btnToggleGhost" type="button" class="py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] font-semibold text-cyan-300 border border-cyan-800/80 transition text-center whitespace-nowrap">
+              👻殘影:開
+            </button>
+            <button id="btnToggleAutoGas" type="button" class="py-1.5 px-2 rounded-lg bg-emerald-950/90 hover:bg-emerald-900 text-[11px] font-semibold text-emerald-200 border border-emerald-700/80 transition text-center whitespace-nowrap">
+              ⚡自動:開
+            </button>
+          </div>
+          <!-- Hidden compatibility button for steer mode toggle -->
+          <button id="btnToggleSteerMode" type="button" class="hidden"></button>
         </div>
 
         <!-- Pause Action Buttons -->
@@ -253,14 +308,16 @@
             <span>▶️</span>
             <span data-i18n="resumeBtn">繼續比賽 (Resume)</span>
           </button>
-          <button id="btnPauseRestart" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-bold text-xs border border-slate-600 transition flex items-center justify-center gap-1.5">
-            <span>🔄</span>
-            <span data-i18n="restartBtn">重新起跑 (Restart)</span>
-          </button>
-          <button id="btnPauseToMenu" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs border border-slate-700 transition flex items-center justify-center gap-1.5">
-            <span>🏠</span>
-            <span data-i18n="resBackMenu">回到主選單 (Main Menu)</span>
-          </button>
+          <div class="grid grid-cols-2 gap-2 w-full">
+            <button id="btnPauseRestart" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-bold text-xs border border-slate-600 transition flex items-center justify-center gap-1">
+              <span>🔄</span>
+              <span data-i18n="restartBtn">重新起跑</span>
+            </button>
+            <button id="btnPauseToMenu" type="button" class="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 font-bold text-xs border border-slate-700 transition flex items-center justify-center gap-1">
+              <span>🏠</span>
+              <span data-i18n="resBackMenu">回主選單</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -364,39 +421,22 @@
       </div>
     </div>
 
-    <!-- Ergonomic On-Screen Touch Controls -->
+    <!-- Ergonomic On-Screen Touch Controls (v1.2.1 Enlarged 96px~112px L/R Buttons, Wider Gap, 3 Layouts: Left / Split / Right, No Brake Button) -->
     <div id="touchControlsBar" class="absolute inset-x-3 sm:inset-x-6 thumb-zone-mid flex items-end justify-between pointer-events-none z-10 transition-all duration-150">
-      <!-- Left Hand: Enlarged & Wider-Spaced Ergonomic Steering Buttons (Hidden when in direct screen-swipe mode) -->
-      <div class="pointer-events-auto pl-1 sm:pl-3">
-        <div id="steerButtonsCluster" class="flex items-center gap-5 sm:gap-7">
-          <button id="btnSteerLeft" type="button" aria-label="左轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl">
-            <span class="text-2xl sm:text-4xl font-bold leading-none">◀</span>
-            <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerLeftDesc">LEFT (A)</span>
-          </button>
-          <button id="btnSteerRight" type="button" aria-label="右轉" class="touch-btn w-20 h-20 sm:w-24 sm:h-24 px-1.5 rounded-2xl flex flex-col items-center justify-center text-white shadow-xl -translate-y-2">
-            <span class="text-2xl sm:text-4xl font-bold leading-none">▶</span>
-            <span class="text-[10px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerRightDesc">RIGHT (D)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Center Help Hint on Desktop -->
-      <div class="hidden xl:flex flex-col items-center bg-slate-900/80 border border-slate-800 px-3.5 py-1.5 rounded-lg text-[11px] text-slate-300 mono mb-2">
-        <span data-i18n="desktopHint1">電腦鍵盤: W/S 或 ↑/↓ 油門煞車 · A/D 或 ←/→ 轉向 · SPACE 甩尾</span>
-        <span class="text-emerald-300" data-i18n="desktopHint2">地面已繪製彎道編號 (T1~T19) 與轉向箭頭看板 · 支援 8 車同場競速</span>
-      </div>
-
-      <!-- Right Hand: Large Ergonomic Brake / Drift Pedal (Wide enough so text never overflows in any language!) -->
-      <div class="flex items-end gap-2 sm:gap-3.5 pointer-events-auto pr-1 sm:pr-2">
-        <button id="btnPedalBrake" type="button" aria-label="煞車與飄移" class="touch-btn w-28 h-20 sm:w-32 sm:h-24 px-2 rounded-2xl flex flex-col items-center justify-center text-amber-300 border-amber-400/75 shadow-xl -translate-y-1">
-          <span class="text-xs sm:text-sm font-extrabold leading-tight mono whitespace-nowrap">BRAKE / DRIFT</span>
-          <span class="text-[10px] sm:text-[11px] text-amber-200 mt-1 mono font-bold whitespace-nowrap" data-i18n="brakePedalDesc">減速/飄移</span>
+      <div id="steerButtonsCluster" class="w-full flex items-center justify-start gap-9 sm:gap-14 px-1 sm:px-3 pointer-events-none">
+        <button id="btnSteerLeft" type="button" aria-label="左轉" class="pointer-events-auto touch-btn w-24 h-24 sm:w-28 sm:h-28 px-2 rounded-2xl flex flex-col items-center justify-center text-white shadow-2xl">
+          <span class="text-4xl sm:text-5xl font-black leading-none">◀</span>
+          <span class="text-[11px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerLeftDesc">LEFT (A)</span>
         </button>
-        <button id="btnPedalGas" type="button" aria-label="油門加速" class="hidden touch-btn w-24 h-20 sm:w-28 sm:h-24 px-2 rounded-2xl flex flex-col items-center justify-center text-emerald-300 border-emerald-500/70 shadow-xl -translate-y-4">
-          <span class="text-base sm:text-lg font-extrabold leading-tight mono whitespace-nowrap">GAS</span>
-          <span class="text-[10px] sm:text-[11px] text-emerald-200 mt-1 mono font-bold whitespace-nowrap" data-i18n="gasPedalDesc">加速 (W)</span>
+        <button id="btnSteerRight" type="button" aria-label="右轉" class="pointer-events-auto touch-btn w-24 h-24 sm:w-28 sm:h-28 px-2 rounded-2xl flex flex-col items-center justify-center text-white shadow-2xl">
+          <span class="text-4xl sm:text-5xl font-black leading-none">▶</span>
+          <span class="text-[11px] sm:text-xs text-slate-300 mt-1.5 mono font-bold whitespace-nowrap" data-i18n="steerRightDesc">RIGHT (D)</span>
         </button>
       </div>
+
+      <!-- Hidden legacy pedals for compatibility -->
+      <button id="btnPedalBrake" type="button" class="hidden"></button>
+      <button id="btnPedalGas" type="button" class="hidden"></button>
     </div>
 
     <!-- =================================================================== -->
@@ -468,7 +508,7 @@
             <span id="aiDiffDesc" class="text-[10px] text-slate-400 mono">AI 具備標準走線與超車避障能力 (極速 92%)</span>
           </div>
 
-          <!-- Mobile Steering Mode Selector (Buttons vs 360 Direct Heading) -->
+          <!-- Mobile Steering Mode Selector (Buttons vs 360 Direct Heading) + L/R Button Position Layout -->
           <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
             <span class="text-[11px] font-bold text-sky-300 mono" data-i18n="steerModeLabel">📱 觸控轉向模式:</span>
             <button id="menuSteerButtons" type="button" class="px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap">
@@ -477,7 +517,24 @@
             <button id="menuSteerSwipe" type="button" class="px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
               🧭 360°車頭指向 (Direct)
             </button>
-            <span id="menuSteerDesc" class="text-[10px] text-slate-400 mono">經典獨立左右方向鍵，適合快速俐落拍擊過彎</span>
+            <div id="menuBtnLayoutGroup" class="flex items-center gap-1 ml-1 pl-2 border-l border-slate-700">
+              <span class="text-[10px] font-bold text-amber-300 mono" data-i18n="btnLayoutLabel">↔️ 按鍵位置:</span>
+              <button type="button" data-btn-layout="left" class="btn-layout-opt px-2 py-0.5 rounded text-[11px] font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 transition whitespace-nowrap" data-i18n="layoutLeftBtn">⬅️ 放左邊</button>
+              <button type="button" data-btn-layout="split" class="btn-layout-opt px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="layoutSplitBtn">↔️ 一左一右</button>
+              <button type="button" data-btn-layout="right" class="btn-layout-opt px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="layoutRightBtn">➡️ 放右邊</button>
+            </div>
+          </div>
+
+          <!-- v1.2.0 1-Lap Qualifying Shootout Selector (Direct P8 Grid vs 1-Lap Quali for Pole Position) -->
+          <div id="qualiModeSection" class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700/60">
+            <span class="text-[11px] font-bold text-amber-300 mono" data-i18n="qualiModeLabel">⏱️ 賽前排位賽 (QUALIFYING):</span>
+            <button id="qualiBtn-skip" type="button" data-quali="skip" class="quali-mode-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap">
+              ⏭️ 直接正賽 (P8起跑)
+            </button>
+            <button id="qualiBtn-run" type="button" data-quali="run" class="quali-mode-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+              ⚡ 1圈排位爭桿位 (1-Lap Quali)
+            </button>
+            <span id="qualiModeDesc" class="text-[10px] text-slate-400 mono">跳過排位賽直接從 P8 追擊起跑；選擇「1圈排位」可爭奪 P1 桿位起跑與 +$10,000 桿位獎金！</span>
           </div>
 
           <!-- v1.0 Weather Condition Selector (Dry / Dynamic / Rain) -->
@@ -962,6 +1019,69 @@
           </div>
         </div>
 
+        <!-- Step 4 (v1.1.0): Custom Livery Paint Workshop (賽車自訂塗裝配色工坊) -->
+        <div class="mt-3.5 bg-slate-800/60 border border-slate-700/80 rounded-xl p-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-pink-300 uppercase tracking-wider mono" data-i18n="liveryWorkshopTitle">3. CUSTOM LIVERY WORKSHOP (賽車自訂塗裝工坊)</span>
+            </div>
+            <div class="flex items-center gap-2 text-[11px] mono">
+              <label class="flex items-center gap-1 text-slate-300 cursor-pointer">
+                <span>主色</span>
+                <input id="customColorMain" type="color" value="#ef4444" class="w-5 h-5 rounded border border-slate-600 bg-transparent cursor-pointer" />
+              </label>
+              <label class="flex items-center gap-1 text-slate-300 cursor-pointer">
+                <span>條紋</span>
+                <input id="customColorStripe" type="color" value="#fef2f2" class="w-5 h-5 rounded border border-slate-600 bg-transparent cursor-pointer" />
+              </label>
+              <label class="flex items-center gap-1 text-slate-300 cursor-pointer">
+                <span>尾翼</span>
+                <input id="customColorSpoiler" type="color" value="#991b1b" class="w-5 h-5 rounded border border-slate-600 bg-transparent cursor-pointer" />
+              </label>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5">
+            <button type="button" data-livery="stock" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-extrabold mono border border-amber-400 bg-amber-500 text-slate-950 shadow flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 border border-white inline-block"></span>
+              <span data-i18n="liveryStock">🎨 原廠塗裝</span>
+            </button>
+            <button type="button" data-livery="sakura" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-pink-300 flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-pink-500 border border-pink-100 inline-block"></span>
+              <span data-i18n="liverySakura">🌸 櫻花粉電光</span>
+            </button>
+            <button type="button" data-livery="blackgold" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-amber-300 flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-slate-950 border border-amber-400 inline-block"></span>
+              <span data-i18n="liveryBlackGold">🏆 黑金傳奇</span>
+            </button>
+            <button type="button" data-livery="gulf" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-sky-300 flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-sky-400 border border-orange-500 inline-block"></span>
+              <span data-i18n="liveryGulf">🌊 海灣藍橘</span>
+            </button>
+            <button type="button" data-livery="aurora" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-purple-300 flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-purple-500 border border-emerald-400 inline-block"></span>
+              <span data-i18n="liveryAurora">⚡ 極光霓虹紫</span>
+            </button>
+            <button type="button" data-livery="champwhite" class="livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-100 flex items-center justify-center gap-1.5 transition whitespace-nowrap">
+              <span class="w-2.5 h-2.5 rounded-full bg-white border border-red-600 inline-block"></span>
+              <span data-i18n="liveryChampWhite">🤍 冠軍純白紅</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 5 (v1.1.0): Trophy Room & Driver Achievements (生涯榮譽獎盃與車手成就陳列室) -->
+        <div class="mt-3.5 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/40 border border-indigo-500/50 rounded-xl p-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-amber-300 uppercase tracking-wider mono" data-i18n="trophyRoomTitle">🏅 TROPHY ROOM & DRIVER ACHIEVEMENTS (榮譽獎盃陳列室)</span>
+            </div>
+            <span id="trophyProgressBadge" class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-400/50 mono">
+              已解鎖: 0 / 12 (完成獎勵匯入生涯資金)
+            </span>
+          </div>
+          <div id="trophyRoomGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] mono">
+          </div>
+        </div>
+
         </div><!-- End Scrollable Middle Content -->
 
         <!-- Pinned Footer Start Action (Always visible above mobile bottom bar!) -->
@@ -971,6 +1091,40 @@
           </div>
           <button id="btnStartRace" type="button" class="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-extrabold text-sm tracking-wide shadow-lg transition">
             🏁 立即出戰
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- v1.2.0 1-LAP QUALIFYING SHOOTOUT RESULTS & STARTING GRID MODAL      -->
+    <!-- =================================================================== -->
+    <div id="qualiResultModal" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-start sm:items-center justify-center pt-4 pb-10 px-4 z-30">
+      <div class="bg-slate-900 border-2 border-sky-400 rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl text-center max-h-[92dvh] overflow-y-auto">
+        <span id="qualiResBadge" class="inline-block px-3 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-400/50 mono uppercase">
+          ⚡ P1 · POLE POSITION (桿位起跑!)
+        </span>
+        <h2 id="qualiResTitle" class="text-xl sm:text-2xl font-extrabold text-white mt-2">排位賽成績與起跑格位表</h2>
+        <p id="qualiResSub" class="text-xs text-slate-300 mono mt-0.5">您的單圈排位時間：<strong id="qualiPlayerTimeText" class="text-emerald-400">00:00.00</strong></p>
+
+        <div id="qualiPoleBonusBanner" class="hidden mt-2.5 p-2 rounded-xl bg-amber-500/20 border border-amber-400 text-xs font-bold text-amber-200 mono">
+          🏆 恭喜奪得 P1 桿位 (Pole Position)！獲發桿位獎金 <strong class="text-emerald-300">+$10,000</strong>！
+        </div>
+
+        <div class="mt-3 text-left">
+          <div class="text-[11px] font-bold text-sky-300 uppercase tracking-wider mono mb-1">
+            🚦 STARTING GRID ORDER (正賽 P1~P8 起跑格位順序)
+          </div>
+          <div id="qualiGridList" class="modal-scroll bg-slate-950/80 border border-slate-800 rounded-xl p-2.5 text-xs mono space-y-1 max-h-52 overflow-y-auto">
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+          <button id="btnQualiRetry" type="button" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm border border-slate-600 transition">
+            🔄 重跑排位賽
+          </button>
+          <button id="btnStartMainRaceFromQuali" type="button" class="flex-1 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm shadow-lg transition">
+            🚦 以 P1 格位正式起跑正賽
           </button>
         </div>
       </div>
@@ -997,6 +1151,12 @@
             <div class="text-[11px] text-amber-300 mono" data-i18n="resBestLabel">最佳單圈 (BEST LAP)</div>
             <div id="resBestLap" class="text-base sm:text-xl font-extrabold text-amber-400 mono mt-0.5">00:00.00</div>
           </div>
+        </div>
+
+        <!-- v1.1.0 Newly Unlocked Trophies Banner in Results Modal -->
+        <div id="resUnlockedAchievementsBox" class="hidden mt-3 p-2.5 rounded-xl bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-emerald-500/25 border-2 border-amber-400 text-left">
+          <div class="text-xs font-black text-amber-300 mono uppercase">🏅 NEW ACHIEVEMENT UNLOCKED! (新解鎖榮譽獎盃)</div>
+          <div id="resUnlockedAchievementsList" class="text-[11px] text-white mono mt-1 space-y-0.5"></div>
         </div>
 
         <!-- 8-Car Classification Leaderboard Table (Arcade) / Lap list (Time Trial) -->
@@ -1279,6 +1439,40 @@
         toastBoxReqOnSub: '抵達最後一彎出彎處時，將自動導航駛入 Pit Lane 並彈出選胎選單！',
         toastBoxReqOff: '已取消預約進站',
         toastBoxReqOffSub: '您仍可在主直線入口處手動靠右駛入 🔧 PIT IN 啟動自動進站',
+        liveryWorkshopTitle: '3. 賽車自訂塗裝工坊 (CUSTOM LIVERY WORKSHOP)',
+        liveryStock: '🎨 原廠塗裝',
+        liverySakura: '🌸 櫻花粉電光',
+        liveryBlackGold: '🏆 黑金傳奇',
+        liveryGulf: '🌊 海灣藍橘',
+        liveryAurora: '⚡ 極光霓虹紫',
+        liveryChampWhite: '🤍 冠軍純白紅',
+        trophyRoomTitle: '🏅 榮譽獎盃與車手成就陳列室 (TROPHY ROOM)',
+        slipstreamStatus: '🌪️ TOW 真空尾流牽引',
+        qualiModeLabel: '⏱️ 賽前排位賽 (Qualifying):',
+        qualiSkipBtn: '⏭️ 直接正賽 (P8起跑)',
+        qualiRunBtn: '⚡ 1圈排位 (乾地+紅胎)',
+        qualiSkipDesc: '跳過排位賽直接從 P8 追擊起跑；選擇「1圈排位」（固定乾地+紅胎）可爭奪 P1 桿位起跑與 +$10,000 獎金！',
+        qualiRunDesc: '正賽前先跑 1 圈無車阻擋的排位衝刺圈（固定晴朗乾地 + 🔴紅胎 Soft），依單圈成績決定正賽 P1~P8 起跑格位！',
+        ersModeBalanced: '⚖️ERS:均衡',
+        ersModeOvertake: '⚡ERS:超車',
+        ersModeHarvest: '♻️ERS:回充',
+        toastErsOvertake: '⚡ ERS 超車推進模式 (OVERTAKE)',
+        toastErsOvertakeSub: '全功率 160kW 電能釋放！出彎加速 +9%、極速 +5.5%（按 E / Shift 切換）',
+        toastErsBalanced: '⚖️ ERS 均衡自動模式 (BALANCED)',
+        toastErsBalancedSub: '直線智慧輔助推進、入彎減速自動回充電能！',
+        toastErsHarvest: '♻️ ERS 優先回充模式 (HARVEST)',
+        toastErsHarvestSub: '高速回收動能與熱能，快速蓄滿 100% 電池容量！',
+        toastErsEmpty: '🔋 ERS 電能已耗盡 · 自動切回均衡模式',
+        toastErsEmptySub: '透過入彎減速、甩尾或切換「♻️回充」可快速恢復電池電量！',
+        vscAlertTitle: '⚠️ VSC 虛擬安全車部署！',
+        vscAlertSub: '賽道事故黃旗！全場限速 72% 並禁用 DRS，此時進站換胎損失時間最少！',
+        vscEndTitle: '🟢 VSC 結束 · 綠旗恢復全速競速！',
+        vscEndSub: '賽道清空，恢復正常比賽速度與 DRS 追擊！',
+        settingsBtn: '⚙️ 設定',
+        btnLayoutLabel: '↔️ 按鍵位置:',
+        layoutLeftBtn: '⬅️ 放左邊',
+        layoutSplitBtn: '↔️ 一左一右',
+        layoutRightBtn: '➡️ 放右邊',
       },
       ja: {
         langBtn: '🌐 日本語',
@@ -1491,6 +1685,40 @@
         toastBoxReqOnSub: '最終コーナー出口で自動的にピットへ入りタイヤ選択画面が開きます！',
         toastBoxReqOff: 'ピット予約を解除しました',
         toastBoxReqOffSub: '手動で右側 🔧 PIT IN へ寄っても自動ピットが作動します',
+        liveryWorkshopTitle: '3. カスタムカラー工房 (CUSTOM LIVERY WORKSHOP)',
+        liveryStock: '🎨 純正カラー',
+        liverySakura: '🌸 サクラピンク',
+        liveryBlackGold: '🏆 ブラック&ゴールド',
+        liveryGulf: '🌊 ガルフブルー',
+        liveryAurora: '⚡ オーロラバイオレット',
+        liveryChampWhite: '🤍 チャンピオン白赤',
+        trophyRoomTitle: '🏅 トロフィールーム＆ドライバー実績 (TROPHY ROOM)',
+        slipstreamStatus: '🌪️ TOW スリップストリーム',
+        qualiModeLabel: '⏱️ 予選モード (Qualifying):',
+        qualiSkipBtn: '⏭️ 決勝直行 (P8スタート)',
+        qualiRunBtn: '⚡ 1周予選 (ドライ+赤タイヤ)',
+        qualiSkipDesc: '予選をスキップしP8からスタート。「1周予選」（ドライ＋赤ソフト固定）でポールポジションを狙えます！',
+        qualiRunDesc: '決勝前に単独1周のタイムアタック（晴天ドライ＋🔴ソフト固定）を行い、決勝のP1〜P8グリッドを決定！',
+        ersModeBalanced: '⚖️ERS:標準',
+        ersModeOvertake: '⚡ERS:追い越し',
+        ersModeHarvest: '♻️ERS:充電',
+        toastErsOvertake: '⚡ ERS オーバーテイクモード発動',
+        toastErsOvertakeSub: '160kWフル出力ブースト！加速+9%・最高速+5.5% (E / Shiftキーで切替)',
+        toastErsBalanced: '⚖️ ERS バランス自動モード',
+        toastErsBalancedSub: '直線でアシスト出力し、コーナー減速で自動回生充電します',
+        toastErsHarvest: '♻️ ERS チャージ優先モード',
+        toastErsHarvestSub: '運動エネルギー回生を最大化し、バッテリーを急速充電します',
+        toastErsEmpty: '🔋 ERSバッテリー残量0% · バランスへ自動切替',
+        toastErsEmptySub: 'コーナリングや減速でバッテリーを回生充電できます',
+        vscAlertTitle: '⚠️ VSC バーチャルセーフティカー発動！',
+        vscAlertSub: 'コース黄旗！全車速度制限＆DRS禁止。今がピットインの絶好のチャンス！',
+        vscEndTitle: '🟢 VSC 終了 · グリーンフラッグ！',
+        vscEndSub: 'レーシングスピード再開！',
+        settingsBtn: '⚙️ 設定',
+        btnLayoutLabel: '↔️ ボタン配置:',
+        layoutLeftBtn: '⬅️ 左側集中',
+        layoutSplitBtn: '↔️ 左右分割',
+        layoutRightBtn: '➡️ 右側集中',
       },
       en: {
         langBtn: '🌐 EN',
@@ -1703,6 +1931,40 @@
         toastBoxReqOnSub: 'Autopilot will steer into the Pit Lane at the final turn exit!',
         toastBoxReqOff: 'Pit Stop Request Cancelled',
         toastBoxReqOffSub: 'You can still steer right into 🔧 PIT IN to trigger Pit Autopilot',
+        liveryWorkshopTitle: '3. CUSTOM LIVERY WORKSHOP',
+        liveryStock: '🎨 Stock Team',
+        liverySakura: '🌸 Sakura Pink',
+        liveryBlackGold: '🏆 Black & Gold',
+        liveryGulf: '🌊 Gulf Heritage',
+        liveryAurora: '⚡ Neon Violet',
+        liveryChampWhite: '🤍 Champ White',
+        trophyRoomTitle: '🏅 TROPHY ROOM & DRIVER ACHIEVEMENTS',
+        slipstreamStatus: '🌪️ TOW SLIPSTREAM',
+        qualiModeLabel: '⏱️ Qualifying:',
+        qualiSkipBtn: '⏭️ Skip (Start P8)',
+        qualiRunBtn: '⚡ 1-Lap Quali (Dry+Soft)',
+        qualiSkipDesc: 'Start directly from P8 grid slot, or choose 1-Lap Quali (fixed Dry + Red Soft) to fight for P1 Pole!',
+        qualiRunDesc: 'Run a 1-lap solo flying shootout (fixed Sunny Dry + 🔴 Red Soft tire) to set your P1-P8 grid slot!',
+        ersModeBalanced: '⚖️ERS:AUTO',
+        ersModeOvertake: '⚡ERS:BOOST',
+        ersModeHarvest: '♻️ERS:CHRG',
+        toastErsOvertake: '⚡ ERS OVERTAKE MODE ACTIVE',
+        toastErsOvertakeSub: 'Full 160kW MGU-K deployment! +9% accel & +5.5% top speed (Press E / Shift)',
+        toastErsBalanced: '⚖️ ERS BALANCED AUTO MODE',
+        toastErsBalancedSub: 'Smart hybrid deployment on straights and kinetic harvesting in corners.',
+        toastErsHarvest: '♻️ ERS HARVEST CHARGE MODE',
+        toastErsHarvestSub: 'Maximizes MGU-K battery recovery to rapidly recharge to 100%.',
+        toastErsEmpty: '🔋 ERS BATTERY DEPLETED · REVERTED TO AUTO',
+        toastErsEmptySub: 'Harvest energy through cornering, drifting, or Harvest mode!',
+        vscAlertTitle: '⚠️ VIRTUAL SAFETY CAR DEPLOYED!',
+        vscAlertSub: 'Yellow Flag! Pack speed limited to 72% & DRS disabled — cheap pit stop window open!',
+        vscEndTitle: '🟢 VSC ENDING · GREEN FLAG!',
+        vscEndSub: 'Track clear! Full racing speed and DRS enabled!',
+        settingsBtn: '⚙️ Settings',
+        btnLayoutLabel: '↔️ Button Pos:',
+        layoutLeftBtn: '⬅️ Both Left',
+        layoutSplitBtn: '↔️ Split L/R',
+        layoutRightBtn: '➡️ Both Right',
       }
     };
 
@@ -1777,6 +2039,7 @@
         document.getElementById('weatherBtn-wet').textContent = dict.weatherWetBtn || '🌧️ 傾盆大雨';
       }
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
 
       // Localize Car Cards
       document.getElementById('carName-balanced').textContent = dict.carBalancedName;
@@ -1805,6 +2068,9 @@
       updateAiDiffUI();
       if (typeof updateDistanceButtonsUI === 'function') updateDistanceButtonsUI();
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
+      if (typeof renderTrophyRoomUI === 'function') renderTrophyRoomUI();
+      if (typeof updateLiveryWorkshopUI === 'function') updateLiveryWorkshopUI();
       updateMenuSummary();
     }
 
@@ -1940,6 +2206,30 @@
       };
     }
 
+    const LIVERY_PRESETS = {
+      stock:      { id: 'stock',      colorMain: null,      colorStripe: null,      colorSpoiler: null },
+      sakura:     { id: 'sakura',     colorMain: '#ec4899', colorStripe: '#fdf2f8', colorSpoiler: '#9d174d' },
+      blackgold:  { id: 'blackgold',  colorMain: '#1e293b', colorStripe: '#facc15', colorSpoiler: '#ca8a04' },
+      gulf:       { id: 'gulf',       colorMain: '#38bdf8', colorStripe: '#f97316', colorSpoiler: '#0369a1' },
+      aurora:     { id: 'aurora',     colorMain: '#a855f7', colorStripe: '#4ade80', colorSpoiler: '#6b21a8' },
+      champwhite: { id: 'champwhite', colorMain: '#f8fafc', colorStripe: '#dc2626', colorSpoiler: '#991b1b' }
+    };
+
+    const ACHIEVEMENTS_CONFIG = [
+      { id: 'first_win',      icon: '🥇', reward: 15000, zhTitle: '首勝破蛋',     jaTitle: '初優勝達成',     enTitle: 'First GP Win',      zhDesc: '奪得首場分站冠軍 (P1)',             jaDesc: 'レースで初優勝 (P1) を達成',         enDesc: 'Win your first P1 race finish' },
+      { id: 'rain_master',    icon: '🌧️', reward: 25000, zhTitle: '雨戰之神',     jaTitle: 'レインマスター', enTitle: 'Rain Master',       zhDesc: '在濕度 ≥35% 雨戰奪得 P1 冠軍',       jaDesc: '湿度35%以上の雨天レースで優勝',     enDesc: 'Win P1 in wet conditions (≥35%)' },
+      { id: 'pit_tactician',  icon: '🔧', reward: 20000, zhTitle: '進站策略家',   jaTitle: 'ピット戦略家',   enTitle: 'Pit Tactician',     zhDesc: '完成自動進站換胎並登上頒獎台',       jaDesc: 'ピットタイヤ交換を行い表彰台獲得',   enDesc: 'Complete a Pit Stop & finish Top 3' },
+      { id: 'drs_hunter',     icon: '🟢', reward: 15000, zhTitle: 'DRS 追擊獵手', jaTitle: 'DRSハンター',    enTitle: 'DRS Overtaker',     zhDesc: '使用 1 秒內 DRS 追擊並完賽前 3',     jaDesc: '1秒以内DRSを発動し表彰台獲得',       enDesc: 'Use <1.0s DRS & finish Top 3' },
+      { id: 'night_king',     icon: '🌙', reward: 25000, zhTitle: '星洲夜王',     jaTitle: 'シンガポール夜王',enTitle: 'Singapore King',    zhDesc: '於新加坡濱海灣夜賽奪得 P1 冠軍',     jaDesc: 'シンガポール夜間GPで優勝を達成',     enDesc: 'Win P1 at Singapore Night GP' },
+      { id: 'chief_engineer', icon: '🔬', reward: 30000, zhTitle: '首席研發總監', jaTitle: '最高開発責任者', enTitle: 'Chief Engineer',    zhDesc: '將任一 R&D 部門升級至滿級 Lv.5',     jaDesc: 'R&D部門のいずれかをLv.5最大強化',   enDesc: 'Max out any R&D department (Lv.5)' },
+      { id: 'world_champ',    icon: '👑', reward: 50000, zhTitle: '世界總冠軍',   jaTitle: 'ワールド王者',   enTitle: 'World Champion',    zhDesc: '奪得生涯模式賽季年度車手總冠軍',     jaDesc: 'キャリア年間総合チャンピオン獲得',   enDesc: 'Win the Career Drivers Championship' },
+      { id: 'track_master',   icon: '🟣', reward: 20000, zhTitle: '單圈刷紫王',   jaTitle: '最速ラップ王',   enTitle: 'Purple Lap Master', zhDesc: '在 3 條不同賽道創下最佳單圈紀錄',     jaDesc: '3つの異なるコースでベスト記録樹立', enDesc: 'Set personal best laps on 3+ tracks' },
+      { id: 'pole_king',      icon: '⚡', reward: 20000, zhTitle: '桿位之王',     jaTitle: 'ポールキング',   enTitle: 'Pole Sitter',       zhDesc: '於 1 圈排位賽奪得 P1 桿位起跑',       jaDesc: '1周予選でP1ポールポジションを獲得', enDesc: 'Claim P1 Pole Position in Qualifying' },
+      { id: 'vsc_tactician',  icon: '⚠️', reward: 25000, zhTitle: 'VSC 策略大師', jaTitle: 'VSC戦略マスター',enTitle: 'VSC Strategist',    zhDesc: '趁 VSC 虛擬安全車期間進站並登上頒獎台', jaDesc: 'VSC発動中にピットインし表彰台獲得', enDesc: 'Pit under VSC caution & finish Top 3' },
+      { id: 'ers_master',     icon: '🔋', reward: 20000, zhTitle: '電能超車王',   jaTitle: 'ERSマスター',    enTitle: 'ERS Overtaker',     zhDesc: '啟用 ⚡ERS 超車模式並奪得 P1 冠軍',     jaDesc: '⚡ERS追い越しモードを使用し優勝',     enDesc: 'Deploy ⚡ERS Overtake & win P1' },
+      { id: 'triple_purple',  icon: '🟣', reward: 25000, zhTitle: '三紫刷圈神',   jaTitle: 'トリプルパープル',enTitle: 'Triple Purple Lap', zhDesc: '單圈同時刷出 S1/S2/S3 三個紫段紀錄',   jaDesc: '1周でS1/S2/S3全て紫セクターを記録', enDesc: 'Set Purple times in S1, S2 & S3 on one lap' }
+    ];
+
     let careerData = {
       teamId: 'tier3_stealth',
       cash: 30000,
@@ -1956,7 +2246,10 @@
         chassis: 0,
         steering: 0
       },
-      standings: getDefaultStandings()
+      standings: getDefaultStandings(),
+      unlockedAchievements: [],
+      liveryPreset: 'stock',
+      customColors: null
     };
 
     function loadCareerData() {
@@ -1993,12 +2286,24 @@
 
     loadCareerData();
 
+    function applyCustomLiveryToSpec(specObj) {
+      if (careerData && careerData.customColors && careerData.liveryPreset !== 'stock') {
+        return {
+          ...specObj,
+          colorMain: careerData.customColors.colorMain || specObj.colorMain,
+          colorStripe: careerData.customColors.colorStripe || specObj.colorStripe,
+          colorSpoiler: careerData.customColors.colorSpoiler || specObj.colorSpoiler
+        };
+      }
+      return specObj;
+    }
+
     function getPlayerSpec() {
       if (selectedGameMode === 'career') {
         const team = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
         const base = team.spec;
         const upg = careerData.upgrades || { engine: 0, aero: 0, chassis: 0, steering: 0 };
-        return {
+        return applyCustomLiveryToSpec({
           ...base,
           maxSpeed: base.maxSpeed + (upg.engine || 0) * 14,
           accel: base.accel + (upg.chassis || 0) * 18,
@@ -2007,9 +2312,71 @@
           turnSpeed: base.turnSpeed + (upg.steering || 0) * 0.10,
           driftTraction: base.driftTraction + (upg.steering || 0) * 0.12,
           driftRetention: Math.min(0.999, base.driftRetention + (upg.steering || 0) * 0.0008)
-        };
+        });
       }
-      return CAR_SPECS[selectedCarKey];
+      return applyCustomLiveryToSpec(CAR_SPECS[selectedCarKey]);
+    }
+
+    function renderTrophyRoomUI() {
+      const grid = document.getElementById('trophyRoomGrid');
+      const badge = document.getElementById('trophyProgressBadge');
+      if (!grid) return;
+      const unlocked = Array.isArray(careerData.unlockedAchievements) ? careerData.unlockedAchievements : [];
+      if (badge) {
+        badge.textContent = currentLang === 'en'
+          ? `Unlocked: ${unlocked.length} / ${ACHIEVEMENTS_CONFIG.length} (Rewards add to Career Funds)`
+          : (currentLang === 'ja'
+            ? `解除済: ${unlocked.length} / ${ACHIEVEMENTS_CONFIG.length} (報酬はキャリア資金へ加算)`
+            : `已解鎖: ${unlocked.length} / ${ACHIEVEMENTS_CONFIG.length} (獎勵自動匯入生涯資金)`);
+      }
+      grid.innerHTML = ACHIEVEMENTS_CONFIG.map(ach => {
+        const isDone = unlocked.includes(ach.id);
+        const title = currentLang === 'en' ? ach.enTitle : (currentLang === 'ja' ? ach.jaTitle : ach.zhTitle);
+        const desc = currentLang === 'en' ? ach.enDesc : (currentLang === 'ja' ? ach.jaDesc : ach.zhDesc);
+        const cardStyle = isDone
+          ? 'rounded-xl p-2 bg-amber-500/20 border-2 border-amber-400 text-white shadow'
+          : 'rounded-xl p-2 bg-slate-950/75 border border-slate-800 text-slate-400 opacity-75';
+        return `
+          <div class="${cardStyle} flex flex-col justify-between">
+            <div class="flex items-center justify-between gap-1">
+              <span class="font-extrabold text-xs ${isDone ? 'text-amber-300' : 'text-slate-300'}">${ach.icon} ${title}</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${isDone ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-amber-300'}">${isDone ? '✔ 已達成' : '+$' + ach.reward.toLocaleString()}</span>
+            </div>
+            <p class="text-[10px] ${isDone ? 'text-slate-200' : 'text-slate-400'} mt-1 leading-snug">${desc}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateLiveryWorkshopUI() {
+      const curPreset = careerData.liveryPreset || 'stock';
+      document.querySelectorAll('.livery-preset-btn').forEach(btn => {
+        const pKey = btn.getAttribute('data-livery');
+        const isSel = (pKey === curPreset);
+        btn.className = isSel
+          ? 'livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-extrabold mono border-2 border-amber-400 bg-amber-500 text-slate-950 shadow flex items-center justify-center gap-1.5 transition whitespace-nowrap'
+          : 'livery-preset-btn px-2 py-1.5 rounded-lg text-[11px] font-bold mono border border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200 flex items-center justify-center gap-1.5 transition whitespace-nowrap';
+      });
+      const spec = getPlayerSpec();
+      const cMain = document.getElementById('customColorMain');
+      const cStripe = document.getElementById('customColorStripe');
+      const cSpoiler = document.getElementById('customColorSpoiler');
+      if (cMain && spec) cMain.value = spec.colorMain || '#ef4444';
+      if (cStripe && spec) cStripe.value = spec.colorStripe || '#fef2f2';
+      if (cSpoiler && spec) cSpoiler.value = spec.colorSpoiler || '#991b1b';
+    }
+
+    function unlockAchievement(achId) {
+      if (!Array.isArray(careerData.unlockedAchievements)) careerData.unlockedAchievements = [];
+      if (careerData.unlockedAchievements.includes(achId)) return null;
+      const ach = ACHIEVEMENTS_CONFIG.find(a => a.id === achId);
+      if (!ach) return null;
+      careerData.unlockedAchievements.push(achId);
+      careerData.cash = (careerData.cash || 0) + ach.reward;
+      saveCareerData();
+      renderTrophyRoomUI();
+      if (typeof updateCareerUI === 'function') updateCareerUI();
+      return ach;
     }
 
     // =========================================================================
@@ -2707,8 +3074,8 @@
       const startOffsetIdx = -30; // Branches off 30 spline steps before Start/Finish line
       const endOffsetIdx = 24;    // Merges back 24 spline steps after Start/Finish line
       const totalSteps = endOffsetIdx - startOffsetIdx; // 54 steps
-      const laneLateralOffset = trackWidth * 0.86; // Separated ~270px to the right of main centerline!
-      const edgeOffset = trackWidth * 0.26;
+      const laneLateralOffset = trackWidth * 1.04; // Separated ~330px outside the main track centerline!
+      const edgeOffset = trackWidth * 0.58;        // Branches off OUTSIDE the right curb so normal racing never hits it!
 
       for (let step = 0; step <= totalSteps; step++) {
         const k = startOffsetIdx + step;
@@ -2831,8 +3198,57 @@
 
     let selectedTrackKey = 'imola';
     let selectedLaps = 3;
-    let selectedGameMode = 'arcade'; // 'arcade' or 'timetrial'
+    let selectedGameMode = 'arcade'; // 'arcade' or 'timetrial' or 'career'
     let selectedAiDiff = 'normal';   // 'easy', 'normal', 'hard'
+    let selectedQualiMode = 'skip';  // 'skip' (start P8) or 'run' (1-Lap Qualifying Shootout)
+    let playerEarnedGridSlot = 7;    // 0 (P1 Pole) to 7 (P8)
+
+    const vscState = {
+      active: false,
+      timer: 0,
+      cooldown: 16.0,
+      deployedCount: 0,
+      pittedUnderVsc: false
+    };
+
+    function updateVscBannerUI() {
+      const banner = document.getElementById('vscCautionBanner');
+      if (!banner) return;
+      if (!vscState.active) {
+        banner.classList.add('hidden');
+        return;
+      }
+      banner.classList.remove('hidden');
+      const timerEl = document.getElementById('vscTimerText');
+      if (timerEl) timerEl.textContent = `${vscState.timer.toFixed(1)}s`;
+    }
+
+    function updateQualiSelectionUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const qSection = document.getElementById('qualiModeSection');
+      if (qSection) {
+        if (selectedGameMode === 'timetrial') qSection.classList.add('hidden');
+        else qSection.classList.remove('hidden');
+      }
+      const skipBtn = document.getElementById('qualiBtn-skip');
+      const runBtn = document.getElementById('qualiBtn-run');
+      if (skipBtn) skipBtn.textContent = dict.qualiSkipBtn || '⏭️ 直接正賽 (P8起跑)';
+      if (runBtn) runBtn.textContent = dict.qualiRunBtn || '⚡ 1圈排位爭桿位 (1-Lap Quali)';
+
+      document.querySelectorAll('.quali-mode-btn').forEach(btn => {
+        const qKey = btn.getAttribute('data-quali');
+        const isSel = (qKey === selectedQualiMode);
+        btn.className = isSel
+          ? 'quali-mode-btn px-2.5 py-0.5 rounded text-xs font-extrabold mono bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'quali-mode-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      });
+      const descEl = document.getElementById('qualiModeDesc');
+      if (descEl) {
+        descEl.textContent = selectedQualiMode === 'run'
+          ? (dict.qualiRunDesc || '')
+          : (dict.qualiSkipDesc || '');
+      }
+    }
 
     // =========================================================================
     // 4. RETRO AUDIO SYNTHESIS (Web Audio API)
@@ -3146,6 +3562,106 @@
         }
       }
       updatePitAutopilotOverlayUI();
+      if (typeof updateErsHudUI === 'function') updateErsHudUI();
+    }
+
+    const ERS_MODES_ORDER = ['balanced', 'overtake', 'harvest'];
+    function updateErsHudUI() {
+      const dict = I18N[currentLang] || I18N.zh;
+      const pct = Math.max(0, Math.min(100, Math.round(car.ersEnergy !== undefined ? car.ersEnergy : 100)));
+      const badgeEl = document.getElementById('hudErsBadge');
+      const barEl = document.getElementById('hudErsBar');
+      const modeBtnEl = document.getElementById('btnCycleErsMode');
+      const mode = car.ersMode || 'balanced';
+
+      if (badgeEl) {
+        badgeEl.textContent = `${mode === 'overtake' ? '⚡' : (mode === 'harvest' ? '♻️' : '🔋')} ${pct}%`;
+        if (mode === 'overtake') {
+          badgeEl.className = 'px-1.5 py-0.5 rounded font-extrabold bg-fuchsia-500/30 text-fuchsia-200 border border-fuchsia-400 shadow-[0_0_8px_rgba(217,70,239,0.5)]';
+        } else if (mode === 'harvest') {
+          badgeEl.className = 'px-1.5 py-0.5 rounded font-extrabold bg-emerald-500/25 text-emerald-300 border border-emerald-400/60';
+        } else {
+          badgeEl.className = 'px-1.5 py-0.5 rounded font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-400/50';
+        }
+      }
+      if (barEl) {
+        barEl.style.width = `${pct}%`;
+        if (mode === 'overtake') {
+          barEl.className = 'h-full bg-gradient-to-r from-fuchsia-500 to-purple-400 transition-all duration-100';
+        } else if (mode === 'harvest') {
+          barEl.className = 'h-full bg-emerald-400 transition-all duration-100';
+        } else {
+          barEl.className = pct > 25 ? 'h-full bg-cyan-400 transition-all duration-100' : 'h-full bg-amber-400 transition-all duration-100';
+        }
+      }
+      if (modeBtnEl) {
+        if (mode === 'overtake') {
+          modeBtnEl.textContent = dict.ersModeOvertake || '⚡ERS:超車';
+          modeBtnEl.className = 'px-1.5 py-0.5 rounded bg-fuchsia-600 text-white text-[9px] font-black border border-fuchsia-300 shadow transition whitespace-nowrap animate-pulse';
+        } else if (mode === 'harvest') {
+          modeBtnEl.textContent = dict.ersModeHarvest || '♻️ERS:回充';
+          modeBtnEl.className = 'px-1.5 py-0.5 rounded bg-emerald-900/90 text-emerald-200 text-[9px] font-bold border border-emerald-500/70 transition whitespace-nowrap';
+        } else {
+          modeBtnEl.textContent = dict.ersModeBalanced || '⚖️ERS:均衡';
+          modeBtnEl.className = 'px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-cyan-300 border border-cyan-700/70 transition whitespace-nowrap';
+        }
+      }
+    }
+
+    function cycleErsDeploymentMode() {
+      initAudio();
+      const curIdx = ERS_MODES_ORDER.indexOf(car.ersMode || 'balanced');
+      const nextMode = ERS_MODES_ORDER[(curIdx + 1) % ERS_MODES_ORDER.length];
+      if (nextMode === 'overtake' && (car.ersEnergy || 0) <= 3) {
+        const dict = I18N[currentLang] || I18N.zh;
+        showToast(dict.toastErsEmpty || '🔋 ERS 電能不足', dict.toastErsEmptySub || '請先透過過彎減速或回充模式蓄電！');
+        playCheckpointBeep(330);
+        return;
+      }
+      car.ersMode = nextMode;
+      updateErsHudUI();
+      playCheckpointBeep(nextMode === 'overtake' ? 880 : (nextMode === 'harvest' ? 523.25 : 659.25));
+      const dict = I18N[currentLang] || I18N.zh;
+      if (nextMode === 'overtake') {
+        showToast(dict.toastErsOvertake || '⚡ ERS 超車推進模式 (OVERTAKE)', dict.toastErsOvertakeSub || '');
+      } else if (nextMode === 'harvest') {
+        showToast(dict.toastErsHarvest || '♻️ ERS 優先回充模式 (HARVEST)', dict.toastErsHarvestSub || '');
+      } else {
+        showToast(dict.toastErsBalanced || '⚖️ ERS 均衡自動模式 (BALANCED)', dict.toastErsBalancedSub || '');
+      }
+    }
+
+    function evaluateAndRenderSectorSplit(secIdx, splitMs, active) {
+      if (!active.bestSectors) active.bestSectors = [null, null, null];
+      if (!car.prevSectors) car.prevSectors = [null, null, null];
+      if (!raceState.curLapSectorColors) raceState.curLapSectorColors = [null, null, null];
+
+      const bestMs = active.bestSectors[secIdx];
+      const prevMs = car.prevSectors[secIdx];
+      let colorType = 'yellow';
+      if (bestMs === null || splitMs <= bestMs) {
+        colorType = 'purple';
+        active.bestSectors[secIdx] = splitMs;
+      } else if (prevMs === null || splitMs <= prevMs) {
+        colorType = 'green';
+      }
+      car.prevSectors[secIdx] = splitMs;
+      raceState.curLapSectorColors[secIdx] = colorType;
+
+      const el = document.getElementById(`hudSector${secIdx + 1}`);
+      if (el) {
+        const secStr = (splitMs / 1000).toFixed(1);
+        const dot = colorType === 'purple' ? '🟣' : (colorType === 'green' ? '🟢' : '🟡');
+        el.textContent = `S${secIdx + 1}:${secStr}${dot}`;
+        if (colorType === 'purple') {
+          el.className = 'px-1 rounded bg-purple-600/90 text-white font-black border border-purple-300/80';
+        } else if (colorType === 'green') {
+          el.className = 'px-1 rounded bg-emerald-600/90 text-white font-bold border border-emerald-300/80';
+        } else {
+          el.className = 'px-1 rounded bg-amber-500/90 text-slate-950 font-bold border border-amber-300/80';
+        }
+      }
+      return colorType;
     }
 
     function toggleBoxThisLapRequest() {
@@ -3366,9 +3882,10 @@
       return { x: gx, y: gy, angle: startAngle };
     }
 
-    function initAiCars() {
+    function initAiCars(playerGridSlotIdx = 7) {
       aiCars = [];
       if (selectedGameMode !== 'arcade' && selectedGameMode !== 'career') return;
+      if (raceState.isQualifyingSession) return; // Solo clear track during 1-Lap Qualifying Shootout!
 
       const active = getActiveTrack();
       const trackSpline = active.pts;
@@ -3377,8 +3894,12 @@
 
       const diffMultiplier = selectedAiDiff === 'easy' ? 0.89 : (selectedAiDiff === 'normal' ? 0.97 : 1.04);
 
+      // Assign the 7 AI cars to the 7 grid slots not occupied by the player!
+      const availableSlots = [0, 1, 2, 3, 4, 5, 6, 7].filter(s => s !== playerGridSlotIdx);
+
       AI_OPPONENTS_DATA.forEach((data, idx) => {
-        const slotPos = getGridSlotPosition(trackSpline, trackWidth, idx); // AI slots 0 to 6 (P1 to P7)
+        const aiSlot = availableSlots[idx] !== undefined ? availableSlots[idx] : idx;
+        const slotPos = getGridSlotPosition(trackSpline, trackWidth, aiSlot);
         const spec = CAR_SPECS[data.specKey] || CAR_SPECS.balanced;
         const nearest = findNearestSplinePoint(slotPos.x, slotPos.y, trackSpline, null);
 
@@ -3454,6 +3975,8 @@
       if (pauseModal) pauseModal.classList.remove('hidden');
     }
 
+    let openedSettingsFromGarage = false;
+
     function resumeGame() {
       if (!isGamePaused) return;
       const pauseDuration = performance.now() - pauseStartTime;
@@ -3461,6 +3984,10 @@
       lastFrameTime = performance.now();
       isGamePaused = false;
       if (pauseModal) pauseModal.classList.add('hidden');
+      if (openedSettingsFromGarage) {
+        openedSettingsFromGarage = false;
+        garageModal.classList.remove('hidden');
+      }
     }
 
     function togglePause() {
@@ -3475,8 +4002,9 @@
     if (btnResumeRace) btnResumeRace.addEventListener('click', resumeGame);
     if (btnPauseRestart) {
       btnPauseRestart.addEventListener('click', () => {
+        openedSettingsFromGarage = false;
         resumeGame();
-        resetCarToStart(true);
+        resetCarToStart(true, raceState.isQualifyingSession, raceState.isQualifyingSession ? 0 : playerEarnedGridSlot);
       });
     }
     if (btnPauseToMenu) {
@@ -3488,15 +4016,37 @@
       });
     }
 
-    function resetCarToStart(withCountdown = true) {
+    function resetCarToStart(withCountdown = true, startAsQualifying = false, customGridSlot = null) {
       isGamePaused = false;
       if (pauseModal) pauseModal.classList.add('hidden');
+      const qModal = document.getElementById('qualiResultModal');
+      if (qModal) qModal.classList.add('hidden');
+
+      raceState.isQualifyingSession = Boolean(startAsQualifying && (selectedGameMode === 'arcade' || selectedGameMode === 'career'));
+      vscState.active = false;
+      vscState.timer = 0;
+      vscState.cooldown = 14.0 + Math.random() * 10.0;
+      vscState.deployedCount = 0;
+      vscState.pittedUnderVsc = false;
+      updateVscBannerUI();
+
       const active = getActiveTrack();
       const trackSpline = active.pts;
       const N = trackSpline.length;
       const trackWidth = active.cfg.trackWidth;
 
-      const playerSlot = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? 7 : 0;
+      let playerSlot = 0;
+      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+        if (raceState.isQualifyingSession) {
+          playerSlot = 0;
+        } else if (customGridSlot !== null && customGridSlot !== undefined) {
+          playerSlot = customGridSlot;
+          playerEarnedGridSlot = customGridSlot;
+        } else {
+          playerSlot = 7;
+          playerEarnedGridSlot = 7;
+        }
+      }
       const slotPos = getGridSlotPosition(trackSpline, trackWidth, playerSlot);
       const nearest = findNearestSplinePoint(slotPos.x, slotPos.y, trackSpline, null);
 
@@ -3516,14 +4066,14 @@
       car.finished = false;
       car.totalTimeMs = 0;
       selectedLaps = getTrackProportionalLaps(selectedTrackKey, selectedDistanceMode);
-      weatherState.mode = selectedWeatherMode || 'dynamic';
-      if (weatherState.mode === 'dry') {
+      weatherState.mode = raceState.isQualifyingSession ? 'dry' : (selectedWeatherMode || 'dynamic');
+      if (raceState.isQualifyingSession || weatherState.mode === 'dry') {
         weatherState.condition = 'clear';
         weatherState.nextForecast = 'clear';
         weatherState.trackWetness = 0.0;
         weatherState.rainIntensity = 0.0;
         weatherState.targetRainIntensity = 0.0;
-        weatherState.phaseTimer = 999;
+        weatherState.phaseTimer = 9999;
       } else if (weatherState.mode === 'wet') {
         weatherState.condition = 'heavy_rain';
         weatherState.nextForecast = 'heavy_rain';
@@ -3561,15 +4111,21 @@
       weatherState.warnedDryTrack = (weatherState.trackWetness < 20);
       updateWeatherHudUI();
 
-      car.tireCompound = selectedTireCompound || 'medium';
-      if (selectedGameMode === 'career' && weatherState.trackWetness >= 26) {
-        // In Career Mode, if the grid starts wet/damp, mount matching wet/inter tires at start
-        car.tireCompound = weatherState.trackWetness >= 55 ? 'wet' : 'inter';
-      }
-      car.tireSetsLeft = getInitialTireAllocation();
-      // Deduct the 1 starting tire set mounted on the grid
-      if (car.tireSetsLeft[car.tireCompound] > 0) {
-        car.tireSetsLeft[car.tireCompound] -= 1;
+      if (raceState.isQualifyingSession) {
+        // Qualifying is ALWAYS fixed to Dry weather and Red Soft tires!
+        car.tireCompound = 'soft';
+        car.tireSetsLeft = getInitialTireAllocation();
+      } else {
+        car.tireCompound = selectedTireCompound || 'medium';
+        if (selectedGameMode === 'career' && weatherState.trackWetness >= 26) {
+          // In Career Mode, if the grid starts wet/damp, mount matching wet/inter tires at start
+          car.tireCompound = weatherState.trackWetness >= 55 ? 'wet' : 'inter';
+        }
+        car.tireSetsLeft = getInitialTireAllocation();
+        // Deduct the 1 starting tire set mounted on the grid
+        if (car.tireSetsLeft[car.tireCompound] > 0) {
+          car.tireSetsLeft[car.tireCompound] -= 1;
+        }
       }
       car.nextTireCompound = (weatherState.mode === 'dynamic') ? 'inter' : 'soft';
       car.tireWear = 100.0;
@@ -3584,23 +4140,35 @@
       car.pitMountedCompoundKey = null;
       car.boxThisLap = false;
       car.drsGapSec = null;
+      car.slipstreamActive = false;
+      car.usedDrsInRace = false;
+      car.ersEnergy = 100.0;
+      car.ersMode = raceState.isQualifyingSession ? 'overtake' : 'balanced';
+      car.ersDeploying = false;
+      car.usedErsOvertake = false;
+      car.achievedTriplePurple = false;
+      car.prevSectors = [null, null, null];
       car.warnedBoxBox = false;
       raceState.passedHalfway = false;
       raceState.passedLateLap = false;
+      raceState.s1CumMs = 0;
+      raceState.s2CumMs = 0;
+      raceState.curLapSectorColors = [null, null, null];
       updateTireHudUI();
+      updateErsHudUI();
       car.totalProgress = computeContinuousProgress(car, N);
 
       raceState.lap = 1;
-      raceState.totalLaps = selectedLaps;
+      raceState.totalLaps = raceState.isQualifyingSession ? 1 : selectedLaps;
       raceState.lapTimes = [];
       raceState.finished = false;
       raceState.lapStartTime = performance.now();
       raceState.passedSector1 = false;
       raceState.passedSector2 = false;
       raceState.maxSplineIdxReached = 0;
-      raceState.playerRank = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? 8 : 1;
+      raceState.playerRank = (selectedGameMode === 'arcade' || selectedGameMode === 'career') ? (playerSlot + 1) : 1;
 
-      initAiCars();
+      initAiCars(playerSlot);
 
       const hudBadge = document.getElementById('hudTrackBadge');
       hudBadge.textContent = active.cfg.badgeText;
@@ -3608,18 +4176,25 @@
       document.getElementById('hudTrackFullName').textContent = active.cfg.fullName;
       document.getElementById('minimapTitle').textContent = active.cfg.shortTitle;
 
-      document.getElementById('hudLap').textContent = `1/${raceState.totalLaps}`;
+      document.getElementById('hudLap').textContent = raceState.isQualifyingSession ? 'Q1/1' : `1/${raceState.totalLaps}`;
       document.getElementById('hudBestTime').textContent = active.bestLapMs ? formatTime(active.bestLapMs) : '--:--.--';
-      document.getElementById('hudSector1').textContent = 'S1:--';
-      document.getElementById('hudSector2').textContent = 'S2:--';
-      document.getElementById('hudSector3').textContent = 'S3:--';
+      const s1El = document.getElementById('hudSector1');
+      const s2El = document.getElementById('hudSector2');
+      const s3El = document.getElementById('hudSector3');
+      if (s1El) { s1El.textContent = 'S1:--'; s1El.className = 'text-red-400'; }
+      if (s2El) { s2El.textContent = 'S2:--'; s2El.className = 'text-sky-400'; }
+      if (s3El) { s3El.textContent = 'S3:--'; s3El.className = 'text-amber-300'; }
 
       const posContainer = document.getElementById('hudPosContainer');
       const bestContainer = document.getElementById('hudBestContainer');
-      if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
+      if (raceState.isQualifyingSession) {
+        posContainer.classList.remove('hidden');
+        bestContainer.classList.remove('hidden');
+        document.getElementById('hudPosition').textContent = '⏱️QUALI';
+      } else if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
         posContainer.classList.remove('hidden');
         bestContainer.classList.add('hidden');
-        document.getElementById('hudPosition').textContent = 'P8/8';
+        document.getElementById('hudPosition').textContent = `P${playerSlot + 1}/8`;
       } else {
         posContainer.classList.add('hidden');
         bestContainer.classList.remove('hidden');
@@ -3700,6 +4275,7 @@
       if (code === 'ArrowDown' || code === 'KeyS') input.brake = true;
       if (code === 'Space') input.handbrake = true;
       if (code === 'KeyC' || code === 'KeyB') toggleBoxThisLapRequest();
+      if (code === 'KeyE' || code === 'ShiftLeft' || code === 'ShiftRight') cycleErsDeploymentMode();
       if (car.inPitAutopilot) {
         const digitMap = { Digit1: 'soft', Digit2: 'medium', Digit3: 'hard', Digit4: 'inter', Digit5: 'wet' };
         const tKey = digitMap[code];
@@ -3756,11 +4332,17 @@
     // 6.2. HOT SLIDE STYLE 360° DIRECT TARGET-HEADING STEERING MODE (v0.8.1)
     // =========================================================================
     const STEER_MODE_STORAGE_KEY = 'pixel_gp_steer_mode_v1';
+    const BTN_LAYOUT_STORAGE_KEY = 'pixel_gp_btn_layout_v1';
     let steerControlMode = 'buttons'; // 'buttons' | 'swipe' (360° Direct Point Mode)
+    let btnLayoutMode = 'left';       // 'left' | 'split' | 'right'
     try {
       const savedMode = localStorage.getItem(STEER_MODE_STORAGE_KEY);
       if (savedMode === 'swipe' || savedMode === 'buttons') {
         steerControlMode = savedMode;
+      }
+      const savedLayout = localStorage.getItem(BTN_LAYOUT_STORAGE_KEY);
+      if (savedLayout === 'left' || savedLayout === 'split' || savedLayout === 'right') {
+        btnLayoutMode = savedLayout;
       }
     } catch (e) {}
 
@@ -3824,6 +4406,30 @@
         menuSteerDesc.textContent = isDirect ? (dict.menuSteerSwipeDesc || '') : (dict.menuSteerButtonsDesc || '');
       }
 
+      const pauseSteerButtons = document.getElementById('pauseSteerButtons');
+      const pauseSteerSwipe = document.getElementById('pauseSteerSwipe');
+      if (pauseSteerButtons && pauseSteerSwipe) {
+        pauseSteerButtons.textContent = dict.menuSteerButtons || '🎮 左右按鍵';
+        pauseSteerSwipe.textContent = dict.menuSteerSwipe || '🧭 360°車頭指向';
+        pauseSteerButtons.className = !isDirect
+          ? 'py-1.5 px-2 rounded-lg font-extrabold text-xs bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'py-1.5 px-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+        pauseSteerSwipe.className = isDirect
+          ? 'py-1.5 px-2 rounded-lg font-extrabold text-xs bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'py-1.5 px-2 rounded-lg font-bold text-xs bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      }
+
+      const pauseLayoutRow = document.getElementById('pauseBtnLayoutRow');
+      const menuLayoutGroup = document.getElementById('menuBtnLayoutGroup');
+      if (pauseLayoutRow) {
+        if (isDirect) pauseLayoutRow.classList.add('hidden');
+        else pauseLayoutRow.classList.remove('hidden');
+      }
+      if (menuLayoutGroup) {
+        if (isDirect) menuLayoutGroup.classList.add('hidden');
+        else menuLayoutGroup.classList.remove('hidden');
+      }
+
       if (steerButtonsCluster) {
         if (isDirect) {
           steerButtonsCluster.classList.add('hidden');
@@ -3834,6 +4440,38 @@
           updateDirectRingVisual();
         }
       }
+      updateButtonLayoutUI();
+    }
+
+    function updateButtonLayoutUI() {
+      if (steerButtonsCluster) {
+        const hiddenClass = (steerControlMode === 'swipe') ? 'hidden ' : '';
+        if (btnLayoutMode === 'split') {
+          steerButtonsCluster.className = `${hiddenClass}w-full flex items-center justify-between px-2 sm:px-6 pointer-events-none`;
+        } else if (btnLayoutMode === 'right') {
+          steerButtonsCluster.className = `${hiddenClass}w-full flex items-center justify-end gap-9 sm:gap-14 px-2 sm:px-6 pointer-events-none`;
+        } else {
+          steerButtonsCluster.className = `${hiddenClass}w-full flex items-center justify-start gap-9 sm:gap-14 px-2 sm:px-6 pointer-events-none`;
+        }
+      }
+      document.querySelectorAll('.btn-layout-opt').forEach(btn => {
+        const bKey = btn.getAttribute('data-btn-layout');
+        const isSel = (bKey === btnLayoutMode);
+        btn.className = isSel
+          ? 'btn-layout-opt py-1 px-2 rounded-lg font-extrabold text-[11px] bg-amber-500 text-slate-950 border border-amber-400 shadow transition whitespace-nowrap'
+          : 'btn-layout-opt py-1 px-2 rounded-lg font-bold text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      });
+    }
+
+    function setButtonLayoutMode(layoutKey) {
+      if (!['left', 'split', 'right'].includes(layoutKey)) return;
+      initAudio();
+      btnLayoutMode = layoutKey;
+      try {
+        localStorage.setItem(BTN_LAYOUT_STORAGE_KEY, btnLayoutMode);
+      } catch (e) {}
+      updateButtonLayoutUI();
+      playCheckpointBeep(660);
     }
 
     function setSteerControlMode(mode, notify = true) {
@@ -3867,6 +4505,36 @@
     }
     if (menuSteerSwipe) {
       menuSteerSwipe.addEventListener('click', () => setSteerControlMode('swipe', true));
+    }
+    const pauseSteerButtonsEl = document.getElementById('pauseSteerButtons');
+    const pauseSteerSwipeEl = document.getElementById('pauseSteerSwipe');
+    if (pauseSteerButtonsEl) {
+      pauseSteerButtonsEl.addEventListener('click', () => setSteerControlMode('buttons', true));
+    }
+    if (pauseSteerSwipeEl) {
+      pauseSteerSwipeEl.addEventListener('click', () => setSteerControlMode('swipe', true));
+    }
+    document.querySelectorAll('.btn-layout-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setButtonLayoutMode(btn.getAttribute('data-btn-layout'));
+      });
+    });
+    const btnOpenSettings = document.getElementById('btnOpenSettings');
+    if (btnOpenSettings) {
+      btnOpenSettings.addEventListener('click', () => {
+        initAudio();
+        if (isGamePaused) {
+          resumeGame();
+          return;
+        }
+        if (!garageModal.classList.contains('hidden')) {
+          openedSettingsFromGarage = true;
+          garageModal.classList.add('hidden');
+        } else {
+          openedSettingsFromGarage = false;
+        }
+        pauseGame();
+      });
     }
 
     // Compute 360° target heading from finger offset (dx, dy) relative to touch ring center (Hot Slide style!)
@@ -4205,6 +4873,14 @@
         chassis: dict.rdChassisTitle || '輕量化傳動',
         steering: dict.rdSteeringTitle || '轉向與飄移'
       };
+      if (curLv + 1 >= RD_MAX_LEVEL) {
+        const ach = unlockAchievement('chief_engineer');
+        if (ach) {
+          const title = currentLang === 'en' ? ach.enTitle : (currentLang === 'ja' ? ach.jaTitle : ach.zhTitle);
+          showToast(`🏅 解鎖成就：${ach.icon} ${title}`, `獲得成就獎金 +$${ach.reward.toLocaleString()}！`);
+          return;
+        }
+      }
       showToast(`${dict.toastUpgraded || '🔧 研發升級：'}${partNames[partKey]} Lv.${curLv + 1}`, `-$${cost.toLocaleString()}`);
     }
 
@@ -4275,6 +4951,7 @@
         selectedWeatherMode = 'dynamic';
       }
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
       if (typeof updateDistanceButtonsUI === 'function') updateDistanceButtonsUI();
       updateMenuSummary();
     }
@@ -4369,6 +5046,7 @@
       });
       updateDistanceButtonsUI();
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
+      if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
       resetCarToStart(false);
       camX = car.x - viewW / 2;
       camY = car.y - viewH / 2;
@@ -4449,6 +5127,12 @@
       });
     });
 
+    const btnCycleErsModeEl = document.getElementById('btnCycleErsMode');
+    if (btnCycleErsModeEl) {
+      btnCycleErsModeEl.addEventListener('click', () => {
+        cycleErsDeploymentMode();
+      });
+    }
     const btnCyclePitTire = document.getElementById('btnCyclePitTire');
     if (btnCyclePitTire) {
       btnCyclePitTire.addEventListener('click', (e) => {
@@ -4484,7 +5168,45 @@
       card.addEventListener('click', () => {
         initAudio();
         selectCar(card.getAttribute('data-car'));
+        if (typeof updateLiveryWorkshopUI === 'function') updateLiveryWorkshopUI();
       });
+    });
+
+    document.querySelectorAll('.livery-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        const lKey = btn.getAttribute('data-livery');
+        if (!LIVERY_PRESETS[lKey]) return;
+        careerData.liveryPreset = lKey;
+        if (lKey === 'stock') {
+          careerData.customColors = null;
+        } else {
+          careerData.customColors = {
+            colorMain: LIVERY_PRESETS[lKey].colorMain,
+            colorStripe: LIVERY_PRESETS[lKey].colorStripe,
+            colorSpoiler: LIVERY_PRESETS[lKey].colorSpoiler
+          };
+        }
+        saveCareerData();
+        updateLiveryWorkshopUI();
+        playCheckpointBeep(660);
+      });
+    });
+
+    ['customColorMain', 'customColorStripe', 'customColorSpoiler'].forEach(inpId => {
+      const inp = document.getElementById(inpId);
+      if (inp) {
+        inp.addEventListener('input', () => {
+          careerData.liveryPreset = 'custom';
+          careerData.customColors = {
+            colorMain: document.getElementById('customColorMain').value,
+            colorStripe: document.getElementById('customColorStripe').value,
+            colorSpoiler: document.getElementById('customColorSpoiler').value
+          };
+          saveCareerData();
+          updateLiveryWorkshopUI();
+        });
+      }
     });
 
     btnCarSelect.addEventListener('click', () => {
@@ -4496,15 +5218,148 @@
       initAudio();
       garageModal.classList.add('hidden');
     });
+    document.querySelectorAll('.quali-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        selectedQualiMode = btn.getAttribute('data-quali') || 'skip';
+        updateQualiSelectionUI();
+        updateMenuSummary();
+      });
+    });
+
     btnStartRace.addEventListener('click', () => {
       initAudio();
       garageModal.classList.add('hidden');
       resultModal.classList.add('hidden');
-      resetCarToStart(true);
+      const runQualiFirst = (selectedQualiMode === 'run' && (selectedGameMode === 'arcade' || selectedGameMode === 'career'));
+      resetCarToStart(true, runQualiFirst, 7);
     });
+
+    const btnQualiRetry = document.getElementById('btnQualiRetry');
+    if (btnQualiRetry) {
+      btnQualiRetry.addEventListener('click', () => {
+        if (performance.now() - resultsModalOpenedAt < 650) return;
+        initAudio();
+        document.getElementById('qualiResultModal').classList.add('hidden');
+        resetCarToStart(true, true, 0);
+      });
+    }
+
+    const btnStartMainRaceFromQuali = document.getElementById('btnStartMainRaceFromQuali');
+    if (btnStartMainRaceFromQuali) {
+      btnStartMainRaceFromQuali.addEventListener('click', () => {
+        if (performance.now() - resultsModalOpenedAt < 650) return;
+        initAudio();
+        document.getElementById('qualiResultModal').classList.add('hidden');
+        resetCarToStart(true, false, playerEarnedGridSlot);
+      });
+    }
+
+    function showQualifyingResultsModal(playerLapMs) {
+      raceState.finished = true;
+      car.finished = true;
+      resultsModalOpenedAt = performance.now();
+      directSteerActive = false;
+      directHasDirection = false;
+      directPointerId = null;
+      if (typeof updateDirectRingVisual === 'function') updateDirectRingVisual();
+      input.left = false;
+      input.right = false;
+      input.gas = false;
+      input.brake = false;
+      updateAudio(0, false, false);
+
+      // Estimate benchmark AI qualifying times for this circuit
+      const active = getActiveTrack();
+      const N = active.pts.length;
+      let totalTrackPx = 0;
+      for (let i = 0; i < N; i++) {
+        const p1 = active.pts[i];
+        const p2 = active.pts[(i + 1) % N];
+        totalTrackPx += Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      }
+      const diffSpeedFactor = selectedAiDiff === 'easy' ? 0.90 : (selectedAiDiff === 'normal' ? 0.97 : 1.03);
+      const wetSlowdown = weatherState.trackWetness > 25 ? 1.08 : 1.0;
+      const baseRefLapMs = ((totalTrackPx / (535 * diffSpeedFactor)) * 1000) * wetSlowdown;
+
+      const entries = [
+        { isPlayer: true, name: 'YOU (Player)', color: getPlayerSpec().colorMain, lapMs: playerLapMs }
+      ];
+      AI_OPPONENTS_DATA.forEach((aiData, idx) => {
+        const aiMs = baseRefLapMs * (1.0 / aiData.skillMod) * (0.985 + idx * 0.014 + (Math.random() - 0.5) * 0.01);
+        entries.push({
+          isPlayer: false,
+          name: aiData.name,
+          color: aiData.colorMain,
+          lapMs: Math.max(8000, Math.round(aiMs))
+        });
+      });
+
+      entries.sort((a, b) => a.lapMs - b.lapMs);
+      const playerGridRank = entries.findIndex(e => e.isPlayer) + 1;
+      playerEarnedGridSlot = playerGridRank - 1; // 0 = P1 Pole, 7 = P8
+
+      const qBadge = document.getElementById('qualiResBadge');
+      const poleBanner = document.getElementById('qualiPoleBonusBanner');
+      if (playerGridRank === 1) {
+        qBadge.textContent = '⚡ P1 · POLE POSITION (奪得桿位!)';
+        qBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-amber-500/25 text-amber-300 border border-amber-400 mono uppercase';
+        if (poleBanner) poleBanner.classList.remove('hidden');
+        if (selectedGameMode === 'career') {
+          careerData.cash = (careerData.cash || 0) + 10000;
+          saveCareerData();
+        }
+        unlockAchievement('pole_king');
+      } else if (playerGridRank <= 3) {
+        qBadge.textContent = `🔥 P${playerGridRank} · FRONT GRID (前排起跑!)`;
+        qBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-sky-500/25 text-sky-300 border border-sky-400 mono uppercase';
+        if (poleBanner) poleBanner.classList.add('hidden');
+      } else {
+        qBadge.textContent = `🏁 P${playerGridRank} · GRID SLOT P${playerGridRank}`;
+        qBadge.className = 'inline-block px-3 py-0.5 rounded-full text-xs font-black bg-slate-800 text-slate-300 border border-slate-600 mono uppercase';
+        if (poleBanner) poleBanner.classList.add('hidden');
+      }
+
+      document.getElementById('qualiResTitle').textContent = `${active.cfg.name} · 排位賽結果`;
+      document.getElementById('qualiPlayerTimeText').textContent = formatTime(playerLapMs);
+
+      const leaderMs = entries[0].lapMs;
+      const gridListEl = document.getElementById('qualiGridList');
+      if (gridListEl) {
+        gridListEl.innerHTML = entries.map((e, idx) => {
+          const pos = idx + 1;
+          const deltaStr = idx === 0 ? 'POLE' : `+${((e.lapMs - leaderMs) / 1000).toFixed(2)}s`;
+          const rowClass = e.isPlayer ? 'bg-sky-950/60 border border-sky-400 text-white font-bold' : 'border-t border-slate-800/80 text-slate-300';
+          return `
+            <div class="flex items-center justify-between p-1.5 rounded ${rowClass}">
+              <div class="flex items-center gap-2">
+                <span class="${pos === 1 ? 'text-amber-300 font-black' : 'text-slate-400'} w-6">P${pos}</span>
+                <span class="w-3 h-3 rounded-full inline-block" style="background:${e.color}"></span>
+                <span>${e.name}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-slate-200">${formatTime(e.lapMs)}</span>
+                <span class="text-[10px] ${idx === 0 ? 'text-amber-300 font-black' : 'text-slate-400'} w-12 text-right">${deltaStr}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const startBtn = document.getElementById('btnStartMainRaceFromQuali');
+      if (startBtn) {
+        startBtn.textContent = currentLang === 'en'
+          ? `🚦 START GRAND PRIX FROM P${playerGridRank}`
+          : (currentLang === 'ja'
+            ? `🚦 P${playerGridRank} グリッドから決勝スタート`
+            : `🚦 以 P${playerGridRank} 格位正式起跑正賽`);
+      }
+
+      document.getElementById('qualiResultModal').classList.remove('hidden');
+    }
     btnResetCar.addEventListener('click', () => {
       initAudio();
-      resetCarToStart(true);
+      resetCarToStart(true, raceState.isQualifyingSession, raceState.isQualifyingSession ? 0 : playerEarnedGridSlot);
     });
 
     function updateMuteUI() {
@@ -4549,7 +5404,8 @@
         resultModal.classList.add('hidden');
         const nextTrackKey = SEASON_CALENDAR[careerData.currentRoundIdx] || 'imola';
         selectTrack(nextTrackKey);
-        resetCarToStart(true);
+        const runQualiFirst = (selectedQualiMode === 'run' && (selectedGameMode === 'arcade' || selectedGameMode === 'career'));
+        resetCarToStart(true, runQualiFirst, 7);
       });
     }
 
@@ -4731,6 +5587,68 @@
         }).join('');
       }
 
+      // v1.1.0 Check & Unlock Driver Achievements on Race Finish
+      const newlyUnlocked = [];
+      const isCompetitiveRace = (selectedGameMode === 'arcade' || selectedGameMode === 'career');
+      if (isCompetitiveRace && playerPos === 1) {
+        const a1 = unlockAchievement('first_win');
+        if (a1) newlyUnlocked.push(a1);
+        if (weatherState.trackWetness >= 35) {
+          const a2 = unlockAchievement('rain_master');
+          if (a2) newlyUnlocked.push(a2);
+        }
+        if (selectedTrackKey === 'singapore') {
+          const a5 = unlockAchievement('night_king');
+          if (a5) newlyUnlocked.push(a5);
+        }
+        if (car.usedErsOvertake) {
+          const aErs = unlockAchievement('ers_master');
+          if (aErs) newlyUnlocked.push(aErs);
+        }
+      }
+      if (car.achievedTriplePurple) {
+        const aPurp = unlockAchievement('triple_purple');
+        if (aPurp) newlyUnlocked.push(aPurp);
+      }
+      if (isCompetitiveRace && playerPos <= 3) {
+        if ((car.pitStopsCount || 0) >= 1) {
+          const a3 = unlockAchievement('pit_tactician');
+          if (a3) newlyUnlocked.push(a3);
+        }
+        if (vscState.pittedUnderVsc) {
+          const aVsc = unlockAchievement('vsc_tactician');
+          if (aVsc) newlyUnlocked.push(aVsc);
+        }
+        if (car.usedDrsInRace) {
+          const a4 = unlockAchievement('drs_hunter');
+          if (a4) newlyUnlocked.push(a4);
+        }
+      }
+      if ((careerData.championshipsCount || 0) >= 1) {
+        const a7 = unlockAchievement('world_champ');
+        if (a7) newlyUnlocked.push(a7);
+      }
+      const tracksWithBest = Object.keys(compiledTracks).filter(k => compiledTracks[k].bestLapMs !== null).length;
+      if (tracksWithBest >= 3) {
+        const a8 = unlockAchievement('track_master');
+        if (a8) newlyUnlocked.push(a8);
+      }
+
+      const achBox = document.getElementById('resUnlockedAchievementsBox');
+      const achList = document.getElementById('resUnlockedAchievementsList');
+      if (achBox && achList) {
+        if (newlyUnlocked.length > 0) {
+          achBox.classList.remove('hidden');
+          achList.innerHTML = newlyUnlocked.map(a => {
+            const t = currentLang === 'en' ? a.enTitle : (currentLang === 'ja' ? a.jaTitle : a.zhTitle);
+            const d = currentLang === 'en' ? a.enDesc : (currentLang === 'ja' ? a.jaDesc : a.zhDesc);
+            return `<div class="flex items-center justify-between"><span>${a.icon} <strong>${t}</strong> — ${d}</span><span class="text-emerald-300 font-bold">+$${a.reward.toLocaleString()}</span></div>`;
+          }).join('');
+        } else {
+          achBox.classList.add('hidden');
+        }
+      }
+
       resultModal.classList.remove('hidden');
     }
 
@@ -4760,8 +5678,11 @@
     // Real F1 DRS Rule: Only cars trailing within 1.00 second of a car ahead on track can activate DRS!
     // (In solo Time Trial mode, DRS is freely available in DRS zones like F1 Qualifying)
     function evaluateCarDrsStatus(targetCar, allCars, trackSpline, N) {
+      if (vscState.active) {
+        return { canUseDrs: false, gapSec: null, wetDisabled: false, vscDisabled: true };
+      }
       if (weatherState.trackWetness >= 45) {
-        return { canUseDrs: false, gapSec: null, wetDisabled: true };
+        return { canUseDrs: false, gapSec: null, wetDisabled: true, vscDisabled: false };
       }
       if (selectedGameMode === 'timetrial') {
         return { canUseDrs: true, gapSec: 0.0, wetDisabled: false };
@@ -4929,9 +5850,9 @@
       const steerDir = Math.max(-1, Math.min(1, steerDiff * 3.15));
       ai.angle += steerDir * ai.spec.turnSpeed * 1.14 * dt;
 
-      // Authentic F1 DRS Rule for AI: Only active in DRS zone when trailing a car ahead within 1.0s!
+      // Authentic F1 DRS Rule for AI: Only active in DRS zone when trailing a car ahead within 1.0s (and no VSC caution)!
       const aiDrsEval = evaluateCarDrsStatus(ai, allCars, trackSpline, N);
-      ai.drsActive = Boolean(!ai.inPitLane && curTrackPt.drs && aiDrsEval.canUseDrs && angleDiff < 0.25 && ai.speed > 250);
+      ai.drsActive = Boolean(!vscState.active && !ai.inPitLane && curTrackPt.drs && aiDrsEval.canUseDrs && angleDiff < 0.25 && ai.speed > 250);
       const aiDrsBoost = ai.drsActive ? (selectedAiDiff === 'hard' ? 1.05 : 1.03) : 1.0;
 
       // Subtle slipstream catch-up only on Hard difficulty (+2%)
@@ -4941,7 +5862,7 @@
       }
 
       const aiWearPenalty = (ai.tireWear < 35) ? (0.86 + (ai.tireWear / 35) * 0.14) : 1.0;
-      const aiPitLimiter = ai.inPitLane ? 0.42 : 1.0;
+      const aiPitLimiter = ai.inPitLane ? 0.42 : (vscState.active ? 0.70 : 1.0);
 
       // Balanced midpoint cornering throttle & braking
       const cooldownMod = ai.finished ? 0.75 : 1.0;
@@ -5143,6 +6064,9 @@
       car.drsGapSec = playerDrsEval.gapSec;
       car.drsWetDisabled = playerDrsEval.wetDisabled;
       car.drsActive = Boolean(!onPitLaneRoad && curTrackPt.drs && playerDrsEval.canUseDrs && effectiveGas && !input.brake && car.surface !== 'grass' && absSpeed > 240);
+      if (car.drsActive) car.usedDrsInRace = true;
+      // v1.1.0 Aerodynamic Slipstream / Tow Draft: trailing within 0.85s behind a car ahead at >180 km/h
+      car.slipstreamActive = Boolean(!onPitLaneRoad && selectedGameMode !== 'timetrial' && playerDrsEval.gapSec !== null && playerDrsEval.gapSec <= 0.85 && effectiveGas && !input.brake && car.surface !== 'grass' && absSpeed > 380);
 
       const digitalSteer = (input.right ? 1 : 0) - (input.left ? 1 : 0);
       const usingDirectNow = (steerControlMode === 'swipe' && directSteerActive && directHasDirection && digitalSteer === 0);
@@ -5186,7 +6110,7 @@
       }
 
       // v1.0.1 Stochastic Dynamic Weather Evolution & Track Wetness Physics
-      if (weatherState.mode === 'dynamic') {
+      if (!raceState.isQualifyingSession && weatherState.mode === 'dynamic') {
         weatherState.phaseTimer -= dt;
         if (weatherState.phaseTimer <= 0) {
           applyWeatherConditionParams(weatherState.nextForecast || pickNextRandomWeather(weatherState.condition));
@@ -5206,6 +6130,37 @@
         weatherState.trackWetness = Math.max(0, weatherState.trackWetness - weatherState.dryingRate * 1.15 * dt);
       }
       updateWeatherHudUI();
+
+      // v1.2.0 Virtual Safety Car (VSC) & Yellow Flag Caution State Machine (only in 8-car main race)
+      if ((selectedGameMode === 'arcade' || selectedGameMode === 'career') && !raceState.isQualifyingSession) {
+        if (vscState.active) {
+          vscState.timer -= dt;
+          if (vscState.timer <= 0) {
+            vscState.active = false;
+            vscState.timer = 0;
+            vscState.cooldown = 24.0 + Math.random() * 15.0;
+            const dict = I18N[currentLang] || I18N.zh;
+            showToast(dict.vscEndTitle || '🟢 VSC 結束 · 綠旗恢復全速競速！', dict.vscEndSub || '賽道清空，恢復正常比賽速度與 DRS 追擊！');
+            playCheckpointBeep(880);
+          }
+          updateVscBannerUI();
+        } else {
+          vscState.cooldown -= dt;
+          if (vscState.cooldown <= 0 && vscState.deployedCount < 2 && raceState.curLapTime > 6000) {
+            // Check if rain or worn AI tires trigger an on-track incident caution
+            const incidentChance = (weatherState.trackWetness > 30 ? 0.045 : 0.022) * dt;
+            if (Math.random() < incidentChance) {
+              vscState.active = true;
+              vscState.timer = 7.5;
+              vscState.deployedCount += 1;
+              const dict = I18N[currentLang] || I18N.zh;
+              showToast(dict.vscAlertTitle || '⚠️ VSC 虛擬安全車部署！', dict.vscAlertSub || '全場限速 72% 並禁用 DRS，此時進站換胎損失時間最少！');
+              playCheckpointBeep(440);
+              updateVscBannerUI();
+            }
+          }
+        }
+      }
 
       // v0.9.0 / v1.0.0 Tire Compound, Weather Crossover & Real-Time Tire Wear Physics
       const tireComp = TIRE_COMPOUNDS[car.tireCompound] || TIRE_COMPOUNDS.medium;
@@ -5253,12 +6208,14 @@
       const relToTrackX = car.x - curTrackPt.x;
       const relToTrackY = car.y - curTrackPt.y;
       const rightSideOffset = relToTrackX * curTrackPt.nx + relToTrackY * curTrackPt.ny;
-      const inPitEntrySplineWindow = (nearestBeforeMove.bestIdx >= N - 35 && nearestBeforeMove.bestIdx <= N - 15);
-      const nearPitEntryRamp = Boolean(nearestPitPt && nearestPitPt.step <= 14 && minPitDist <= 78);
+      const inPitEntrySplineWindow = (nearestBeforeMove.bestIdx >= N - 34 && nearestBeforeMove.bestIdx <= N - 16);
+      // Manual Pit Entry ONLY triggers if player deliberately steers completely OUTSIDE the right curb (> trackWidth * 0.56) onto the Pit Entry ramp!
+      const deliberatelyInPitEntry = Boolean(rightSideOffset > trackWidth * 0.56 && nearestPitPt && nearestPitPt.step <= 12 && minPitDist <= 48);
 
       if (!car.inPitAutopilot && car.pitCooldown <= 0 && inPitEntrySplineWindow) {
-        if (car.boxThisLap || rightSideOffset > trackWidth * 0.22 || nearPitEntryRamp) {
+        if (car.boxThisLap || deliberatelyInPitEntry) {
           car.inPitAutopilot = true;
+          if (vscState.active) vscState.pittedUnderVsc = true;
           car.boxThisLap = false;
           car.pitAutoPhase = 'entry';
           car.pitAutoStep = nearestPitPt ? Math.min(10, nearestPitPt.step) : 0;
@@ -5383,15 +6340,64 @@
       }
 
       if (!car.inPitAutopilot) {
-        const drsBoost = (car.drsActive && weatherState.trackWetness < 45) ? 1.08 : 1.0;
-        const effectiveAccel = spec.accel * tireComp.accelMult * weatherPerf.speedMod * tireWearSpeedFactor;
+        // v1.3.0 ERS (Energy Recovery System) MGU-K Harvesting & 160kW Deployment Physics
+        if (car.ersEnergy === undefined) car.ersEnergy = 100.0;
+        if (!car.ersMode) car.ersMode = 'balanced';
+        const isHybridCar = (spec.id === 'hybrid');
+        const harvestBonus = isHybridCar ? 1.22 : 1.0;
+        let ersAccelMult = 1.0;
+        let ersSpeedMult = 1.0;
+        car.ersDeploying = false;
+
+        if (vscState.active || input.brake || !effectiveGas || car.isDrifting || absSteer > 0.38) {
+          // Kinetic & thermal harvesting during braking, cornering, drifting, or VSC caution
+          const harvestRate = (input.brake ? 15.5 : (car.isDrifting ? 13.0 : (vscState.active ? 9.5 : 8.5))) * harvestBonus * (car.ersMode === 'harvest' ? 1.45 : 1.0);
+          car.ersEnergy = Math.min(100.0, car.ersEnergy + harvestRate * dt);
+        }
+
+        if (car.ersMode === 'harvest') {
+          ersAccelMult = 0.97;
+          ersSpeedMult = 0.975;
+          if (effectiveGas && absSpeed > 120) {
+            car.ersEnergy = Math.min(100.0, car.ersEnergy + 7.5 * harvestBonus * dt);
+          }
+        } else if (car.ersMode === 'overtake') {
+          if (car.ersEnergy > 0 && effectiveGas && !input.brake && !vscState.active) {
+            ersAccelMult = 1.09;
+            ersSpeedMult = 1.055;
+            car.ersDeploying = true;
+            car.usedErsOvertake = true;
+            const drainRate = isHybridCar ? 8.2 : 10.2;
+            car.ersEnergy = Math.max(0.0, car.ersEnergy - drainRate * dt);
+            if (car.ersEnergy <= 0.0) {
+              car.ersEnergy = 0.0;
+              car.ersMode = 'balanced';
+              const dict = I18N[currentLang] || I18N.zh;
+              showToast(dict.toastErsEmpty || '🔋 ERS 電能已耗盡 · 自動切回均衡模式', dict.toastErsEmptySub || '');
+            }
+          }
+        } else {
+          // 'balanced' smart hybrid mode: mild assist on straights when battery > 18%
+          if (car.ersEnergy > 18 && effectiveGas && !input.brake && !car.isDrifting && absSteer < 0.25 && !vscState.active) {
+            ersAccelMult = 1.025;
+            ersSpeedMult = 1.015;
+            car.ersDeploying = true;
+            car.ersEnergy = Math.max(15.0, car.ersEnergy - 2.4 * dt);
+          }
+        }
+        updateErsHudUI();
+
+        const slipstreamBoost = car.slipstreamActive ? 1.04 : 1.0;
+        const drsBoost = ((car.drsActive && weatherState.trackWetness < 45) ? 1.08 : 1.0) * slipstreamBoost;
+        const effectiveAccel = spec.accel * tireComp.accelMult * weatherPerf.speedMod * tireWearSpeedFactor * ersAccelMult;
         if (effectiveGas) forwardVel += effectiveAccel * drsBoost * dt;
         if (input.brake) {
           if (forwardVel > 20) forwardVel -= spec.brake * dt;
           else forwardVel -= effectiveAccel * 0.5 * dt;
         }
 
-        let maxAllowedSpeed = spec.maxSpeed * tireComp.speedMult * weatherPerf.speedMod * tireWearSpeedFactor * drsBoost;
+        const vscSpeedFactor = vscState.active ? 0.72 : 1.0;
+        let maxAllowedSpeed = spec.maxSpeed * tireComp.speedMult * weatherPerf.speedMod * tireWearSpeedFactor * drsBoost * ersSpeedMult * vscSpeedFactor;
         let rollingDrag = 0.65;
         if (car.surface === 'grass') {
           maxAllowedSpeed = spec.maxSpeed * 0.52;
@@ -5460,15 +6466,19 @@
       if ((postTrackPt.sector === 2 || (bestIdx > N * 0.28 && bestIdx < N * 0.70)) && !raceState.passedSector1) {
         raceState.passedSector1 = true;
         car.passedSector1 = true;
-        raceState.s1Time = (raceState.curLapTime / 1000).toFixed(1);
-        document.getElementById('hudSector1').textContent = `S1:${raceState.s1Time}`;
+        raceState.s1CumMs = raceState.curLapTime;
+        const s1SplitMs = raceState.curLapTime;
+        raceState.s1Time = (s1SplitMs / 1000).toFixed(1);
+        evaluateAndRenderSectorSplit(0, s1SplitMs, active);
         playCheckpointBeep(587.33);
       }
       if ((postTrackPt.sector === 3 || bestIdx >= N * 0.65) && raceState.passedSector1 && !raceState.passedSector2) {
         raceState.passedSector2 = true;
         car.passedSector2 = true;
-        raceState.s2Time = (raceState.curLapTime / 1000).toFixed(1);
-        document.getElementById('hudSector2').textContent = `S2:${raceState.s2Time}`;
+        raceState.s2CumMs = raceState.curLapTime;
+        const s2SplitMs = Math.max(500, raceState.curLapTime - (raceState.s1CumMs || (raceState.curLapTime * 0.33)));
+        raceState.s2Time = (s2SplitMs / 1000).toFixed(1);
+        evaluateAndRenderSectorSplit(1, s2SplitMs, active);
         playCheckpointBeep(659.25);
       }
       if (bestIdx > N * 0.30 && bestIdx < N * 0.75) {
@@ -5487,8 +6497,19 @@
 
       if ((wrappedAroundFinish || inFinishZoneAfterFullLap) && (raceState.passedHalfway || raceState.passedSector1) && raceState.curLapTime > 3500) {
         const finishedLapMs = raceState.curLapTime;
-        raceState.s3Time = (finishedLapMs / 1000).toFixed(1);
-        document.getElementById('hudSector3').textContent = `S3:${raceState.s3Time}`;
+        const s3SplitMs = Math.max(500, finishedLapMs - (raceState.s2CumMs || (finishedLapMs * 0.66)));
+        raceState.s3Time = (s3SplitMs / 1000).toFixed(1);
+        evaluateAndRenderSectorSplit(2, s3SplitMs, active);
+        if (Array.isArray(raceState.curLapSectorColors) &&
+            raceState.curLapSectorColors[0] === 'purple' &&
+            raceState.curLapSectorColors[1] === 'purple' &&
+            raceState.curLapSectorColors[2] === 'purple') {
+          car.achievedTriplePurple = true;
+          unlockAchievement('triple_purple');
+        }
+        raceState.s1CumMs = 0;
+        raceState.s2CumMs = 0;
+        raceState.curLapSectorColors = [null, null, null];
         raceState.lapTimes.push(finishedLapMs);
 
         if (active.bestLapMs === null || finishedLapMs < active.bestLapMs) {
@@ -5508,6 +6529,10 @@
           car.passedSector1 = false;
           car.passedSector2 = false;
           car.totalProgress = computeContinuousProgress(car, N);
+          if (raceState.isQualifyingSession) {
+            showQualifyingResultsModal(finishedLapMs);
+            return;
+          }
           // Also update AI progress before showing classification table
           if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
             aiCars.forEach(ai => {
@@ -5661,6 +6686,9 @@
       if (car.isDrifting) {
         gripBadge.textContent = dict.driftStatus;
         gripBadge.className = 'px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-amber-500/25 text-amber-300 border border-amber-400 truncate w-full text-center';
+      } else if (car.slipstreamActive) {
+        gripBadge.textContent = dict.slipstreamStatus || '🌪️ TOW 真空尾流牽引';
+        gripBadge.className = 'px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-cyan-500/25 text-cyan-200 border border-cyan-400 truncate w-full text-center';
       } else {
         gripBadge.textContent = dict.gripStatus;
         gripBadge.className = 'px-1.5 py-0.5 rounded font-bold mono text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 truncate w-full text-center';
@@ -6095,6 +7123,7 @@
         ctx.fillRect(-21, 2, 4, 3);
       }
 
+
       ctx.restore();
     }
 
@@ -6413,7 +7442,9 @@
       const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
       lastFrameTime = now;
 
-      if (garageModal.classList.contains('hidden') && resultModal.classList.contains('hidden') && !isGamePaused) {
+      const qModalEl = document.getElementById('qualiResultModal');
+      const qHidden = !qModalEl || qModalEl.classList.contains('hidden');
+      if (garageModal.classList.contains('hidden') && resultModal.classList.contains('hidden') && qHidden && !isGamePaused) {
         updatePhysics(dt);
       } else {
         updateAudio(0, false, false);
