@@ -1,16 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<script>
-  const lang = navigator.language || 'en';
 
-  const supported = ['zh-Hant', 'en', 'ja'];
+<head>
+    <meta charset="UTF-8" />
 
-  const matched = supported.find(l =>
-    lang.toLowerCase().startsWith(l.toLowerCase())
-  );
+    <script>
+    (() => {
+        const lang = (navigator.language || 'en').toLowerCase();
 
-  document.documentElement.lang = matched || 'en';
-</script>
+        if (/^zh-(tw|hk|mo|hant)(-|$)/i.test(lang)) {
+            document.documentElement.lang = 'zh-Hant';
+        } 
+        else if (lang.startsWith('ja')) {
+            document.documentElement.lang = 'ja';
+        } 
+        else if (lang.startsWith('en')) {
+            document.documentElement.lang = 'en';
+        } 
+        else {
+            document.documentElement.lang = 'en';
+        }
+    })();
+    </script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
