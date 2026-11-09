@@ -1,6 +1,6 @@
 - # 🏎️ Pixel GP — 2D Top-Down Retro Pixel Racing (v3.1.0)
 
-**Pixel GP** 是一款基於 HTML5 Canvas 與 Web Audio API 打造的**俯視角（Sky-View Top-Down）2D 復古像素賽車遊戲**，支援 PC 瀏覽器鍵盤操作與手機觸控直覺遊玩。遊戲採用單一 HTML 檔案、零外部素材依賴架構（所有像素賽車、賽道材質、路緣石、粒子特效與引擎音效皆由程式碼即時程序化生成），完整收錄 **7 大傳奇 F1 經典大獎賽賽道（含新加坡濱海灣夜間街道賽）**，並全面支援**繁體中文／日本語／English 三語系切換**與**職業生涯模式（Career Mode）**。
+**Pixel GP** 是一款基於 HTML5 Canvas 與 Web Audio API 打造的**俯視角（Sky-View Top-Down）2D 復古像素賽車遊戲**，支援 PC 瀏覽器鍵盤操作與手機觸控直覺遊玩。遊戲採用單一 HTML 檔案、零外部素材依賴架構（所有像素賽車、賽道材質、路緣石、粒子特效與引擎音效皆由程式碼即時程序化生成），完整收錄 13 大傳奇 F1 經典大獎賽賽道（含巴林沙漠夜賽、吉達紅海街道賽、澳洲墨爾本、奧地利紅牛環、巴庫、蒙札與新加坡夜賽），並全面支援繁體中文／日本語／English 三語系切換與職業生涯模式（Career Mode）。
 
 🎮 立即線上遊玩（Play Online — 支援電腦瀏覽器與手機全螢幕觸控）：
 👉 https://pennypixellab.github.io/-Pixel-GP-2D-Top-Down-Retro-Pixel-Racing-/
