@@ -1,5 +1,16 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
+<script>
+  const lang = navigator.language || 'en';
+
+  const supported = ['zh-Hant', 'en', 'ja'];
+
+  const matched = supported.find(l =>
+    lang.toLowerCase().startsWith(l.toLowerCase())
+  );
+
+  document.documentElement.lang = matched || 'en';
+</script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
