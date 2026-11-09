@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Pixel GP - 2D 俯視角像素賽車 </title>
+  <title>Pixel GP - 2D 俯視角像素賽車 (v3.1.0)</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
@@ -205,6 +205,13 @@
           <button id="btnCyclePitTire" type="button" class="w-full py-0.5 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-sky-300 border border-sky-700/70 transition text-center whitespace-nowrap truncate" title="預約本圈自動進站 (Key: B / C)">
             🔧預約進站
           </button>
+          <!-- v2.9.0 In-Race Pit Tire Compound Quick Pre-Selector (Zero Overflow 4-Col Grid) -->
+          <div id="hudPitTirePreselectRow" class="grid grid-cols-4 gap-0.5 w-full">
+            <button type="button" data-pre-tire="soft" class="hud-pre-tire-btn py-0.2 rounded text-[8px] font-black mono bg-slate-900/90 text-red-300 border border-slate-700 transition text-center whitespace-nowrap">🔴S</button>
+            <button type="button" data-pre-tire="hard" class="hud-pre-tire-btn py-0.2 rounded text-[8px] font-black mono bg-slate-900/90 text-slate-200 border border-slate-700 transition text-center whitespace-nowrap">⚪H</button>
+            <button type="button" data-pre-tire="inter" class="hud-pre-tire-btn py-0.2 rounded text-[8px] font-black mono bg-slate-900/90 text-emerald-300 border border-slate-700 transition text-center whitespace-nowrap">🟢I</button>
+            <button type="button" data-pre-tire="wet" class="hud-pre-tire-btn py-0.2 rounded text-[8px] font-black mono bg-slate-900/90 text-sky-300 border border-slate-700 transition text-center whitespace-nowrap">🔵W</button>
+          </div>
           <!-- v1.3.0 ERS Energy Recovery & Overtake Boost Deployment Bar -->
           <div class="mt-0.5 pt-1 border-t border-slate-800/90 flex items-center justify-between gap-1 text-[9px] mono">
             <span id="hudErsBadge" class="px-1 py-0.5 rounded font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 whitespace-nowrap shrink-0">
@@ -669,6 +676,43 @@
             </button>
             <span id="carSetupDesc" class="text-[10px] text-slate-400 mono">尾翼下壓力與齒比完美均衡（★ 請依上方氣象雷達與賽道特性選擇輪胎與車輛調校）</span>
           </div>
+          <!-- v2.8.0 Pre-Race Final Drive Gear Ratio & Brake Bias Fine-Tuning Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-700/60">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-bold text-cyan-300 mono" id="gearRatioLabel">⚙️ 終傳齒比 (GEAR RATIO):</span>
+              <button id="gearBtn-short" type="button" data-gear="short" class="gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                ⚡ 短齒加速 (Short)
+              </button>
+              <button id="gearBtn-standard" type="button" data-gear="standard" class="gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-extrabold mono bg-cyan-600 text-white border border-cyan-300 shadow transition whitespace-nowrap">
+                ⚖️ 標準齒比 (Std)
+              </button>
+              <button id="gearBtn-long" type="button" data-gear="long" class="gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🚀 長齒尾速 (Long)
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <span class="text-[11px] font-bold text-amber-300 mono" id="brakeBiasLabel">🛑 煞車偏置 (BRAKE BIAS):</span>
+              <button id="biasBtn-front" type="button" data-bias="front" class="brake-bias-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🎯 前偏穩定 58%F
+              </button>
+              <button id="biasBtn-balanced" type="button" data-bias="balanced" class="brake-bias-btn px-2 py-0.5 rounded text-[11px] font-extrabold mono bg-amber-600 text-white border border-amber-300 shadow transition whitespace-nowrap">
+                ⚖️ 均衡 54%F
+              </button>
+              <button id="biasBtn-rear" type="button" data-bias="rear" class="brake-bias-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🔄 後偏靈活 50%F
+              </button>
+            </div>
+          </div>
+          <!-- v3.0.0 Chief Race Engineer One-Click Optimal Setup Advisory Banner -->
+          <div id="engineerSetupAdvisoryBanner" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-700/60 bg-slate-950/60 rounded-lg px-2.5 py-1.5">
+            <div class="text-[11px] mono leading-snug">
+              <span id="engineerAdvisoryTitle" class="font-extrabold text-emerald-300">🎧 首席工程師建議 (RACE ENGINEER):</span>
+              <span id="engineerAdvisorySummary" class="text-slate-200 font-bold ml-1">🔴 軟胎 + ⚖️ 均衡設定 + ⚖️ 標準齒比 + ⚖️ 均衡 54%F</span>
+            </div>
+            <button id="btnApplyEngineerSetup" type="button" class="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black mono bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-300 shadow transition whitespace-nowrap">
+              ⚡ 一鍵套用最佳調校
+            </button>
+          </div>
         </div>
 
         <!-- Career Mode Headquarters & Team Contract Section (Visible in Career Mode) -->
@@ -994,6 +1038,21 @@
                 </button>
               </div>
             </div>
+            <!-- v3.1.0 Circuit Category Quick-Filter Bar (All 22 / Night & Street / High-Speed / Technical) -->
+            <div id="trackCategoryFilterBar" class="flex flex-wrap items-center gap-1.5 mb-2">
+              <button id="trackCatBtn-all" type="button" data-track-cat="all" class="track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold mono bg-sky-500 text-slate-950 border border-sky-300 shadow transition whitespace-nowrap">
+                🌍 全部賽道 (22)
+              </button>
+              <button id="trackCatBtn-street_night" type="button" data-track-cat="street_night" class="track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🌃 夜間與街道 (9)
+              </button>
+              <button id="trackCatBtn-high_speed" type="button" data-track-cat="high_speed" class="track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🚀 超高速殿堂 (9)
+              </button>
+              <button id="trackCatBtn-technical" type="button" data-track-cat="technical" class="track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap">
+                🦅 技術與多彎 (12)
+              </button>
+            </div>
             <div id="trackCarousel" class="horiz-carousel gap-2.5 pb-2">
               <!-- Imola (Easy) -->
               <div id="track-imola" data-track="imola" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/95 border-2 border-emerald-500 transition hover:bg-slate-800 flex flex-col justify-between shadow-lg">
@@ -1216,6 +1275,134 @@
                 <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between text-[10px] mono text-slate-300">
                   <span data-i18n="trackWidthLabel">賽道寬度: 8車寬</span>
                   <span class="text-orange-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-barcelona">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- Netherlands Circuit Zandvoort (v2.8.0 New 15th Circuit!) -->
+              <div id="track-zandvoort" data-track="zandvoort" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-zandvoort" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-orange-500/20 text-orange-300 border border-orange-500/40 mono">★★★ 沙丘傾角 DUNE BANKED</span>
+                    <span class="text-[10px] text-orange-300 mono">14 CORNERS · 🌧️28%</span>
+                  </div>
+                  <h3 id="cardName-zandvoort" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇳🇱 贊德沃特 · Zandvoort</h3>
+                  <p id="cardDesc-zandvoort" class="text-[11px] text-slate-400 mt-0.5 leading-snug">北海沙丘經典賽道！T1 泰山 180° 髮夾彎、T3 19° 大傾角碗狀彎與 T14 全油門傾角衝線彎！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CW 順時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-zandvoort">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- USA Circuit of the Americas Austin COTA (v2.8.0 New 16th Circuit!) -->
+              <div id="track-cota" data-track="cota" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-cota" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40 mono">★★★ 德州全能 AMERICAS</span>
+                    <span class="text-[10px] text-blue-300 mono">20 CORNERS · 🌧️14%</span>
+                  </div>
+                  <h3 id="cardName-cota" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇺🇸 奧斯汀 · Austin COTA</h3>
+                  <p id="cardDesc-cota" class="text-[11px] text-slate-400 mt-0.5 leading-snug">德州美洲賽道！T1 陡坡盲頂急左彎、T3-T6 高速連續 S 彎、1.2km 長直線與觀景塔三重頂點右彎！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CCW 逆時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-cota">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- Canada Circuit Gilles-Villeneuve Montreal (v2.9.0 New 17th Circuit!) -->
+              <div id="track-montreal" data-track="montreal" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-montreal" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40 mono">★★★ 冠軍之牆 CHAMPIONS</span>
+                    <span class="text-[10px] text-red-300 mono">14 CORNERS · 🌧️26%</span>
+                  </div>
+                  <h3 id="cardName-montreal" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇨🇦 蒙特婁 · Montreal</h3>
+                  <p id="cardDesc-montreal" class="text-[11px] text-slate-400 mt-0.5 leading-snug">聖母島高速減速彎賽道！T1-T2 冼拿 S 彎、T10 東端 180° 髮夾彎、賭場大直線與 T13-T14 冠軍牆！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CW 順時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-montreal">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- Mexico City Autódromo Hermanos Rodríguez (v2.9.0 New 18th Circuit!) -->
+              <div id="track-mexico" data-track="mexico" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-mexico" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mono">★★★ 高原棒球館 FORO SOL</span>
+                    <span class="text-[10px] text-emerald-300 mono">17 CORNERS · 🌧️18%</span>
+                  </div>
+                  <h3 id="cardName-mexico" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇲🇽 墨西哥城 · Mexico City</h3>
+                  <p id="cardDesc-mexico" class="text-[11px] text-slate-400 mt-0.5 leading-snug">2,285m 高原極速殿堂！1.2km 超長主直線、T7-T11 高速連續 S 彎與 Foro Sol 棒球看台區！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CW 順時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-mexico">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- USA Las Vegas Strip Night Street Circuit (v3.0.0 New 19th Circuit!) -->
+              <div id="track-lasvegas" data-track="lasvegas" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-lasvegas" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-fuchsia-500/20 text-fuchsia-300 border border-fuchsia-500/40 mono">★★★ 賭城大道 THE STRIP</span>
+                    <span class="text-[10px] text-fuchsia-300 mono">17 CORNERS · 🌧️5%</span>
+                  </div>
+                  <h3 id="cardName-lasvegas" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇺🇸 拉斯維加斯 · Las Vegas</h3>
+                  <p id="cardDesc-lasvegas" class="text-[11px] text-slate-400 mt-0.5 leading-snug">賭城霓虹極速街道夜賽！T1 180° 髮夾彎、Sphere 巨型球體彎區与 1.9km 賭城大道超長全油門直線！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CCW 逆時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-lasvegas">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- UAE Abu Dhabi Yas Marina Twilight Finale Circuit (v3.0.0 New 20th Circuit!) -->
+              <div id="track-abudhabi" data-track="abudhabi" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-abudhabi" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 mono">★★★ 亞斯收官 YAS FINALE</span>
+                    <span class="text-[10px] text-cyan-300 mono">16 CORNERS · 🌧️4%</span>
+                  </div>
+                  <h3 id="cardName-abudhabi" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇦🇪 阿布達比 · Abu Dhabi</h3>
+                  <p id="cardDesc-abudhabi" class="text-[11px] text-slate-400 mt-0.5 leading-snug">亞斯碼頭收官夜賽！T5 北端髮夾彎、1.2km 雙長直線、T9 18° 傾角彎與 W Hotel 跨橋飯店彎段！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CCW 逆時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-abudhabi">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- China Shanghai International Circuit (v3.1.0 New 21st Circuit!) -->
+              <div id="track-shanghai" data-track="shanghai" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-shanghai" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/40 mono">★★★ 上字螺螄彎 SNAIL</span>
+                    <span class="text-[10px] text-red-300 mono">16 CORNERS · 🌧️24%</span>
+                  </div>
+                  <h3 id="cardName-shanghai" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇨🇳 上海 · Shanghai</h3>
+                  <p id="cardDesc-shanghai" class="text-[11px] text-slate-400 mt-0.5 leading-snug">漢字「上」字形經典大獎賽！T1-T3 270° 漸縮螺螄彎、T7-T8 高速 S 彎與 1.17km 超長後直線！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CW 順時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-shanghai">--:--.--</span></span>
+                </div>
+              </div>
+
+              <!-- Qatar Lusail International Night Circuit (v3.1.0 New 22nd Circuit!) -->
+              <div id="track-qatar" data-track="qatar" class="track-card shrink-0 w-[235px] sm:w-[255px] snap-center cursor-pointer rounded-xl p-3 bg-slate-800/50 border-2 border-slate-700 transition hover:bg-slate-800 flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between gap-1">
+                    <span id="cardBadge-qatar" class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40 mono">★★★ 盧賽爾三連右彎 LUSAIL</span>
+                    <span class="text-[10px] text-purple-300 mono">16 CORNERS · 🌧️4%</span>
+                  </div>
+                  <h3 id="cardName-qatar" class="text-sm sm:text-base font-extrabold text-white mt-1.5">🇶🇦 卡達 · Lusail Qatar</h3>
+                  <p id="cardDesc-qatar" class="text-[11px] text-slate-400 mt-0.5 leading-snug">波斯灣沙漠極速夜賽！1.068km 超長主直線、中段流暢連續彎與著名的 T12-T14 高 G 力三連右彎！</p>
+                </div>
+                <div class="mt-2 pt-1.5 border-t border-slate-700/60 flex justify-between items-center text-[11px] mono">
+                  <span class="text-slate-400">CW 順時針</span>
+                  <span class="text-emerald-400 font-bold"><span data-i18n="bestShort">最佳:</span> <span id="menuBest-qatar">--:--.--</span></span>
                 </div>
               </div>
             </div>
@@ -1579,6 +1766,19 @@
               <span id="resLeaderSpeedTrapText" class="text-[9px] text-slate-400 mono">全場最高: 320 km/h</span>
             </div>
           </div>
+        </div>
+
+        <!-- v2.8.0 Post-Race Lap Speed & Tyre Thermal Telemetry Curve Graph -->
+        <div id="resTelemetryGraphBox" class="mt-3 bg-slate-950/90 border border-cyan-500/40 rounded-xl p-2.5 text-left">
+          <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+            <span id="resTelemetryGraphTitle" class="text-[10px] sm:text-[11px] font-black text-cyan-300 mono uppercase">📈 LAP SPEED & TYRE THERMAL TELEMETRY (單圈速度與胎溫遙測曲線)</span>
+            <div class="flex items-center gap-2 text-[9px] mono">
+              <span class="text-cyan-300 font-bold" id="resTelePeakSpeedBadge">⚡ Vmax: 325 km/h</span>
+              <span class="text-emerald-300 font-bold" id="resTeleMinApexBadge">🎯 Apex: 142 km/h</span>
+              <span class="text-amber-300 font-bold" id="resTelePeakTempBadge">🌡️ Peak: 98°C</span>
+            </div>
+          </div>
+          <canvas id="resTelemetryCanvas" width="520" height="110" class="w-full h-[96px] sm:h-[110px] rounded-lg bg-slate-900/95 border border-slate-800"></canvas>
         </div>
 
         <!-- v1.5.0 Post-Race Stint, Tire Wear & Sector Telemetry Analysis -->
@@ -2558,6 +2758,79 @@
             ? 'カタルーニャ空力聖地！1.05kmメイン直線、T3ルノー高速右コーナー、T9カンプサと全開T13-T14！'
             : '加泰隆尼亞空力試金石！1.05km 主直線、T3 Renault 長弧高速右彎、T9 Campsa 上坡盲彎與 T13-T14 全油門雙右彎！');
       }
+      if (document.getElementById('cardBadge-zandvoort')) {
+        document.getElementById('cardBadge-zandvoort').textContent = lang === 'en' ? '★★★ DUNE BANKED' : (lang === 'ja' ? '★★★ 砂丘バンク角 DUNE' : '★★★ 沙丘傾角 DUNE BANKED');
+        document.getElementById('cardName-zandvoort').textContent = lang === 'en' ? '🇳🇱 Zandvoort · Netherlands' : (lang === 'ja' ? '🇳🇱 ザントフォールト · Zandvoort' : '🇳🇱 贊德沃特 · Zandvoort');
+        document.getElementById('cardDesc-zandvoort').textContent = lang === 'en'
+          ? 'North Sea coastal dunes! T1 Tarzan 180° hairpin, T3 Hugenholtz 19° banked bowl & T14 Luyendyk flat-out banked finish!'
+          : (lang === 'ja'
+            ? '北海砂丘の伝統コース！T1ターザン180°ヘアピン、T3フーゲンホルツ19°すり鉢バンク＆T14全開バンク最終コーナー！'
+            : '北海沙丘經典賽道！T1 泰山 180° 髮夾彎、T3 19° 大傾角碗狀彎與 T14 全油門傾角衝線彎！');
+      }
+      if (document.getElementById('cardBadge-cota')) {
+        document.getElementById('cardBadge-cota').textContent = lang === 'en' ? '★★★ TEXAS AMERICAS' : (lang === 'ja' ? '★★★ テキサス高速エス字' : '★★★ 德州全能 AMERICAS');
+        document.getElementById('cardName-cota').textContent = lang === 'en' ? '🇺🇸 Austin · COTA USA' : (lang === 'ja' ? '🇺🇸 オースティン · COTA USA' : '🇺🇸 奧斯汀 · Austin COTA');
+        document.getElementById('cardDesc-cota').textContent = lang === 'en'
+          ? 'Circuit of the Americas! Steep uphill T1 hairpin, T3-T6 high-speed Esses, 1.2km DRS back straight & T16-T18 triple-apex!'
+          : (lang === 'ja'
+            ? 'サーキット・オブ・ジ・アメリカズ！急勾配T1ヘアピン、T3-T6高速S字、1.2km裏ストレート＆展望塔3連続右コーナー！'
+            : '德州美洲賽道！T1 陡坡盲頂急左彎、T3-T6 高速連續 S 彎、1.2km 長直線與觀景塔三重頂點右彎！');
+      }
+      if (document.getElementById('cardBadge-montreal')) {
+        document.getElementById('cardBadge-montreal').textContent = lang === 'en' ? '★★★ WALL OF CHAMPIONS' : (lang === 'ja' ? '★★★ チャンピオンズウォール' : '★★★ 冠軍之牆 CHAMPIONS');
+        document.getElementById('cardName-montreal').textContent = lang === 'en' ? '🇨🇦 Montreal · Canada' : (lang === 'ja' ? '🇨🇦 モントリオール · Canada' : '🇨🇦 蒙特婁 · Montreal');
+        document.getElementById('cardDesc-montreal').textContent = lang === 'en'
+          ? 'Circuit Gilles-Villeneuve! T1-T2 Senna S, T10 hairpin, 1.06km Casino Straight & T13-T14 Wall of Champions chicane!'
+          : (lang === 'ja'
+            ? 'ジル・ヴィルヌーヴ・サーキット！T1-T2セナS字、T10ヘアピン、カジノ直線＆T13-T14チャンピオンズウォール！'
+            : '聖母島高速減速彎賽道！T1-T2 冼拿 S 彎、T10 東端 180° 髮夾彎、賭場大直線與 T13-T14 冠軍牆！');
+      }
+      if (document.getElementById('cardBadge-mexico')) {
+        document.getElementById('cardBadge-mexico').textContent = lang === 'en' ? '★★★ FORO SOL STADIUM' : (lang === 'ja' ? '★★★ 高地スタジアム FORO SOL' : '★★★ 高原棒球館 FORO SOL');
+        document.getElementById('cardName-mexico').textContent = lang === 'en' ? '🇲🇽 Mexico City · Mexico' : (lang === 'ja' ? '🇲🇽 メキシコシティ · Mexico' : '🇲🇽 墨西哥城 · Mexico City');
+        document.getElementById('cardDesc-mexico').textContent = lang === 'en'
+          ? '2,285m high-altitude speed temple! 1.2km main straight, T7-T11 high-speed Esses & iconic Foro Sol baseball stadium!'
+          : (lang === 'ja'
+            ? '標高2,285mの超高速サーキット！1.2kmメイン直線、T7-T11高速S字＆フォロ・ソル野球場スタジアム！'
+            : '2,285m 高原極速殿堂！1.2km 超長主直線、T7-T11 高速連續 S 彎與 Foro Sol 棒球看台區！');
+      }
+      if (document.getElementById('cardBadge-lasvegas')) {
+        document.getElementById('cardBadge-lasvegas').textContent = lang === 'en' ? '★★★ THE STRIP NIGHT' : (lang === 'ja' ? '★★★ ラスベガス・ストリップ' : '★★★ 賭城大道 THE STRIP');
+        document.getElementById('cardName-lasvegas').textContent = lang === 'en' ? '🇺🇸 Las Vegas · USA' : (lang === 'ja' ? '🇺🇸 ラスベガス · Las Vegas' : '🇺🇸 拉斯維加斯 · Las Vegas');
+        document.getElementById('cardDesc-lasvegas').textContent = lang === 'en'
+          ? 'Neon street speed temple! T1 hairpin, MSG Sphere arena section & 1.9km flat-out Las Vegas Strip DRS blast!'
+          : (lang === 'ja'
+            ? '眠らない街の超高速ナイトレース！T1ヘアピン、球体Sphereエリア＆全長1.9kmストリップ全開ストレート！'
+            : '賭城霓虹極速街道夜賽！T1 180° 髮夾彎、Sphere 巨型球體彎區與 1.9km 賭城大道超長全油門直線！');
+      }
+      if (document.getElementById('cardBadge-abudhabi')) {
+        document.getElementById('cardBadge-abudhabi').textContent = lang === 'en' ? '★★★ YAS MARINA FINALE' : (lang === 'ja' ? '★★★ ヤス・マリーナ最終戦' : '★★★ 亞斯收官 YAS FINALE');
+        document.getElementById('cardName-abudhabi').textContent = lang === 'en' ? '🇦🇪 Abu Dhabi · Yas Marina' : (lang === 'ja' ? '🇦🇪 アブダビ · Yas Marina' : '🇦🇪 阿布達比 · Abu Dhabi');
+        document.getElementById('cardDesc-abudhabi').textContent = lang === 'en'
+          ? 'Yas Marina twilight finale! T5 North Hairpin, 1.2km twin DRS straights, T9 Marsa banked corner & W Hotel underpass!'
+          : (lang === 'ja'
+            ? 'ヤス・マリーナ最終戦ナイトレース！T5北ヘアピン、1.2kmダブルDRS直線、T9バンク角コーナー＆Wホテル通過！'
+            : '亞斯碼頭收官夜賽！T5 北端髮夾彎、1.2km 雙長直線、T9 18° 傾角彎與 W Hotel 跨橋飯店彎段！');
+      }
+      if (document.getElementById('cardBadge-shanghai')) {
+        document.getElementById('cardBadge-shanghai').textContent = lang === 'en' ? '★★★ SNAIL CORNER' : (lang === 'ja' ? '★★★ 上海カタツムリ複合' : '★★★ 上字螺螄彎 SNAIL');
+        document.getElementById('cardName-shanghai').textContent = lang === 'en' ? '🇨🇳 Shanghai · China' : (lang === 'ja' ? '🇨🇳 上海 · Shanghai' : '🇨🇳 上海 · Shanghai');
+        document.getElementById('cardDesc-shanghai').textContent = lang === 'en'
+          ? 'Iconic "Shang" layout! T1-T3 270° tightening Snail Corner, T7-T8 high-G sweepers & 1.17km long back straight!'
+          : (lang === 'ja'
+            ? '漢字「上」モチーフの名門コース！T1-T3の270°渦巻きコーナー、T7-T8高速S字＆1.17km裏ロングストレート！'
+            : '漢字「上」字形經典大獎賽！T1-T3 270° 漸縮螺螄彎、T7-T8 高速 S 彎與 1.17km 超長後直線！');
+      }
+      if (document.getElementById('cardBadge-qatar')) {
+        document.getElementById('cardBadge-qatar').textContent = lang === 'en' ? '★★★ TRIPLE-RIGHT G' : (lang === 'ja' ? '★★★ ルサイル3連続右' : '★★★ 盧賽爾三連右彎 LUSAIL');
+        document.getElementById('cardName-qatar').textContent = lang === 'en' ? '🇶🇦 Lusail · Qatar' : (lang === 'ja' ? '🇶🇦 ルサイル · Qatar' : '🇶🇦 卡達 · Lusail Qatar');
+        document.getElementById('cardDesc-qatar').textContent = lang === 'en'
+          ? 'Desert night speed flow! 1.068km main straight, flowing medium-speed loops & famous T12-T14 triple-apex right!'
+          : (lang === 'ja'
+            ? '砂漠の超高速ナイトレース！1.068kmメイン直線、流れる中高速セクション＆名物T12-T14トリプル右コーナー！'
+            : '波斯灣沙漠極速夜賽！1.068km 超長主直線、中段流暢連續彎與著名的 T12-T14 高 G 力三連右彎！');
+      }
+      if (typeof updateTrackCategoryFilterUI === 'function') updateTrackCategoryFilterUI();
       if (typeof renderSponsorObjectiveUI === 'function') renderSponsorObjectiveUI();
       if (document.getElementById('weatherBtn-dry')) {
         document.getElementById('weatherBtn-dry').textContent = dict.weatherDryBtn || '☀️ 晴朗乾地';
@@ -2566,6 +2839,7 @@
       }
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
       if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
+      if (typeof loadTrackFinetuneFor === 'function') loadTrackFinetuneFor(trackKey);
       if (typeof updateCarSetupSelectionUI === 'function') updateCarSetupSelectionUI();
 
       // Localize Car Cards
@@ -2750,7 +3024,7 @@
       }
     };
 
-    const SEASON_CALENDAR = ['bahrain', 'jeddah', 'melbourne', 'imola', 'monaco', 'barcelona', 'baku', 'silverstone', 'redbullring', 'spa', 'monza', 'suzuka', 'singapore', 'interlagos'];
+    const SEASON_CALENDAR = ['bahrain', 'jeddah', 'melbourne', 'suzuka', 'shanghai', 'imola', 'monaco', 'montreal', 'barcelona', 'redbullring', 'silverstone', 'spa', 'zandvoort', 'monza', 'baku', 'singapore', 'cota', 'mexico', 'interlagos', 'lasvegas', 'qatar', 'abudhabi'];
 
     const SPONSOR_OBJECTIVES_DEF = [
       { id: 'clean_drive',   icon: '🧼', reward: 14000, zh: '完美潔淨駕駛：全場未駛入草地超過 1.2 秒並完賽前 5 名', ja: 'クリーン走行：芝生コースアウト1.2秒以内で5位以内完走', en: 'Clean Drive: Stay off grass (<1.2s) & finish Top 5' },
@@ -2856,7 +3130,15 @@
       { id: 'bahrain_king',      icon: '🇧🇭', reward: 28000, zhTitle: '巴林沙漠夜王',  jaTitle: 'バーレーン砂漠の王', enTitle: 'King of Bahrain',    zhDesc: '於巴林薩基爾沙漠夜間賽道奪得 P1 冠軍',         jaDesc: 'バーレーン夜間GPサヒールでP1優勝を達成',   enDesc: 'Win P1 at Bahrain Sakhir Night Circuit' },
       { id: 'jeddah_king',       icon: '🇸🇦', reward: 30000, zhTitle: '吉達紅海極速王',jaTitle: 'ジェッダ最速の覇者', enTitle: 'Jeddah Corniche King',zhDesc: '於沙烏地吉達紅海高速街道夜賽奪得 P1 冠軍',     jaDesc: 'サウジアラビアGPジェッダでP1優勝を達成',   enDesc: 'Win P1 at Jeddah Corniche Street Circuit' },
       { id: 'spain_king',        icon: '🇪🇸', reward: 28000, zhTitle: '巴塞隆納空力王',jaTitle: 'カタルーニャの覇者', enTitle: 'King of Barcelona',   zhDesc: '於西班牙巴塞隆納加泰隆尼亞賽道奪得 P1 冠軍',   jaDesc: 'スペインGPバルセロナでP1優勝を達成',       enDesc: 'Win P1 at Circuit de Barcelona-Catalunya' },
-      { id: 'world_tour_conqueror',icon: '👑', reward: 60000, zhTitle: '十站巡迴大滿貫',jaTitle: '世界10戦完全制覇',   enTitle: '10-Circuit Conqueror',zhDesc: '於生涯模式累積在至少 10 條不同賽道奪得 P1 冠軍', jaDesc: 'キャリアで10コース以上のP1優勝を制覇',     enDesc: 'Win P1 on at least 10 different circuits in Career Mode' }
+      { id: 'world_tour_conqueror',icon: '👑', reward: 60000, zhTitle: '十站巡迴大滿貫',jaTitle: '世界10戦完全制覇',   enTitle: '10-Circuit Conqueror',zhDesc: '於生涯模式累積在至少 10 條不同賽道奪得 P1 冠軍', jaDesc: 'キャリアで10コース以上のP1優勝を制覇',     enDesc: 'Win P1 on at least 10 different circuits in Career Mode' },
+      { id: 'dutch_king',        icon: '🇳🇱', reward: 28000, zhTitle: '橘色沙丘之王',  jaTitle: 'ザントフォールトの覇者',enTitle: 'King of Zandvoort',  zhDesc: '於荷蘭贊德沃特海岸沙丘賽道奪得 P1 冠軍',       jaDesc: 'オランダGPザントフォールトでP1優勝を達成', enDesc: 'Win P1 at Circuit Zandvoort Dutch GP' },
+      { id: 'cota_king',         icon: '🇺🇸', reward: 30000, zhTitle: '德州牛仔霸主',  jaTitle: 'オースティンの覇者', enTitle: 'King of Austin COTA', zhDesc: '於美國奧斯汀美洲賽道 (COTA) 奪得 P1 冠軍',     jaDesc: 'アメリカGPオースティンCOTAでP1優勝を達成', enDesc: 'Win P1 at Circuit of the Americas (COTA)' },
+      { id: 'canada_king',       icon: '🇨🇦', reward: 28000, zhTitle: '跨越冠軍之牆',  jaTitle: 'モントリオールの覇者',enTitle: 'King of Montreal',    zhDesc: '於加拿大蒙特婁吉爾·維倫紐夫賽道奪得 P1 冠軍',   jaDesc: 'カナダGPモントリオールでP1優勝を達成',     enDesc: 'Win P1 at Circuit Gilles-Villeneuve Montreal' },
+      { id: 'mexico_king',       icon: '🇲🇽', reward: 30000, zhTitle: '高原球場霸主',  jaTitle: 'メキシコ高地の覇者', enTitle: 'King of Mexico City', zhDesc: '於墨西哥城羅德里格斯兄弟賽道奪得 P1 冠軍',     jaDesc: 'メキシコGPフォロ・ソルでP1優勝を達成',     enDesc: 'Win P1 at Autódromo Hermanos Rodríguez Mexico' },
+      { id: 'vegas_king',        icon: '🇺🇸', reward: 30000, zhTitle: '賭城霓虹霸主',  jaTitle: 'ラスベガスの覇者',   enTitle: 'King of Las Vegas',   zhDesc: '於拉斯維加斯大道夜間街道賽奪得 P1 冠軍',       jaDesc: 'ラスベガスGPストリップ夜戦でP1優勝を達成', enDesc: 'Win P1 at Las Vegas Strip Night Circuit' },
+      { id: 'abudhabi_king',     icon: '🇦🇪', reward: 32000, zhTitle: '亞斯收官之王',  jaTitle: 'ヤス・マリーナの覇者',enTitle: 'Yas Marina Champion', zhDesc: '於阿布達比亞斯碼頭收官賽道奪得 P1 冠軍',       jaDesc: 'アブダビGPヤス・マリーナでP1優勝を達成',   enDesc: 'Win P1 at Abu Dhabi Yas Marina Circuit' },
+      { id: 'china_king',        icon: '🇨🇳', reward: 30000, zhTitle: '上海螺螄彎霸主',jaTitle: '上海インターの覇者', enTitle: 'King of Shanghai',    zhDesc: '於中國上海國際賽道奪得 P1 冠軍',               jaDesc: '中国GP上海国際サーキットでP1優勝を達成',   enDesc: 'Win P1 at Shanghai International Circuit' },
+      { id: 'qatar_king',        icon: '🇶🇦', reward: 30000, zhTitle: '盧賽爾夜王',    jaTitle: 'ルサイル砂漠の覇者', enTitle: 'King of Lusail Qatar',zhDesc: '於卡達盧賽爾國際夜間賽道奪得 P1 冠軍',         jaDesc: 'カタールGPルサイル夜戦でP1優勝を達成',     enDesc: 'Win P1 at Lusail International Circuit Qatar' }
     ];
 
     let careerData = {
@@ -3014,20 +3296,68 @@
           return 'wet_setup';
         }
       }
-      if (['monaco', 'singapore', 'suzuka'].includes(trackKey)) return 'high_downforce';
-      if (['spa', 'silverstone', 'monza', 'baku', 'redbullring', 'jeddah'].includes(trackKey)) return 'low_drag';
+      if (['monaco', 'singapore', 'suzuka', 'zandvoort'].includes(trackKey)) return 'high_downforce';
+      if (['spa', 'silverstone', 'monza', 'baku', 'redbullring', 'jeddah', 'montreal', 'mexico', 'lasvegas'].includes(trackKey)) return 'low_drag';
       return 'balanced';
+    }
+
+    const GEAR_RATIO_PRESETS = {
+      short:    { id: 'short',    speedMult: 0.978, accelMult: 1.045 },
+      standard: { id: 'standard', speedMult: 1.000, accelMult: 1.000 },
+      long:     { id: 'long',     speedMult: 1.032, accelMult: 0.972 }
+    };
+    const BRAKE_BIAS_PRESETS = {
+      front:    { id: 'front',    brakeMult: 1.060, turnMult: 0.975, wearMult: 0.97 },
+      balanced: { id: 'balanced', brakeMult: 1.000, turnMult: 1.000, wearMult: 1.00 },
+      rear:     { id: 'rear',     brakeMult: 0.985, turnMult: 1.045, wearMult: 1.035 }
+    };
+    let selectedGearRatio = 'standard';
+    let selectedBrakeBias = 'balanced';
+    const FINETUNE_STORAGE_KEY = 'pixel_gp_track_finetune_v1';
+    let savedTrackFinetune = {};
+    try {
+      const rawFt = localStorage.getItem(FINETUNE_STORAGE_KEY);
+      if (rawFt) savedTrackFinetune = JSON.parse(rawFt) || {};
+    } catch (e) {}
+
+    function saveCurrentTrackFinetune() {
+      try {
+        savedTrackFinetune[selectedTrackKey] = { gear: selectedGearRatio, bias: selectedBrakeBias };
+        localStorage.setItem(FINETUNE_STORAGE_KEY, JSON.stringify(savedTrackFinetune));
+      } catch (e) {}
+    }
+
+    function loadTrackFinetuneFor(trackKey) {
+      const rec = savedTrackFinetune && savedTrackFinetune[trackKey];
+      if (rec && GEAR_RATIO_PRESETS[rec.gear] && BRAKE_BIAS_PRESETS[rec.bias]) {
+        selectedGearRatio = rec.gear;
+        selectedBrakeBias = rec.bias;
+      } else {
+        if (['monaco', 'singapore', 'zandvoort'].includes(trackKey)) {
+          selectedGearRatio = 'short';
+          selectedBrakeBias = 'rear';
+        } else if (['monza', 'spa', 'baku', 'jeddah', 'redbullring', 'montreal', 'mexico', 'lasvegas'].includes(trackKey)) {
+          selectedGearRatio = 'long';
+          selectedBrakeBias = 'front';
+        } else {
+          selectedGearRatio = 'standard';
+          selectedBrakeBias = 'balanced';
+        }
+      }
     }
 
     function applySetupToSpec(specObj) {
       const setup = CAR_SETUP_PRESETS[selectedCarSetup] || CAR_SETUP_PRESETS.balanced;
+      const gear = GEAR_RATIO_PRESETS[selectedGearRatio] || GEAR_RATIO_PRESETS.standard;
+      const bias = BRAKE_BIAS_PRESETS[selectedBrakeBias] || BRAKE_BIAS_PRESETS.balanced;
       return {
         ...specObj,
-        maxSpeed: specObj.maxSpeed * setup.speedMult,
-        accel: specObj.accel * setup.accelMult,
+        maxSpeed: specObj.maxSpeed * setup.speedMult * gear.speedMult,
+        accel: specObj.accel * setup.accelMult * gear.accelMult,
+        brake: (specObj.brake || 380) * bias.brakeMult,
         gripTraction: specObj.gripTraction * setup.gripMult,
-        turnSpeed: specObj.turnSpeed * setup.turnMult,
-        tireWearMod: (specObj.tireWearMod || 1.0) * setup.wearMult
+        turnSpeed: specObj.turnSpeed * setup.turnMult * bias.turnMult,
+        tireWearMod: (specObj.tireWearMod || 1.0) * setup.wearMult * bias.wearMult
       };
     }
 
@@ -3395,7 +3725,15 @@
       redbullring: 0.32, // 32% Styrian Alps mountain afternoon showers
       bahrain: 0.06,     // 6% Sakhir arid Arabian desert night climate
       jeddah: 0.08,      // 8% Red Sea warm coastal night climate
-      barcelona: 0.16    // 16% Catalan Mediterranean spring sunshine
+      barcelona: 0.16,   // 16% Catalan Mediterranean spring sunshine
+      zandvoort: 0.28,   // 28% North Sea coastal wind & showers
+      cota: 0.14,        // 14% Texas warm autumn sunshine
+      montreal: 0.26,    // 26% St. Lawrence River early summer showers
+      mexico: 0.18,      // 18% Mexico City high-altitude afternoon clouds
+      lasvegas: 0.05,    // 5% Mojave Desert crisp night air
+      abudhabi: 0.04,    // 4% Arabian Gulf dry twilight sky
+      shanghai: 0.24,    // 24% Jiading spring drizzle & overcast
+      qatar: 0.04        // 4% Lusail arid desert night sky
     };
 
     function getActiveTrackRainProb() {
@@ -4243,6 +4581,329 @@
           { x: 3920, y: 1380, sector: 3, drs: false, turnTag: 'T13',        chevron: 'R', name: 'T13 · Fast Downhill Right Entry' },
           { x: 4240, y: 2320, sector: 3, drs: false, turnTag: 'T14',        chevron: 'R', name: 'T14 · New Holland Flat-Out Final Right onto Main Straight!' }
         ])
+      },
+
+      zandvoort: {
+        id: 'zandvoort',
+        shortTitle: 'DUTCH',
+        badgeText: 'DUTCH',
+        badgeColor: 'bg-orange-500',
+        name: '贊德沃特賽道 Zandvoort',
+        fullName: 'Circuit Zandvoort · Dutch Grand Prix',
+        difficultyLabel: '沙丘傾角 DUNE',
+        directionLabel: '順時針 (CW)',
+        trackWidth: 300,
+        curbWidth: 25,
+        groundBg: '#365314',
+        groundTile: '#3f6212',
+        runoffColor: '#ea580c',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 680,  y: 2180, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'Zandvoort Main Straight Finish Line (DRS Zone 1)' },
+          { x: 820,  y: 1600, sector: 1, drs: true,  turnTag: 'START',        name: 'Dutch GP Starting Grid & Speed Trap' },
+          { x: 960,  y: 1020, sector: 1, drs: true,  turnTag: '',             name: 'Tarzanbocht Heavy Braking Zone' },
+          { x: 1120, y: 460,  sector: 1, drs: false, turnTag: 'T1 TARZAN',    chevron: 'R', name: 'T1 · Tarzanbocht 180° Banked Right Hairpin' },
+          { x: 1740, y: 440,  sector: 1, drs: false, turnTag: 'T1 EXIT',      name: 'Tarzanbocht Wide Exit' },
+          { x: 1840, y: 980,  sector: 1, drs: false, turnTag: 'T2 GERLACH',   chevron: 'R', name: 'T2 · Gerlachbocht Fast Right Kink' },
+          { x: 1380, y: 1420, sector: 1, drs: false, turnTag: 'T3 BANKED',    chevron: 'L', name: 'T3 · Hugenholtzbocht 19° Banked Left Bowl' },
+          { x: 1860, y: 1720, sector: 1, drs: false, turnTag: 'T4 HUNZERUG',  chevron: 'R', name: 'T4 · Hunzerug Uphill Full-Throttle Right' },
+          { x: 2420, y: 1320, sector: 2, drs: false, turnTag: 'T5',           chevron: 'L', name: 'T5 · Rob Slotemakerbocht High-Speed Left' },
+          { x: 2980, y: 860,  sector: 2, drs: false, turnTag: 'T6',           chevron: 'R', name: 'T6 · Dune Crest Fast Right Sweeper' },
+          { x: 3640, y: 520,  sector: 2, drs: false, turnTag: 'T7 SCHEIVLAK', chevron: 'R', name: 'T7 · Scheivlak High-G Downhill Right' },
+          { x: 4080, y: 1020, sector: 2, drs: false, turnTag: 'T8 MASTERS',   chevron: 'R', name: 'T8 · Mastersbocht Sweeping Right' },
+          { x: 3460, y: 1480, sector: 2, drs: false, turnTag: 'T9',           chevron: 'R', name: 'T9 · Infield Braking Right-Hander' },
+          { x: 2720, y: 1860, sector: 2, drs: false, turnTag: 'T10',          chevron: 'L', name: 'T10 · Tight Infield Left Hairpin' },
+          { x: 3320, y: 2280, sector: 3, drs: true,  turnTag: 'DRS ZONE 2',   name: 'Infield Back Straight toward Hans Ernst (DRS Zone 2)' },
+          { x: 3940, y: 2600, sector: 3, drs: false, turnTag: 'T11 ERNST',    chevron: 'R', name: 'T11 · Hans Ernstbocht 90° Right Braking Zone' },
+          { x: 3480, y: 3040, sector: 3, drs: false, turnTag: 'T12',          chevron: 'L', name: 'T12 · Hans Ernstbocht Left Exit' },
+          { x: 2580, y: 3120, sector: 3, drs: false, turnTag: 'T13',          chevron: 'R', name: 'T13 · Kumhobocht Fast Right Approach' },
+          { x: 1480, y: 3060, sector: 3, drs: true,  turnTag: 'T14 BANKED',   chevron: 'R', name: 'T14 · Arie Luyendykbocht 18° Banked Flat-Out Right (DRS)' },
+          { x: 740,  y: 2680, sector: 3, drs: true,  turnTag: 'MAIN DRS',     name: 'Luyendyk Exit onto Main Straight (DRS Zone 1)!' }
+        ])
+      },
+
+      cota: {
+        id: 'cota',
+        shortTitle: 'USA',
+        badgeText: 'USA',
+        badgeColor: 'bg-blue-600',
+        name: '奧斯汀美洲賽道 COTA',
+        fullName: 'Circuit of the Americas · United States Grand Prix',
+        difficultyLabel: '德州全能 AMERICAS',
+        directionLabel: '逆時針 (CCW)',
+        trackWidth: 310,
+        curbWidth: 26,
+        groundBg: '#14532d',
+        groundTile: '#166534',
+        runoffColor: '#dc2626',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 980,  y: 1280, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'COTA Main Straight Finish Line (DRS Zone 2)' },
+          { x: 620,  y: 1100, sector: 1, drs: true,  turnTag: 'START',        name: 'Austin Uphill Starting Grid (41m Climb)' },
+          { x: 240,  y: 920,  sector: 1, drs: false, turnTag: 'T1 HILLTOP',   chevron: 'L', name: 'T1 · Big Red Steep Uphill Blind Left Hairpin' },
+          { x: 680,  y: 1720, sector: 1, drs: false, turnTag: 'T2',           chevron: 'R', name: 'T2 · Downhill Sweeping Right-Hander' },
+          { x: 1180, y: 1980, sector: 1, drs: false, turnTag: 'T3 ESSES',     chevron: 'L', name: 'T3 · High-Speed Esses Left Entry' },
+          { x: 1580, y: 2360, sector: 1, drs: false, turnTag: 'T4',           chevron: 'R', name: 'T4 · High-Speed Esses Right' },
+          { x: 2040, y: 2160, sector: 1, drs: false, turnTag: 'T5',           chevron: 'L', name: 'T5 · High-Speed Esses Left Crest' },
+          { x: 2480, y: 2520, sector: 1, drs: false, turnTag: 'T6',           chevron: 'R', name: 'T6 · Sweeping Right Apex' },
+          { x: 2960, y: 2320, sector: 1, drs: false, turnTag: 'T7-T8',        chevron: 'L', name: 'T7-T8 · Technical Left-Right Complex' },
+          { x: 3460, y: 2660, sector: 1, drs: false, turnTag: 'T9',           chevron: 'L', name: 'T9 · Downhill Left Exit toward T10' },
+          { x: 4040, y: 2560, sector: 2, drs: false, turnTag: 'T10',          chevron: 'L', name: 'T10 · Fast Left Kink' },
+          { x: 4640, y: 2580, sector: 2, drs: false, turnTag: 'T11 HAIRPIN',  chevron: 'L', name: 'T11 · Far-East Tight Left Hairpin' },
+          { x: 4180, y: 1960, sector: 2, drs: true,  turnTag: 'DRS ZONE 1',   name: 'COTA 1.2km Long Back Straight (DRS Zone 1)' },
+          { x: 3580, y: 1260, sector: 2, drs: true,  turnTag: 'SPEED TRAP',   name: 'Back Straight Speed Trap (335+ km/h DRS)' },
+          { x: 3020, y: 520,  sector: 2, drs: false, turnTag: 'T12 STADIUM',  chevron: 'L', name: 'T12 · Heavy Braking 90° Left into Stadium' },
+          { x: 2680, y: 1080, sector: 3, drs: false, turnTag: 'T13',          chevron: 'R', name: 'T13 · Stadium Right Hook' },
+          { x: 2320, y: 580,  sector: 3, drs: false, turnTag: 'T14',          chevron: 'R', name: 'T14 · Stadium Apex Right' },
+          { x: 1980, y: 1120, sector: 3, drs: false, turnTag: 'T15',          chevron: 'L', name: 'T15 · Tight Left Hairpin before Tower' },
+          { x: 1780, y: 380,  sector: 3, drs: false, turnTag: 'T16 TOWER',    chevron: 'R', name: 'T16 · Observation Tower Triple-Apex Right (Apex 1)' },
+          { x: 1220, y: 260,  sector: 3, drs: false, turnTag: 'T17',          chevron: 'R', name: 'T17 · Triple-Apex Sweeping Right (Apex 2)' },
+          { x: 960,  y: 720,  sector: 3, drs: false, turnTag: 'T18',          chevron: 'R', name: 'T18 · Triple-Apex Exit Right (Apex 3)' },
+          { x: 1480, y: 1020, sector: 3, drs: false, turnTag: 'T19',          chevron: 'L', name: 'T19 · Fast Downhill Left-Hander' },
+          { x: 1380, y: 1480, sector: 3, drs: true,  turnTag: 'T20',          chevron: 'L', name: 'T20 · Final 90° Left onto COTA Main Straight!' }
+        ])
+      },
+
+      montreal: {
+        id: 'montreal',
+        shortTitle: 'CANADA',
+        badgeText: 'CANADA',
+        badgeColor: 'bg-red-600',
+        name: '蒙特婁賽道 Montreal',
+        fullName: 'Circuit Gilles-Villeneuve · Canadian Grand Prix',
+        difficultyLabel: '冠軍之牆 CHAMPIONS',
+        directionLabel: '順時針 (CW)',
+        trackWidth: 298,
+        curbWidth: 25,
+        groundBg: '#064e3b',
+        groundTile: '#065f46',
+        runoffColor: '#dc2626',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 1120, y: 1980, sector: 1, drs: true,  turnTag: 'FINISH',        name: 'Montreal Finish Line & Wall of Champions Exit (DRS Zone 3)' },
+          { x: 680,  y: 1980, sector: 1, drs: true,  turnTag: 'START',         name: 'Île Notre-Dame Starting Grid' },
+          { x: 280,  y: 2120, sector: 1, drs: false, turnTag: 'T1 SENNA',      chevron: 'L', name: 'T1 · Virage Senna Left Entry' },
+          { x: 220,  y: 1620, sector: 1, drs: false, turnTag: 'T2 HAIRPIN',    chevron: 'R', name: 'T2 · Virage Senna 180° Right Hairpin' },
+          { x: 640,  y: 1320, sector: 1, drs: false, turnTag: 'T2 EXIT',       name: 'Senna Hairpin Acceleration Zone' },
+          { x: 1060, y: 1340, sector: 1, drs: false, turnTag: 'T3',            chevron: 'R', name: 'T3 · Fast Right Chicane Entry' },
+          { x: 1340, y: 1080, sector: 1, drs: false, turnTag: 'T4',            chevron: 'L', name: 'T4 · Close-to-Wall Left Exit' },
+          { x: 1860, y: 840,  sector: 1, drs: false, turnTag: 'T5 RIVER',      chevron: 'R', name: 'T5 · Full-Throttle Riverfront Sweeping Right' },
+          { x: 2340, y: 1180, sector: 2, drs: false, turnTag: 'T6',            chevron: 'L', name: 'T6 · Heavy Braking Left-Hander' },
+          { x: 2680, y: 920,  sector: 2, drs: false, turnTag: 'T7',            chevron: 'R', name: 'T7 · Kerb-Hop Right Exit onto Back Chute' },
+          { x: 3220, y: 980,  sector: 2, drs: true,  turnTag: 'DRS ZONE 1',    name: 'Pont de la Concorde Straight (DRS Zone 1)' },
+          { x: 3680, y: 1260, sector: 2, drs: false, turnTag: 'T8',            chevron: 'R', name: 'T8 · Right Chicane Entry' },
+          { x: 4040, y: 1020, sector: 2, drs: false, turnTag: 'T9',            chevron: 'L', name: 'T9 · Left Exit toward Hairpin' },
+          { x: 4460, y: 1140, sector: 2, drs: false, turnTag: 'T10 BRAKE',     name: 'Heavy Braking Zone for L’Épingle' },
+          { x: 4780, y: 1540, sector: 2, drs: false, turnTag: 'T10 EPINGLE',   chevron: 'R', name: 'T10 · L’Épingle Famous 180° Right Hairpin' },
+          { x: 4480, y: 1980, sector: 3, drs: false, turnTag: 'T11 EXIT',      name: 'Hairpin Exit onto Casino Straight' },
+          { x: 3820, y: 2040, sector: 3, drs: true,  turnTag: 'T12 CASINO',    name: 'T12 · Casino Straight Full-Throttle Kink (DRS Zone 2)' },
+          { x: 3060, y: 2020, sector: 3, drs: true,  turnTag: 'DRS ZONE 2',    name: '1.06km Casino Straight Blast (DRS Zone 2)' },
+          { x: 2380, y: 2000, sector: 3, drs: true,  turnTag: 'SPEED TRAP',    name: 'Montreal Speed Trap (340+ km/h) & Chicane Braking' },
+          { x: 1920, y: 1740, sector: 3, drs: false, turnTag: 'T13',           chevron: 'R', name: 'T13 · Final Chicane Right Entry' },
+          { x: 1580, y: 1980, sector: 3, drs: true,  turnTag: 'T14 CHAMPIONS', chevron: 'L', name: 'T14 · Wall of Champions Exit (Bienvenue au Québec!)' }
+        ])
+      },
+
+      mexico: {
+        id: 'mexico',
+        shortTitle: 'MEXICO',
+        badgeText: 'MEXICO',
+        badgeColor: 'bg-emerald-600',
+        name: '墨西哥城賽道 Mexico',
+        fullName: 'Autódromo Hermanos Rodríguez · Mexican Grand Prix',
+        difficultyLabel: '高原球場 FORO SOL',
+        directionLabel: '順時針 (CW)',
+        trackWidth: 308,
+        curbWidth: 26,
+        groundBg: '#14532d',
+        groundTile: '#166534',
+        runoffColor: '#059669',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 1680, y: 420,  sector: 1, drs: true,  turnTag: 'FINISH',        name: 'Mexico City Finish Line (1.2km Main Straight · DRS Zone 1)' },
+          { x: 2560, y: 420,  sector: 1, drs: true,  turnTag: 'START',         name: 'Autódromo Hermanos Rodríguez Starting Grid' },
+          { x: 3620, y: 420,  sector: 1, drs: true,  turnTag: 'SPEED TRAP',    name: '2,285m Altitude Speed Trap (350+ km/h DRS Zone 1)' },
+          { x: 4520, y: 420,  sector: 1, drs: false, turnTag: 'T1',            chevron: 'R', name: 'T1 · Heavy Braking 90° Right-Hander' },
+          { x: 4560, y: 800,  sector: 1, drs: false, turnTag: 'T2',            chevron: 'L', name: 'T2 · Tight Left Kerb Hop' },
+          { x: 4780, y: 1060, sector: 1, drs: false, turnTag: 'T3',            chevron: 'R', name: 'T3 · Right Exit onto DRS Zone 2 Straight' },
+          { x: 3880, y: 1140, sector: 2, drs: true,  turnTag: 'DRS ZONE 2',    name: 'Infield Long Straight toward Turn 4 (DRS Zone 2)' },
+          { x: 3060, y: 1140, sector: 2, drs: true,  turnTag: 'T4 BRAKE',      name: 'Braking Zone for Turn 4 Complex' },
+          { x: 2320, y: 1140, sector: 2, drs: false, turnTag: 'T4',            chevron: 'L', name: 'T4 · 90° Left Entry to Slow Complex' },
+          { x: 2080, y: 1480, sector: 2, drs: false, turnTag: 'T5',            chevron: 'R', name: 'T5 · Tight Right-Hander' },
+          { x: 2380, y: 1740, sector: 2, drs: false, turnTag: 'T6',            chevron: 'L', name: 'T6 · Slow Double-Apex Hairpin Exit' },
+          { x: 2840, y: 1580, sector: 2, drs: false, turnTag: 'T7 ESSES',      chevron: 'L', name: 'T7 · High-Speed Esses Left Entry' },
+          { x: 3260, y: 1980, sector: 2, drs: false, turnTag: 'T8',            chevron: 'R', name: 'T8 · High-Speed Esses Right Apex' },
+          { x: 3720, y: 1680, sector: 2, drs: false, turnTag: 'T9',            chevron: 'L', name: 'T9 · Flowing Esses Left Crest' },
+          { x: 4180, y: 2060, sector: 2, drs: false, turnTag: 'T10',           chevron: 'R', name: 'T10 · Fast Esses Right Sweep' },
+          { x: 4620, y: 2420, sector: 2, drs: false, turnTag: 'T11',           chevron: 'R', name: 'T11 · Final Esses Right onto Stadium Approach' },
+          { x: 3320, y: 2760, sector: 3, drs: false, turnTag: '',              name: 'High-Speed Approach to Foro Sol Stadium' },
+          { x: 2040, y: 2780, sector: 3, drs: false, turnTag: 'T12 FORO SOL',  chevron: 'R', name: 'T12 · 90° Right Entry into Foro Sol Stadium!' },
+          { x: 1880, y: 2240, sector: 3, drs: false, turnTag: 'T13 STADIUM',   chevron: 'L', name: 'T13 · Foro Sol Stadium Amphitheatre Left' },
+          { x: 1280, y: 2240, sector: 3, drs: false, turnTag: 'T14',           chevron: 'L', name: 'T14 · Tight Stadium Hairpin Left' },
+          { x: 1180, y: 2780, sector: 3, drs: false, turnTag: 'T15',           chevron: 'R', name: 'T15 · Foro Sol Stadium Right Exit' },
+          { x: 560,  y: 2620, sector: 3, drs: false, turnTag: 'T16 PERALTADA', chevron: 'R', name: 'T16 · Peraltada High-Speed Sweeping Right Entry' },
+          { x: 320,  y: 1620, sector: 3, drs: false, turnTag: 'T17',           chevron: 'R', name: 'T17 · Nigel Mansell Peraltada Parabolic Right' },
+          { x: 680,  y: 580,  sector: 3, drs: true,  turnTag: 'MAIN DRS',      name: 'Peraltada Full-Throttle Exit onto 1.2km Main Straight!' }
+        ])
+      },
+
+      lasvegas: {
+        id: 'lasvegas',
+        shortTitle: 'VEGAS',
+        badgeText: 'VEGAS',
+        badgeColor: 'bg-fuchsia-600',
+        name: '拉斯維加斯賽道 Las Vegas',
+        fullName: 'Las Vegas Strip Circuit · Las Vegas Grand Prix',
+        difficultyLabel: '賭城極速 STRIP',
+        directionLabel: '逆時針 (CCW)',
+        trackWidth: 302,
+        curbWidth: 25,
+        groundBg: '#090d16',
+        groundTile: '#111827',
+        runoffColor: '#a21caf',
+        sceneryType: 'singapore',
+        waypoints: scaleWaypoints([
+          { x: 1680, y: 2760, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'Las Vegas Finish Line & Neon Paddock' },
+          { x: 2280, y: 2760, sector: 1, drs: true,  turnTag: 'START',        name: 'Las Vegas Strip Starting Grid' },
+          { x: 3080, y: 2720, sector: 1, drs: false, turnTag: 'T1 HAIRPIN',   chevron: 'L', name: 'T1 · Heavy Braking 180° Left Hairpin' },
+          { x: 3060, y: 2180, sector: 1, drs: false, turnTag: 'T2',           chevron: 'L', name: 'T2 · Tight Left Hairpin Exit' },
+          { x: 2280, y: 2060, sector: 1, drs: false, turnTag: 'T3',           chevron: 'R', name: 'T3 · Sweeping Right Turn' },
+          { x: 2340, y: 1540, sector: 1, drs: true,  turnTag: 'T4 KOVAL',     chevron: 'R', name: 'T4 · Koval Lane Straight Entry (DRS Zone 1)' },
+          { x: 3260, y: 1520, sector: 1, drs: true,  turnTag: 'DRS ZONE 1',   name: 'Koval Lane High-Speed Blast (DRS Zone 1)' },
+          { x: 4120, y: 1520, sector: 2, drs: false, turnTag: 'T5 SPHERE',    chevron: 'R', name: 'T5 · 90° Right into MSG Sphere Arena Zone' },
+          { x: 4180, y: 2180, sector: 2, drs: false, turnTag: 'T6-T7',        chevron: 'L', name: 'T6-T7 · Sweeping Arena Curve around The Sphere' },
+          { x: 4720, y: 2240, sector: 2, drs: false, turnTag: 'T8-T9',        chevron: 'L', name: 'T8-T9 · Tight Left-Right Chicane Exit' },
+          { x: 4780, y: 1560, sector: 2, drs: false, turnTag: 'T10',          chevron: 'L', name: 'T10 · Sands Avenue High-Speed Left Kink' },
+          { x: 4720, y: 960,  sector: 2, drs: false, turnTag: 'T11',          chevron: 'R', name: 'T11 · Approach to The Strip' },
+          { x: 4520, y: 440,  sector: 2, drs: true,  turnTag: 'T12 STRIP',    chevron: 'L', name: 'T12 · 90° Left onto The Las Vegas Strip (DRS Zone 2)' },
+          { x: 3560, y: 420,  sector: 3, drs: true,  turnTag: 'THE STRIP',    name: '1.9km Las Vegas Strip Full-Throttle Blast (DRS Zone 2)' },
+          { x: 2480, y: 460,  sector: 3, drs: true,  turnTag: 'T13 KINK',     chevron: 'L', name: 'T13 · Bellagio Fountains 350 km/h Kink (DRS Zone 2)' },
+          { x: 1420, y: 440,  sector: 3, drs: true,  turnTag: 'SPEED TRAP',   name: 'Las Vegas Strip Speed Trap (355+ km/h!)' },
+          { x: 520,  y: 460,  sector: 3, drs: false, turnTag: 'T14 BRAKE',    chevron: 'L', name: 'T14 · Cosmopolitan Heavy Braking 90° Left' },
+          { x: 480,  y: 1120, sector: 3, drs: false, turnTag: 'T15',          chevron: 'R', name: 'T15 · Tight Right Chicane Kerb' },
+          { x: 820,  y: 1560, sector: 3, drs: false, turnTag: 'T16',          chevron: 'L', name: 'T16 · Fast Left Exit onto Harmon Straight' },
+          { x: 680,  y: 2320, sector: 3, drs: false, turnTag: 'T16 CHUTE',    name: 'Approach to Final Corner' },
+          { x: 1060, y: 2740, sector: 3, drs: true,  turnTag: 'T17 FINAL',    chevron: 'L', name: 'T17 · 310 km/h Flat-Out Left onto Main Straight!' }
+        ])
+      },
+
+      abudhabi: {
+        id: 'abudhabi',
+        shortTitle: 'ABU DHABI',
+        badgeText: 'ABU DHABI',
+        badgeColor: 'bg-cyan-600',
+        name: '阿布達比亞斯賽道 Abu Dhabi',
+        fullName: 'Yas Marina Circuit · Abu Dhabi Grand Prix',
+        difficultyLabel: '亞斯收官 FINALE',
+        directionLabel: '逆時針 (CCW)',
+        trackWidth: 308,
+        curbWidth: 26,
+        groundBg: '#0c1928',
+        groundTile: '#0f2942',
+        runoffColor: '#0284c7',
+        sceneryType: 'baku',
+        waypoints: scaleWaypoints([
+          { x: 1680, y: 1680, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'Yas Marina Finish Line & Twilight Paddock' },
+          { x: 2060, y: 1320, sector: 1, drs: true,  turnTag: 'START',        name: 'Abu Dhabi Grand Prix Starting Grid' },
+          { x: 2260, y: 960,  sector: 1, drs: false, turnTag: 'T1',           chevron: 'L', name: 'T1 · Medium-Speed 90° Left-Hander' },
+          { x: 1820, y: 760,  sector: 1, drs: false, turnTag: 'T2-T3',        chevron: 'R', name: 'T2-T3 · High-Speed Crest & Sweeping Esses' },
+          { x: 1180, y: 460,  sector: 1, drs: false, turnTag: 'T4',           chevron: 'L', name: 'T4 · Approach to North Hairpin' },
+          { x: 440,  y: 480,  sector: 1, drs: false, turnTag: 'T5 HAIRPIN',   chevron: 'L', name: 'T5 · North Hairpin 180° Left-Hander' },
+          { x: 360,  y: 1120, sector: 1, drs: true,  turnTag: 'T5 EXIT',      name: 'North Hairpin Exit onto 1.2km Straight (DRS Zone 1)' },
+          { x: 780,  y: 1880, sector: 2, drs: true,  turnTag: 'DRS ZONE 1',   name: 'Yas Marina 1.2km Long Back Straight (DRS Zone 1)' },
+          { x: 1380, y: 2580, sector: 2, drs: true,  turnTag: 'BACK BLAST',   name: 'Full-Throttle Back Straight Blast (DRS Zone 1)' },
+          { x: 2280, y: 2940, sector: 2, drs: true,  turnTag: 'SPEED TRAP',   name: 'Yas Marina Speed Trap (340+ km/h DRS Zone 1)' },
+          { x: 3260, y: 2960, sector: 2, drs: false, turnTag: 'T6',           chevron: 'L', name: 'T6 · Heavy Braking Left Chicane Entry' },
+          { x: 3680, y: 2640, sector: 2, drs: true,  turnTag: 'T7',           chevron: 'R', name: 'T7 · Chicane Exit onto Marina Straight (DRS Zone 2)' },
+          { x: 4180, y: 2060, sector: 2, drs: true,  turnTag: 'DRS ZONE 2',   name: 'Yas Marina Second Straight (DRS Zone 2)' },
+          { x: 4620, y: 1420, sector: 2, drs: false, turnTag: 'T8 BRAKE',     name: 'Braking Zone for Marsa Corner' },
+          { x: 4740, y: 740,  sector: 3, drs: false, turnTag: 'T9 MARSA',     chevron: 'L', name: 'T9 · Marsa Corner 18° Banked Sweeping Left' },
+          { x: 4160, y: 420,  sector: 3, drs: false, turnTag: 'T9 EXIT',      name: 'Marsa Corner Exit along Yacht Marina' },
+          { x: 3480, y: 620,  sector: 3, drs: false, turnTag: 'T10-T11',      chevron: 'R', name: 'T10-T11 · Yacht Marina Fast Kinks' },
+          { x: 2980, y: 960,  sector: 3, drs: false, turnTag: 'T12 MARINA',   chevron: 'L', name: 'T12 · Marina Braking Zone Left' },
+          { x: 2920, y: 1520, sector: 3, drs: false, turnTag: 'T13 HOTEL',    chevron: 'L', bridge: true, name: 'T13 · W Hotel Illuminated Bridge Underpass Left' },
+          { x: 3240, y: 1980, sector: 3, drs: false, turnTag: 'T14',          chevron: 'L', name: 'T14 · Hotel Complex Exit Left' },
+          { x: 2480, y: 2280, sector: 3, drs: false, turnTag: 'T15',          chevron: 'R', name: 'T15 · Fast Right Sweeper' },
+          { x: 1680, y: 2160, sector: 3, drs: true,  turnTag: 'T16 FINAL',    chevron: 'R', name: 'T16 · Final 90° Right onto Yas Marina Main Straight!' }
+        ])
+      },
+
+      shanghai: {
+        id: 'shanghai',
+        shortTitle: 'CHINA',
+        badgeText: 'CHINA',
+        badgeColor: 'bg-red-600',
+        name: '上海國際賽道 Shanghai',
+        fullName: 'Shanghai International Circuit · Chinese Grand Prix',
+        difficultyLabel: '上字螺螄彎 SNAIL',
+        directionLabel: '順時針 (CW)',
+        trackWidth: 312,
+        curbWidth: 26,
+        groundBg: '#14532d',
+        groundTile: '#166534',
+        runoffColor: '#dc2626',
+        sceneryType: 'park',
+        waypoints: scaleWaypoints([
+          { x: 1320, y: 2060, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'Shanghai Finish Line & Grandstand Wing (DRS Zone 2)' },
+          { x: 2080, y: 2060, sector: 1, drs: true,  turnTag: 'START',        name: 'Shanghai International Circuit Starting Grid' },
+          { x: 2860, y: 2060, sector: 1, drs: true,  turnTag: '',             name: 'Approach to Turn 1 Snail Corner' },
+          { x: 3680, y: 2120, sector: 1, drs: false, turnTag: 'T1 SNAIL',     chevron: 'R', name: 'T1 · Famous 270° Tightening Snail Corner Entry' },
+          { x: 3960, y: 2660, sector: 1, drs: false, turnTag: 'T2',           chevron: 'R', name: 'T2 · Snail Corner Tightening Right Apex' },
+          { x: 3320, y: 2660, sector: 1, drs: false, turnTag: 'T3',           chevron: 'R', name: 'T3 · Slowest Right Apex of the Snail' },
+          { x: 3380, y: 3140, sector: 1, drs: false, turnTag: 'T4',           chevron: 'L', name: 'T4 · Tight Left Exit from Snail Complex' },
+          { x: 4160, y: 3140, sector: 2, drs: false, turnTag: 'T5',           chevron: 'R', name: 'T5 · Full-Throttle Right Bend' },
+          { x: 4720, y: 2860, sector: 2, drs: false, turnTag: 'T6 HAIRPIN',   chevron: 'L', name: 'T6 · Tight Braking Hairpin' },
+          { x: 4380, y: 2220, sector: 2, drs: false, turnTag: 'T7 ESSES',     chevron: 'L', name: 'T7 · High-Speed Left Sweeper' },
+          { x: 4760, y: 1620, sector: 2, drs: false, turnTag: 'T8',           chevron: 'R', name: 'T8 · High-G Right Sweeper' },
+          { x: 4120, y: 1380, sector: 2, drs: false, turnTag: 'T9-T10',       chevron: 'L', name: 'T9-T10 · Technical Double-Left Complex' },
+          { x: 4180, y: 920,  sector: 2, drs: false, turnTag: 'T11-T12',      chevron: 'R', name: 'T11-T12 · Chicane into Banked Turn 13' },
+          { x: 4680, y: 620,  sector: 2, drs: false, turnTag: 'T13 BANKED',   chevron: 'L', name: 'T13 · Banked Sweeping Corner onto 1.17km Straight' },
+          { x: 3780, y: 380,  sector: 3, drs: true,  turnTag: 'DRS ZONE 1',   name: 'Shanghai 1.17km Long Back Straight (DRS Zone 1)' },
+          { x: 2680, y: 380,  sector: 3, drs: true,  turnTag: 'BACK BLAST',   name: 'Full-Throttle 1.17km Back Straight Blast (DRS Zone 1)' },
+          { x: 1520, y: 380,  sector: 3, drs: true,  turnTag: 'SPEED TRAP',   name: 'Shanghai Speed Trap (348+ km/h DRS Zone 1)' },
+          { x: 520,  y: 420,  sector: 3, drs: false, turnTag: 'T14 HAIRPIN',  chevron: 'L', name: 'T14 · Heavy Braking End-of-Straight Hairpin' },
+          { x: 520,  y: 1040, sector: 3, drs: false, turnTag: 'T14 EXIT',     name: 'Hairpin Exit Chute' },
+          { x: 960,  y: 1440, sector: 3, drs: false, turnTag: 'T15',          chevron: 'R', name: 'T15 · Medium-Speed Sweeping Corner' },
+          { x: 680,  y: 1980, sector: 3, drs: true,  turnTag: 'T16 FINAL',    chevron: 'L', name: 'T16 · Fast Final Corner onto Shanghai Main Straight!' }
+        ])
+      },
+
+      qatar: {
+        id: 'qatar',
+        shortTitle: 'QATAR',
+        badgeText: 'QATAR',
+        badgeColor: 'bg-purple-600',
+        name: '卡達盧賽爾賽道 Qatar',
+        fullName: 'Lusail International Circuit · Qatar Grand Prix',
+        difficultyLabel: '沙漠極速 LUSAIL',
+        directionLabel: '順時針 (CW)',
+        trackWidth: 308,
+        curbWidth: 26,
+        groundBg: '#181124',
+        groundTile: '#231834',
+        runoffColor: '#7e22ce',
+        sceneryType: 'singapore',
+        waypoints: scaleWaypoints([
+          { x: 3080, y: 2860, sector: 1, drs: true,  turnTag: 'FINISH',       name: 'Lusail Finish Line (1.068km Main Straight · DRS Zone 1)' },
+          { x: 2160, y: 2860, sector: 1, drs: true,  turnTag: 'START',        name: 'Qatar Night GP Starting Grid' },
+          { x: 1240, y: 2860, sector: 1, drs: true,  turnTag: 'SPEED TRAP',   name: 'Lusail Main Straight Speed Trap (342+ km/h DRS)' },
+          { x: 520,  y: 2640, sector: 1, drs: false, turnTag: 'T1',           chevron: 'R', name: 'T1 · Flowing Medium-Speed Right-Hander' },
+          { x: 360,  y: 2040, sector: 1, drs: false, turnTag: 'T2',           chevron: 'L', name: 'T2 · Sweeping Left Turn' },
+          { x: 560,  y: 1420, sector: 1, drs: false, turnTag: 'T3',           chevron: 'R', name: 'T3 · Fast Right Exit toward Turn 4' },
+          { x: 720,  y: 640,  sector: 1, drs: false, turnTag: 'T4',           chevron: 'R', name: 'T4 · 90° Right-Hander' },
+          { x: 1460, y: 560,  sector: 1, drs: false, turnTag: 'T5',           chevron: 'R', name: 'T5 · Second 90° Right into Infield Chute' },
+          { x: 1560, y: 1480, sector: 2, drs: false, turnTag: 'T6 HAIRPIN',   chevron: 'L', name: 'T6 · Tight Infield 180° Left Hairpin' },
+          { x: 2180, y: 1460, sector: 2, drs: false, turnTag: 'T6 EXIT',      name: 'Short Acceleration Chute toward Turn 7' },
+          { x: 2280, y: 660,  sector: 2, drs: false, turnTag: 'T7-T8',        chevron: 'R', name: 'T7-T8 · Double-Apex Sweeping Right Loop' },
+          { x: 2980, y: 640,  sector: 2, drs: false, turnTag: 'T9',           chevron: 'R', name: 'T9 · Fast Right Exit' },
+          { x: 3120, y: 1340, sector: 2, drs: false, turnTag: 'T10',          chevron: 'L', name: 'T10 · High-Speed Left Bend' },
+          { x: 3860, y: 1180, sector: 2, drs: false, turnTag: 'T11',          chevron: 'L', name: 'T11 · Full-Throttle Approach to Triple-Right' },
+          { x: 4380, y: 620,  sector: 3, drs: false, turnTag: 'T12 TRIPLE',   chevron: 'R', name: 'T12 · Famous High-G Triple-Right Entry (Apex 1)' },
+          { x: 4820, y: 1120, sector: 3, drs: false, turnTag: 'T13',          chevron: 'R', name: 'T13 · High-Speed Triple-Right Middle (Apex 2)' },
+          { x: 4660, y: 1840, sector: 3, drs: false, turnTag: 'T14',          chevron: 'R', name: 'T14 · Flat-Out Triple-Right Exit (Apex 3)' },
+          { x: 3980, y: 2120, sector: 3, drs: false, turnTag: 'T15',          chevron: 'L', name: 'T15 · High-Speed Left-Hander' },
+          { x: 4120, y: 2760, sector: 3, drs: true,  turnTag: 'T16 FINAL',    chevron: 'R', name: 'T16 · Final Right-Hander onto Lusail Main Straight!' }
+        ])
       }
     };
 
@@ -4380,7 +5041,15 @@
       redbullring: { sprint3: 3, short: 6, medium: 10, long: 15 },
       bahrain:     { sprint3: 3, short: 5, medium: 8,  long: 13 },
       jeddah:      { sprint3: 3, short: 4, medium: 7,  long: 11 },
-      barcelona:   { sprint3: 3, short: 5, medium: 9,  long: 14 }
+      barcelona:   { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      zandvoort:   { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      cota:        { sprint3: 3, short: 5, medium: 8,  long: 13 },
+      montreal:    { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      mexico:      { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      lasvegas:    { sprint3: 3, short: 5, medium: 8,  long: 13 },
+      abudhabi:    { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      shanghai:    { sprint3: 3, short: 5, medium: 9,  long: 14 },
+      qatar:       { sprint3: 3, short: 5, medium: 9,  long: 14 }
     };
     let selectedDistanceMode = 'sprint3'; // 'sprint3', 'short', 'medium', 'long'
 
@@ -4395,7 +5064,7 @@
       const { pts, bounds } = buildSplineTrack(cfg.waypoints, 22);
       const pitPts = buildPitLaneForTrack(pts, cfg.trackWidth);
       const scenery = [];
-      const seedMap = { imola: 108, suzuka: 204, monaco: 309, interlagos: 415, silverstone: 522, spa: 637, singapore: 749, monza: 863, baku: 977, melbourne: 1091, redbullring: 1205, bahrain: 1319, jeddah: 1433, barcelona: 1547 };
+      const seedMap = { imola: 108, suzuka: 204, monaco: 309, interlagos: 415, silverstone: 522, spa: 637, singapore: 749, monza: 863, baku: 977, melbourne: 1091, redbullring: 1205, bahrain: 1319, jeddah: 1433, barcelona: 1547, zandvoort: 1661, cota: 1775, montreal: 1889, mexico: 2003, lasvegas: 2117, abudhabi: 2231, shanghai: 2345, qatar: 2459 };
       let seed = seedMap[key] || 108;
       function rand() {
         seed = (seed * 1664525 + 1013904223) % 4294967296;
@@ -4896,14 +5565,23 @@
         }
       }
       if (nextBtnEl) {
+        const nextComp = TIRE_COMPOUNDS[car.nextTireCompound] || TIRE_COMPOUNDS.hard;
         if (car.boxThisLap) {
-          nextBtnEl.textContent = dict.boxReqOn || '🔧本圈進站:開';
+          nextBtnEl.textContent = `${dict.boxReqOn || '🔧本圈進站'}→${nextComp.icon}${nextComp.code}`;
           nextBtnEl.className = 'w-full py-0.5 px-1.5 rounded bg-emerald-500 text-slate-950 text-[9px] font-black border border-emerald-300 shadow transition text-center whitespace-nowrap truncate animate-pulse';
         } else {
-          nextBtnEl.textContent = dict.boxReqOff || '🔧預約進站';
+          nextBtnEl.textContent = `${dict.boxReqOff || '🔧預約進站'} (${nextComp.icon}${nextComp.code})`;
           nextBtnEl.className = 'w-full py-0.5 px-1.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-sky-300 border border-sky-700/70 transition text-center whitespace-nowrap truncate';
         }
       }
+      document.querySelectorAll('.hud-pre-tire-btn').forEach(btn => {
+        const tKey = btn.getAttribute('data-pre-tire');
+        const isSel = (tKey === car.nextTireCompound);
+        const colorCls = tKey === 'soft' ? 'text-red-300' : (tKey === 'hard' ? 'text-slate-100' : (tKey === 'inter' ? 'text-emerald-300' : 'text-sky-300'));
+        btn.className = isSel
+          ? `hud-pre-tire-btn py-0.2 rounded text-[8px] font-black mono bg-amber-500/30 ${colorCls} border border-amber-300 shadow text-center whitespace-nowrap`
+          : `hud-pre-tire-btn py-0.2 rounded text-[8px] font-bold mono bg-slate-900/90 hover:bg-slate-800 ${colorCls} border border-slate-700/80 opacity-75 text-center whitespace-nowrap`;
+      });
       updatePitAutopilotOverlayUI();
       if (typeof updateErsHudUI === 'function') updateErsHudUI();
     }
@@ -5089,6 +5767,77 @@
               : '🌧️ 雨戰濕地設定：軟化懸吊與最大雨戰下壓力，雨天濕地過彎抓地力 +15%、濕地速度 +4.5%、輪胎磨損 -12%！');
         } else descEl.textContent = dict.setupBalancedDesc || '';
       }
+
+      // v2.8.0 Update Gear Ratio & Brake Bias Fine-Tuning UI
+      const gearLabelEl = document.getElementById('gearRatioLabel');
+      if (gearLabelEl) {
+        gearLabelEl.textContent = currentLang === 'en' ? '⚙️ GEAR RATIO:' : (currentLang === 'ja' ? '⚙️ ギア比 (GEAR):' : '⚙️ 終傳齒比 (GEAR RATIO):');
+      }
+      const biasLabelEl = document.getElementById('brakeBiasLabel');
+      if (biasLabelEl) {
+        biasLabelEl.textContent = currentLang === 'en' ? '🛑 BRAKE BIAS:' : (currentLang === 'ja' ? '🛑 ブレーキ配分:' : '🛑 煞車偏置 (BRAKE BIAS):');
+      }
+      const gearTextMap = {
+        short: currentLang === 'en' ? '⚡ Short (+Accel)' : (currentLang === 'ja' ? '⚡ ショート加速' : '⚡ 短齒加速 (Short)'),
+        standard: currentLang === 'en' ? '⚖️ Std (100%)' : (currentLang === 'ja' ? '⚖️ 標準ギア' : '⚖️ 標準齒比 (Std)'),
+        long: currentLang === 'en' ? '🚀 Long (+Vmax)' : (currentLang === 'ja' ? '🚀 ロング最高速' : '🚀 長齒尾速 (Long)')
+      };
+      document.querySelectorAll('.gear-ratio-btn').forEach(btn => {
+        const gKey = btn.getAttribute('data-gear');
+        const isSel = (gKey === selectedGearRatio);
+        btn.textContent = gearTextMap[gKey] || gKey;
+        btn.className = isSel
+          ? 'gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-extrabold mono bg-cyan-600 text-white border border-cyan-300 shadow transition whitespace-nowrap'
+          : 'gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      });
+      const biasTextMap = {
+        front: currentLang === 'en' ? '🎯 58%F (Stable)' : (currentLang === 'ja' ? '🎯 前寄り 58%F' : '🎯 前偏穩定 58%F'),
+        balanced: currentLang === 'en' ? '⚖️ 54%F (Mid)' : (currentLang === 'ja' ? '⚖️ 均衡 54%F' : '⚖️ 均衡 54%F'),
+        rear: currentLang === 'en' ? '🔄 50%F (Agile)' : (currentLang === 'ja' ? '🔄 後寄り 50%F' : '🔄 後偏靈活 50%F')
+      };
+      document.querySelectorAll('.brake-bias-btn').forEach(btn => {
+        const bKey = btn.getAttribute('data-bias');
+        const isSel = (bKey === selectedBrakeBias);
+        btn.textContent = biasTextMap[bKey] || bKey;
+        btn.className = isSel
+          ? 'brake-bias-btn px-2 py-0.5 rounded text-[11px] font-extrabold mono bg-amber-600 text-white border border-amber-300 shadow transition whitespace-nowrap'
+          : 'brake-bias-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      });
+
+      // v3.0.0 Update Chief Race Engineer One-Click Optimal Setup Advisory Banner
+      const engTitleEl = document.getElementById('engineerAdvisoryTitle');
+      const engSumEl = document.getElementById('engineerAdvisorySummary');
+      const engBtnEl = document.getElementById('btnApplyEngineerSetup');
+      if (engTitleEl && engSumEl && engBtnEl) {
+        const recAero = getRecommendedSetupForTrack(selectedTrackKey);
+        const isWetRec = (recAero === 'wet_setup');
+        const recTire = isWetRec
+          ? ((selectedWeatherMode === 'wet' || (Array.isArray(weatherState.radarForecast) && weatherState.radarForecast[0] === 'heavy_rain')) ? 'wet' : 'inter')
+          : 'soft';
+        const recGear = ['monaco', 'singapore', 'zandvoort'].includes(selectedTrackKey)
+          ? 'short'
+          : (['monza', 'spa', 'baku', 'jeddah', 'redbullring', 'montreal', 'mexico', 'lasvegas'].includes(selectedTrackKey) ? 'long' : 'standard');
+        const recBias = isWetRec
+          ? 'front'
+          : (['monaco', 'singapore', 'zandvoort'].includes(selectedTrackKey) ? 'rear' : (['monza', 'baku', 'jeddah', 'lasvegas', 'montreal'].includes(selectedTrackKey) ? 'front' : 'balanced'));
+
+        const tireLabel = TIRE_COMPOUNDS[recTire] ? `${TIRE_COMPOUNDS[recTire].icon}${TIRE_COMPOUNDS[recTire].code}` : '🔴S';
+        const aeroLabel = labelMap[recAero] ? labelMap[recAero].replace(recTag, '') : recAero;
+        const gearLabel = gearTextMap[recGear] || recGear;
+        const biasLabel = biasTextMap[recBias] || recBias;
+
+        engTitleEl.textContent = currentLang === 'en' ? '🎧 RACE ENGINEER:' : (currentLang === 'ja' ? '🎧 エンジニア推奨:' : '🎧 首席工程師建議:');
+        engSumEl.textContent = `${tireLabel} + ${aeroLabel} + ${gearLabel} + ${biasLabel}`;
+
+        const isAllMatched = (selectedStartTire === recTire && selectedCarSetup === recAero && selectedGearRatio === recGear && selectedBrakeBias === recBias);
+        if (isAllMatched) {
+          engBtnEl.textContent = currentLang === 'en' ? '✅ Optimal Applied' : (currentLang === 'ja' ? '✅ 最適セット適用済' : '✅ 已套用最佳配置');
+          engBtnEl.className = 'shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black mono bg-slate-800 text-emerald-300 border border-emerald-500/60 transition whitespace-nowrap';
+        } else {
+          engBtnEl.textContent = currentLang === 'en' ? '⚡ Apply Optimal Setup' : (currentLang === 'ja' ? '⚡ 推奨セット一括適用' : '⚡ 一鍵套用最佳調校');
+          engBtnEl.className = 'shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black mono bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-300 shadow transition whitespace-nowrap';
+        }
+      }
     }
 
     function updateTireSelectionUI() {
@@ -5103,6 +5852,133 @@
           updateCarSetupSelectionUI();
           updateMenuSummary();
           playCheckpointBeep(659.25);
+        }
+      });
+    });
+
+    document.querySelectorAll('.gear-ratio-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        const gKey = btn.getAttribute('data-gear');
+        if (GEAR_RATIO_PRESETS[gKey]) {
+          selectedGearRatio = gKey;
+          saveCurrentTrackFinetune();
+          updateCarSetupSelectionUI();
+          updateMenuSummary();
+          playCheckpointBeep(740.0);
+        }
+      });
+    });
+
+    document.querySelectorAll('.brake-bias-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        const bKey = btn.getAttribute('data-bias');
+        if (BRAKE_BIAS_PRESETS[bKey]) {
+          selectedBrakeBias = bKey;
+          saveCurrentTrackFinetune();
+          updateCarSetupSelectionUI();
+          updateMenuSummary();
+          playCheckpointBeep(784.0);
+        }
+      });
+    });
+
+    document.querySelectorAll('.hud-pre-tire-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        initAudio();
+        const tKey = btn.getAttribute('data-pre-tire');
+        if (TIRE_COMPOUNDS[tKey]) {
+          car.nextTireCompound = tKey;
+          if (!car.inPitAutopilot) car.boxThisLap = true;
+          playCheckpointBeep(784.0);
+          updateTireHudUI();
+          const comp = TIRE_COMPOUNDS[tKey];
+          showToast(
+            currentLang === 'en' ? `🔧 Pit Pre-Select: ${comp.icon}${comp.code}` : (currentLang === 'ja' ? `🔧 ピット予約タイヤ: ${comp.icon}${comp.code}` : `🔧 進站預選胎: ${comp.icon}${comp.name}`),
+            currentLang === 'en' ? 'BOX THIS LAP enabled with pre-selected compound!' : (currentLang === 'ja' ? '今周ピットイン＆次回装着タイヤを事前指定しました！' : '已自動開啟本圈預約進站並鎖定下一套更換輪胎！')
+          );
+        }
+      });
+    });
+
+    const btnApplyEng = document.getElementById('btnApplyEngineerSetup');
+    if (btnApplyEng) {
+      btnApplyEng.addEventListener('click', () => {
+        initAudio();
+        const recAero = getRecommendedSetupForTrack(selectedTrackKey);
+        const isWetRec = (recAero === 'wet_setup');
+        selectedStartTire = isWetRec
+          ? ((selectedWeatherMode === 'wet' || (Array.isArray(weatherState.radarForecast) && weatherState.radarForecast[0] === 'heavy_rain')) ? 'wet' : 'inter')
+          : 'soft';
+        selectedCarSetup = recAero;
+        selectedGearRatio = ['monaco', 'singapore', 'zandvoort'].includes(selectedTrackKey)
+          ? 'short'
+          : (['monza', 'spa', 'baku', 'jeddah', 'redbullring', 'montreal', 'mexico', 'lasvegas'].includes(selectedTrackKey) ? 'long' : 'standard');
+        selectedBrakeBias = isWetRec
+          ? 'front'
+          : (['monaco', 'singapore', 'zandvoort'].includes(selectedTrackKey) ? 'rear' : (['monza', 'baku', 'jeddah', 'lasvegas', 'montreal'].includes(selectedTrackKey) ? 'front' : 'balanced'));
+        try { localStorage.setItem(CAR_SETUP_STORAGE_KEY, selectedCarSetup); } catch (e) {}
+        saveCurrentTrackFinetune();
+        updateTireSelectionUI();
+        updateCarSetupSelectionUI();
+        updateMenuSummary();
+        playCheckpointBeep(880.0);
+        showToast(
+          currentLang === 'en' ? '🎧 Engineer Optimal Setup Applied!' : (currentLang === 'ja' ? '🎧 エンジニア推奨セットアップ適用完了！' : '🎧 已一鍵套用首席工程師最佳調校！'),
+          currentLang === 'en' ? 'Tires, Aero, Gear Ratio & Brake Bias synced for this circuit.' : (currentLang === 'ja' ? 'タイヤ・空力・ギア比・ブレーキ配分を最適化しました。' : '已自動同步本賽道與天氣最佳輪胎、空力、齒比與煞車偏置！')
+        );
+      });
+    }
+
+    // v3.1.0 Circuit Category Filter Bar (All 22 / Night & Street / High-Speed / Technical)
+    const TRACK_CATEGORY_MAP = {
+      all: Object.keys(TRACKS),
+      street_night: ['monaco', 'singapore', 'baku', 'bahrain', 'jeddah', 'montreal', 'lasvegas', 'qatar', 'abudhabi'],
+      high_speed: ['spa', 'silverstone', 'monza', 'redbullring', 'jeddah', 'montreal', 'mexico', 'lasvegas', 'shanghai'],
+      technical: ['monaco', 'singapore', 'imola', 'suzuka', 'interlagos', 'melbourne', 'barcelona', 'zandvoort', 'cota', 'shanghai', 'qatar', 'abudhabi']
+    };
+    let selectedTrackCategory = 'all';
+
+    function updateTrackCategoryFilterUI() {
+      const catTextMap = {
+        all: currentLang === 'en' ? '🌍 All Circuits (22)' : (currentLang === 'ja' ? '🌍 全コース (22)' : '🌍 全部賽道 (22)'),
+        street_night: currentLang === 'en' ? '🌃 Night & Street (9)' : (currentLang === 'ja' ? '🌃 夜間＆市街地 (9)' : '🌃 夜間與街道 (9)'),
+        high_speed: currentLang === 'en' ? '🚀 High-Speed (9)' : (currentLang === 'ja' ? '🚀 超高速コース (9)' : '🚀 超高速殿堂 (9)'),
+        technical: currentLang === 'en' ? '🦅 Technical (12)' : (currentLang === 'ja' ? '🦅 テクニカル (12)' : '🦅 技術與多彎 (12)')
+      };
+      document.querySelectorAll('.track-cat-btn').forEach(btn => {
+        const cKey = btn.getAttribute('data-track-cat');
+        const isSel = (cKey === selectedTrackCategory);
+        btn.textContent = catTextMap[cKey] || cKey;
+        btn.className = isSel
+          ? 'track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-extrabold mono bg-sky-500 text-slate-950 border border-sky-300 shadow transition whitespace-nowrap'
+          : 'track-cat-btn px-2.5 py-0.5 rounded-lg text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition whitespace-nowrap';
+      });
+      const allowed = TRACK_CATEGORY_MAP[selectedTrackCategory] || TRACK_CATEGORY_MAP.all;
+      document.querySelectorAll('.track-card').forEach(card => {
+        const tk = card.getAttribute('data-track');
+        if (selectedTrackCategory === 'all' || allowed.includes(tk)) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    document.querySelectorAll('.track-cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        initAudio();
+        const cKey = btn.getAttribute('data-track-cat');
+        if (TRACK_CATEGORY_MAP[cKey]) {
+          selectedTrackCategory = cKey;
+          updateTrackCategoryFilterUI();
+          const allowed = TRACK_CATEGORY_MAP[cKey];
+          if (selectedGameMode !== 'career' && Array.isArray(allowed) && allowed.length > 0 && !allowed.includes(selectedTrackKey)) {
+            selectTrack(allowed[0]);
+          }
+          playCheckpointBeep(720.0);
         }
       });
     });
@@ -6199,7 +7075,15 @@
         redbullring: currentLang === 'en' ? '🇦🇹 Red Bull Ring · Austria' : (currentLang === 'ja' ? '🇦🇹 レッドブル・リンク · Austria' : '🇦🇹 紅牛環 · Austria'),
         bahrain: currentLang === 'en' ? '🇧🇭 Bahrain · Sakhir' : (currentLang === 'ja' ? '🇧🇭 バーレーン · Bahrain' : '🇧🇭 巴林 · Bahrain'),
         jeddah: currentLang === 'en' ? '🇸🇦 Jeddah · Saudi Arabia' : (currentLang === 'ja' ? '🇸🇦 ジェッダ · Jeddah' : '🇸🇦 吉達 · Jeddah'),
-        barcelona: currentLang === 'en' ? '🇪🇸 Barcelona · Spain' : (currentLang === 'ja' ? '🇪🇸 バルセロナ · Spain' : '🇪🇸 巴塞隆納 · Spain')
+        barcelona: currentLang === 'en' ? '🇪🇸 Barcelona · Spain' : (currentLang === 'ja' ? '🇪🇸 バルセロナ · Spain' : '🇪🇸 巴塞隆納 · Spain'),
+        zandvoort: currentLang === 'en' ? '🇳🇱 Zandvoort · Netherlands' : (currentLang === 'ja' ? '🇳🇱 ザントフォールト · Zandvoort' : '🇳🇱 贊德沃特 · Zandvoort'),
+        cota: currentLang === 'en' ? '🇺🇸 Austin · COTA USA' : (currentLang === 'ja' ? '🇺🇸 オースティン · COTA USA' : '🇺🇸 奧斯汀 · Austin COTA'),
+        montreal: currentLang === 'en' ? '🇨🇦 Montreal · Canada' : (currentLang === 'ja' ? '🇨🇦 モントリオール · Canada' : '🇨🇦 蒙特婁 · Montreal'),
+        mexico: currentLang === 'en' ? '🇲🇽 Mexico City · Mexico' : (currentLang === 'ja' ? '🇲🇽 メキシコシティ · Mexico' : '🇲🇽 墨西哥城 · Mexico City'),
+        lasvegas: currentLang === 'en' ? '🇺🇸 Las Vegas · USA' : (currentLang === 'ja' ? '🇺🇸 ラスベガス · Las Vegas' : '🇺🇸 拉斯維加斯 · Las Vegas'),
+        abudhabi: currentLang === 'en' ? '🇦🇪 Abu Dhabi · Yas Marina' : (currentLang === 'ja' ? '🇦🇪 アブダビ · Yas Marina' : '🇦🇪 阿布達比 · Abu Dhabi'),
+        shanghai: currentLang === 'en' ? '🇨🇳 Shanghai · China' : (currentLang === 'ja' ? '🇨🇳 上海 · Shanghai' : '🇨🇳 上海 · Shanghai'),
+        qatar: currentLang === 'en' ? '🇶🇦 Lusail · Qatar' : (currentLang === 'ja' ? '🇶🇦 ルサイル · Qatar' : '🇶🇦 卡達 · Lusail Qatar')
       };
       const trackName = nameMap[selectedTrackKey] || dict.imolaName;
       const activeTeam = CAREER_TEAMS[careerData.teamId] || CAREER_TEAMS.tier3_stealth;
@@ -6294,7 +7178,7 @@
             : `已制霸 ${wonTracks.length} / ${SEASON_CALENDAR.length} 站`);
       }
       if (slamStripEl) {
-        const flagMap = { bahrain: '🇧🇭BAH', jeddah: '🇸🇦JED', melbourne: '🇦🇺MEL', imola: '🇮🇹IMO', monaco: '🇲🇨MON', barcelona: '🇪🇸BAR', baku: '🇦🇿BAK', silverstone: '🇬🇧SIL', redbullring: '🇦🇹RBR', spa: '🇧🇪SPA', monza: '🇮🇹MZA', suzuka: '🇯🇵SUZ', singapore: '🇸🇬SIN', interlagos: '🇧🇷INT' };
+        const flagMap = { bahrain: '🇧🇭BAH', jeddah: '🇸🇦JED', melbourne: '🇦🇺MEL', imola: '🇮🇹IMO', monaco: '🇲🇨MON', barcelona: '🇪🇸BAR', baku: '🇦🇿BAK', silverstone: '🇬🇧SIL', redbullring: '🇦🇹RBR', zandvoort: '🇳🇱ZAN', spa: '🇧🇪SPA', monza: '🇮🇹MZA', suzuka: '🇯🇵SUZ', montreal: '🇨🇦CAN', singapore: '🇸🇬SIN', cota: '🇺🇸USA', mexico: '🇲🇽MEX', interlagos: '🇧🇷INT', shanghai: '🇨🇳CHN', lasvegas: '🇺🇸LVG', qatar: '🇶🇦QAT', abudhabi: '🇦🇪ABU' };
         slamStripEl.innerHTML = SEASON_CALENDAR.map(tk => {
           const isWon = wonTracks.includes(tk);
           return `<span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold ${isWon ? 'bg-amber-400 text-slate-950 border border-white shadow' : 'bg-slate-900 text-slate-500 border border-slate-800'}">${isWon ? '🏆' : ''}${flagMap[tk] || tk.toUpperCase()}</span>`;
@@ -7630,6 +8514,92 @@
         }
       }
 
+      // v2.8.0 Render Post-Race Lap Speed & Tyre Thermal Telemetry Curve Graph (#resTelemetryCanvas)
+      try {
+        const teleCanvas = document.getElementById('resTelemetryCanvas');
+        const teleTitleEl = document.getElementById('resTelemetryGraphTitle');
+        if (teleTitleEl) {
+          teleTitleEl.textContent = currentLang === 'en'
+            ? '📈 LAP SPEED & TYRE THERMAL TELEMETRY (S1 / S2 / S3)'
+            : (currentLang === 'ja'
+              ? '📈 ベストラップ車速＆タイヤ温度テレメトリー曲線 (S1/S2/S3)'
+              : '📈 單圈速度與輪胎溫度遙測曲線 (S1 / S2 / S3)');
+        }
+        if (teleCanvas) {
+          const tctx = teleCanvas.getContext('2d');
+          const W = teleCanvas.width;
+          const H = teleCanvas.height;
+          tctx.clearRect(0, 0, W, H);
+          const rawSpd = (Array.isArray(raceState.telemetrySpeedBuckets) && raceState.telemetrySpeedBuckets.some(v => v > 120))
+            ? raceState.telemetrySpeedBuckets
+            : [];
+          const rawTmp = Array.isArray(raceState.telemetryTempBuckets) ? raceState.telemetryTempBuckets : [];
+          const spdPts = [];
+          const tmpPts = [];
+          const peakV = car.maxKmhInRace || 315;
+          for (let i = 0; i < 48; i++) {
+            const u = i / 47;
+            const wave = Math.sin(u * Math.PI * 6) * 0.28 + Math.cos(u * Math.PI * 10) * 0.18;
+            const fallbackSpd = Math.round(peakV * (0.76 + 0.22 * Math.max(-0.8, wave)));
+            const sVal = (rawSpd[i] && rawSpd[i] > 80) ? rawSpd[i] : fallbackSpd;
+            const tVal = (rawTmp[i] && rawTmp[i] > 40) ? rawTmp[i] : Math.round(86 + (peakV - sVal) * 0.08 + u * 8);
+            spdPts.push(sVal);
+            tmpPts.push(tVal);
+          }
+          const maxSpd = Math.max(...spdPts, peakV);
+          const minSpd = Math.min(...spdPts);
+          const maxTmp = Math.max(...tmpPts);
+          const peakBadge = document.getElementById('resTelePeakSpeedBadge');
+          const apexBadge = document.getElementById('resTeleMinApexBadge');
+          const tempBadge = document.getElementById('resTelePeakTempBadge');
+          if (peakBadge) peakBadge.textContent = `⚡ Vmax: ${maxSpd} km/h`;
+          if (apexBadge) apexBadge.textContent = `🎯 Apex: ${minSpd} km/h`;
+          if (tempBadge) tempBadge.textContent = `🌡️ Peak: ${maxTmp}°C`;
+
+          // Sector S1 / S2 / S3 vertical grid lines
+          tctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+          tctx.lineWidth = 1;
+          [0.333, 0.666].forEach(frac => {
+            const x = Math.round(W * frac);
+            tctx.beginPath();
+            tctx.moveTo(x, 0);
+            tctx.lineTo(x, H);
+            tctx.stroke();
+          });
+          tctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
+          tctx.font = 'bold 9px monospace';
+          tctx.fillText('S1', 8, 12);
+          tctx.fillText('S2', Math.round(W * 0.35), 12);
+          tctx.fillText('S3', Math.round(W * 0.68), 12);
+
+          // Draw Speed Curve (Cyan area + line)
+          tctx.beginPath();
+          for (let i = 0; i < 48; i++) {
+            const x = 8 + (i / 47) * (W - 16);
+            const norm = Math.max(0, Math.min(1, (spdPts[i] - 90) / Math.max(40, maxSpd - 80)));
+            const y = H - 14 - norm * (H - 30);
+            if (i === 0) tctx.moveTo(x, y);
+            else tctx.lineTo(x, y);
+          }
+          tctx.strokeStyle = '#22d3ee';
+          tctx.lineWidth = 2.2;
+          tctx.stroke();
+
+          // Draw Tyre Temp Curve (Amber dashed/solid line)
+          tctx.beginPath();
+          for (let i = 0; i < 48; i++) {
+            const x = 8 + (i / 47) * (W - 16);
+            const normT = Math.max(0, Math.min(1, (tmpPts[i] - 60) / 65));
+            const y = H - 14 - normT * (H - 30);
+            if (i === 0) tctx.moveTo(x, y);
+            else tctx.lineTo(x, y);
+          }
+          tctx.strokeStyle = '#f59e0b';
+          tctx.lineWidth = 1.6;
+          tctx.stroke();
+        }
+      } catch (e) {}
+
       if (selectedGameMode === 'arcade' || selectedGameMode === 'career') {
         tableTitle.textContent = '🏁 8-CAR FINAL CLASSIFICATION & SPEED TRAP (完賽成績與最高尾速榜)';
         listEl.innerHTML = allCars.map((c, idx) => {
@@ -7723,6 +8693,38 @@
         if (finishedTrackKey === 'barcelona') {
           const aBar = unlockAchievement('spain_king');
           if (aBar) newlyUnlocked.push(aBar);
+        }
+        if (finishedTrackKey === 'zandvoort') {
+          const aDut = unlockAchievement('dutch_king');
+          if (aDut) newlyUnlocked.push(aDut);
+        }
+        if (finishedTrackKey === 'cota') {
+          const aCot = unlockAchievement('cota_king');
+          if (aCot) newlyUnlocked.push(aCot);
+        }
+        if (finishedTrackKey === 'montreal') {
+          const aCan = unlockAchievement('canada_king');
+          if (aCan) newlyUnlocked.push(aCan);
+        }
+        if (finishedTrackKey === 'mexico') {
+          const aMex = unlockAchievement('mexico_king');
+          if (aMex) newlyUnlocked.push(aMex);
+        }
+        if (finishedTrackKey === 'lasvegas') {
+          const aVeg = unlockAchievement('vegas_king');
+          if (aVeg) newlyUnlocked.push(aVeg);
+        }
+        if (finishedTrackKey === 'abudhabi') {
+          const aAbu = unlockAchievement('abudhabi_king');
+          if (aAbu) newlyUnlocked.push(aAbu);
+        }
+        if (finishedTrackKey === 'shanghai') {
+          const aChn = unlockAchievement('china_king');
+          if (aChn) newlyUnlocked.push(aChn);
+        }
+        if (finishedTrackKey === 'qatar') {
+          const aQat = unlockAchievement('qatar_king');
+          if (aQat) newlyUnlocked.push(aQat);
         }
         if (Array.isArray(careerData.careerTracksWon) && careerData.careerTracksWon.length >= 10) {
           const aConq = unlockAchievement('world_tour_conqueror');
@@ -9230,6 +10232,15 @@
       // HUD update
       const kmh = Math.round(absSpeed * 0.47);
       if (kmh > (car.maxKmhInRace || 0)) car.maxKmhInRace = kmh;
+      if (raceState.status === 'racing') {
+        if (!Array.isArray(raceState.telemetrySpeedBuckets) || raceState.telemetrySpeedBuckets.length !== 48) {
+          raceState.telemetrySpeedBuckets = new Array(48).fill(0);
+          raceState.telemetryTempBuckets = new Array(48).fill(88);
+        }
+        const bIdx = Math.max(0, Math.min(47, Math.floor((car.closestSplineIdx / Math.max(1, trackSpline.length)) * 48)));
+        raceState.telemetrySpeedBuckets[bIdx] = Math.max(raceState.telemetrySpeedBuckets[bIdx] || 0, kmh);
+        raceState.telemetryTempBuckets[bIdx] = Math.round(car.tireTemp || 88);
+      }
       document.getElementById('hudSpeed').textContent = kmh;
       document.getElementById('hudSpeedBar').style.width = `${Math.min(100, (kmh / 345) * 100)}%`;
       updateTireHudUI();
