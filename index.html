@@ -518,7 +518,7 @@
     <!-- MAIN MENU OVERLAY (Language, Mode, AI Difficulty, Track, Laps & Car)-->
     <!-- =================================================================== -->
     <div id="garageModal" class="absolute inset-0 bg-slate-950/92 backdrop-blur-md flex items-start sm:items-center justify-center pt-2 pb-8 px-2.5 sm:p-4 z-30">
-      <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-3xl w-full p-3.5 sm:p-5 shadow-2xl max-h-[84dvh] sm:max-h-[92dvh] flex flex-col overflow-hidden">
+      <div class="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-3xl w-full p-3.5 sm:p-5 shadow-2xl max-h-[92dvh] sm:max-h-[94dvh] flex flex-col overflow-hidden">
         <!-- Header (Clean title with NO version numbers and clean title!) -->
         <div class="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 shrink-0">
           <div>
@@ -541,7 +541,7 @@
         </div>
 
         <!-- Scrollable Middle Content (Touch-scrollable on Mobile) -->
-        <div class="modal-scroll flex-1 overflow-y-auto pr-0.5 space-y-3 py-2.5">
+        <div class="modal-scroll flex-1 overflow-y-auto pr-0.5 space-y-2 py-1.5">
         <!-- Step 1: Game Mode Tabs, AI Difficulty & Lap Selector -->
         <div class="flex flex-col gap-2.5 bg-slate-800/60 border border-slate-700/80 rounded-xl p-2.5">
           <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
@@ -656,7 +656,7 @@
             <button id="tireBtn-wet" type="button" data-tire="wet" class="tire-compound-btn px-2 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap" data-i18n="tireWetBtn">
               🔵 全雨胎 Wet
             </button>
-            <span id="tireCompoundDesc" class="text-[10px] text-slate-400 mono">抓地與耐磨完美均衡，適合 3~5 圈賽事（主直線右側設可進站換胎區 PIT）</span>
+            <span id="tireCompoundDesc" class="hidden sm:inline text-[10px] text-slate-400 mono">抓地與耐磨完美均衡，適合 3~5 圈賽事（主直線右側設可進站換胎區 PIT）</span>
           </div>
 
           <!-- v1.5.0 Parc Fermé Car Aero & Gear Ratio Setup (High Downforce / Balanced / Low Drag) -->
@@ -674,10 +674,25 @@
             <button id="setupBtn-wet_setup" type="button" data-setup="wet_setup" class="car-setup-btn px-2.5 py-0.5 rounded text-xs font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
               🌧️ 雨戰濕地 (Wet Setup)
             </button>
-            <span id="carSetupDesc" class="text-[10px] text-slate-400 mono">尾翼下壓力與齒比完美均衡（★ 請依上方氣象雷達與賽道特性選擇輪胎與車輛調校）</span>
+            <span id="carSetupDesc" class="hidden sm:inline text-[10px] text-slate-400 mono">尾翼下壓力與齒比完美均衡（★ 請依上方氣象雷達與賽道特性選擇輪胎與車輛調校）</span>
           </div>
-          <!-- v2.8.0 Pre-Race Final Drive Gear Ratio & Brake Bias Fine-Tuning Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-700/60">
+          <!-- v3.0.0 Chief Race Engineer One-Click Optimal Setup Advisory Banner + Fine-Tune Toggle -->
+          <div id="engineerSetupAdvisoryBanner" class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-700/60 bg-slate-950/60 rounded-lg px-2 py-1">
+            <div class="text-[10px] sm:text-[11px] mono leading-snug truncate max-w-full">
+              <span id="engineerAdvisoryTitle" class="font-extrabold text-emerald-300">🎧 首席工程師建議:</span>
+              <span id="engineerAdvisorySummary" class="text-slate-200 font-bold ml-1">🔴S + ⚖️均衡 + ⚖️標準齒 + ⚖️54%F</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button id="btnApplyEngineerSetup" type="button" class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-black mono bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-300 shadow transition whitespace-nowrap">
+                ⚡ 一鍵最佳調校
+              </button>
+              <button id="btnToggleFinetuneDrawer" type="button" class="px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold mono bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-600 transition whitespace-nowrap">
+                ⚙️ 齒比/煞車微調 ▾
+              </button>
+            </div>
+          </div>
+          <!-- v2.8.0 Pre-Race Final Drive Gear Ratio & Brake Bias Fine-Tuning Drawer (Collapsible to save mobile vertical height) -->
+          <div id="finetuneDrawer" class="hidden flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-700/60">
             <div class="flex flex-wrap items-center gap-1.5">
               <span class="text-[11px] font-bold text-cyan-300 mono" id="gearRatioLabel">⚙️ 終傳齒比 (GEAR RATIO):</span>
               <button id="gearBtn-short" type="button" data-gear="short" class="gear-ratio-btn px-2 py-0.5 rounded text-[11px] font-bold mono bg-slate-800 text-slate-300 border border-slate-700 transition whitespace-nowrap">
@@ -702,16 +717,6 @@
                 🔄 後偏靈活 50%F
               </button>
             </div>
-          </div>
-          <!-- v3.0.0 Chief Race Engineer One-Click Optimal Setup Advisory Banner -->
-          <div id="engineerSetupAdvisoryBanner" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-700/60 bg-slate-950/60 rounded-lg px-2.5 py-1.5">
-            <div class="text-[11px] mono leading-snug">
-              <span id="engineerAdvisoryTitle" class="font-extrabold text-emerald-300">🎧 首席工程師建議 (RACE ENGINEER):</span>
-              <span id="engineerAdvisorySummary" class="text-slate-200 font-bold ml-1">🔴 軟胎 + ⚖️ 均衡設定 + ⚖️ 標準齒比 + ⚖️ 均衡 54%F</span>
-            </div>
-            <button id="btnApplyEngineerSetup" type="button" class="shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black mono bg-emerald-500 hover:bg-emerald-400 text-slate-950 border border-emerald-300 shadow transition whitespace-nowrap">
-              ⚡ 一鍵套用最佳調校
-            </button>
           </div>
         </div>
 
@@ -2839,7 +2844,7 @@
       }
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
       if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
-      if (typeof loadTrackFinetuneFor === 'function') loadTrackFinetuneFor(trackKey);
+      if (typeof loadTrackFinetuneFor === 'function') loadTrackFinetuneFor(selectedTrackKey);
       if (typeof updateCarSetupSelectionUI === 'function') updateCarSetupSelectionUI();
 
       // Localize Car Cards
@@ -5829,7 +5834,7 @@
         engTitleEl.textContent = currentLang === 'en' ? '🎧 RACE ENGINEER:' : (currentLang === 'ja' ? '🎧 エンジニア推奨:' : '🎧 首席工程師建議:');
         engSumEl.textContent = `${tireLabel} + ${aeroLabel} + ${gearLabel} + ${biasLabel}`;
 
-        const isAllMatched = (selectedStartTire === recTire && selectedCarSetup === recAero && selectedGearRatio === recGear && selectedBrakeBias === recBias);
+        const isAllMatched = (selectedTireCompound === recTire && selectedCarSetup === recAero && selectedGearRatio === recGear && selectedBrakeBias === recBias);
         if (isAllMatched) {
           engBtnEl.textContent = currentLang === 'en' ? '✅ Optimal Applied' : (currentLang === 'ja' ? '✅ 最適セット適用済' : '✅ 已套用最佳配置');
           engBtnEl.className = 'shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-black mono bg-slate-800 text-emerald-300 border border-emerald-500/60 transition whitespace-nowrap';
@@ -5842,6 +5847,32 @@
 
     function updateTireSelectionUI() {
       const dict = I18N[currentLang] || I18N.zh;
+          document.querySelectorAll('.tire-compound-btn').forEach(btn => {
+        const compKey = btn.getAttribute('data-tire');
+        const isSel = compKey === selectedTireCompound;
+        let borderCol = 'border-amber-400 bg-amber-500 text-slate-950';
+        if (compKey === 'soft') borderCol = 'border-red-500 bg-red-600/90 text-white';
+        else if (compKey === 'hard') borderCol = 'border-slate-200 bg-slate-200 text-slate-950';
+        else if (compKey === 'inter') borderCol = 'border-emerald-400 bg-emerald-500 text-slate-950';
+        else if (compKey === 'wet') borderCol = 'border-sky-400 bg-sky-500 text-white';
+
+        btn.className = isSel
+          ? `tire-compound-btn px-2 py-0.5 rounded text-xs font-extrabold mono border ${borderCol} shadow transition whitespace-nowrap`
+          : 'tire-compound-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 transition whitespace-nowrap';
+      });
+      const descEl = document.getElementById('tireCompoundDesc');
+      if (descEl) {
+        const descMap = {
+          soft: dict.tireSoftDesc,
+          medium: dict.tireMedDesc,
+          hard: dict.tireHardDesc,
+          inter: dict.tireInterDesc,
+          wet: dict.tireWetDesc
+        };
+        descEl.textContent = descMap[selectedTireCompound] || dict.tireMedDesc || '';
+      }
+    }
+
       document.querySelectorAll('.car-setup-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         initAudio();
@@ -5903,15 +5934,28 @@
       });
     });
 
+    const btnToggleFt = document.getElementById('btnToggleFinetuneDrawer');
+    const ftDrawerEl = document.getElementById('finetuneDrawer');
+    if (btnToggleFt && ftDrawerEl) {
+      btnToggleFt.addEventListener('click', () => {
+        initAudio();
+        const isHidden = ftDrawerEl.classList.toggle('hidden');
+        btnToggleFt.textContent = currentLang === 'en'
+          ? (isHidden ? '⚙️ Gear/Brake ▾' : '⚙️ Gear/Brake ▴')
+          : (currentLang === 'ja' ? (isHidden ? '⚙️ ギア/制動微調整 ▾' : '⚙️ ギア/制動微調整 ▴') : (isHidden ? '⚙️ 齒比/煞車微調 ▾' : '⚙️ 齒比/煞車微調 ▴'));
+        playCheckpointBeep(660.0);
+      });
+    }
     const btnApplyEng = document.getElementById('btnApplyEngineerSetup');
     if (btnApplyEng) {
       btnApplyEng.addEventListener('click', () => {
         initAudio();
         const recAero = getRecommendedSetupForTrack(selectedTrackKey);
         const isWetRec = (recAero === 'wet_setup');
-        selectedStartTire = isWetRec
+        selectedTireCompound = isWetRec
           ? ((selectedWeatherMode === 'wet' || (Array.isArray(weatherState.radarForecast) && weatherState.radarForecast[0] === 'heavy_rain')) ? 'wet' : 'inter')
           : 'soft';
+        car.tireCompound = selectedTireCompound;
         selectedCarSetup = recAero;
         selectedGearRatio = ['monaco', 'singapore', 'zandvoort'].includes(selectedTrackKey)
           ? 'short'
@@ -5983,31 +6027,7 @@
       });
     });
 
-    document.querySelectorAll('.tire-compound-btn').forEach(btn => {
-        const compKey = btn.getAttribute('data-tire');
-        const isSel = compKey === selectedTireCompound;
-        let borderCol = 'border-amber-400 bg-amber-500 text-slate-950';
-        if (compKey === 'soft') borderCol = 'border-red-500 bg-red-600/90 text-white';
-        else if (compKey === 'hard') borderCol = 'border-slate-200 bg-slate-200 text-slate-950';
-        else if (compKey === 'inter') borderCol = 'border-emerald-400 bg-emerald-500 text-slate-950';
-        else if (compKey === 'wet') borderCol = 'border-sky-400 bg-sky-500 text-white';
 
-        btn.className = isSel
-          ? `tire-compound-btn px-2 py-0.5 rounded text-xs font-extrabold mono border ${borderCol} shadow transition whitespace-nowrap`
-          : 'tire-compound-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold mono border border-slate-700 transition whitespace-nowrap';
-      });
-      const descEl = document.getElementById('tireCompoundDesc');
-      if (descEl) {
-        const descMap = {
-          soft: dict.tireSoftDesc,
-          medium: dict.tireMedDesc,
-          hard: dict.tireHardDesc,
-          inter: dict.tireInterDesc,
-          wet: dict.tireWetDesc
-        };
-        descEl.textContent = descMap[selectedTireCompound] || dict.tireMedDesc || '';
-      }
-    }
 
     const skidMarks = [];
     const MAX_SKID_MARKS = 420;
@@ -7733,6 +7753,7 @@
       });
       if (typeof renderCareerLockedTrackUI === 'function') renderCareerLockedTrackUI();
       updateDistanceButtonsUI();
+      if (typeof loadTrackFinetuneFor === 'function') loadTrackFinetuneFor(trackKey);
       if (typeof updateWeatherSelectionUI === 'function') updateWeatherSelectionUI();
       if (typeof updateQualiSelectionUI === 'function') updateQualiSelectionUI();
       if (typeof updateCarSetupSelectionUI === 'function') updateCarSetupSelectionUI();
