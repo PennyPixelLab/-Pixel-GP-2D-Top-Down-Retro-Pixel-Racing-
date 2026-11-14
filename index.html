@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Pixel GP — 像素大獎賽 v4.3.0 (Top-Down Retro Pixel Racing)</title>
+  <title>Pixel GP — 像素大獎賽 v4.3.1 (Top-Down Retro Pixel Racing)</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
@@ -809,7 +809,7 @@
   </div>
   <script>
 // === [ANTIGRAVITY MODULE 01: CORE & I18N] START ===
-const APP_VERSION = '4.3.0';
+const APP_VERSION = '4.3.1';
 const VERSION_COOKIE_KEY = 'imola_gp_app_version';
 const STORAGE_PREFIX = 'imola_gp_';
 
@@ -959,20 +959,6 @@ const I18N = {
 const TRACK_WIDTH = 132; // 2.2x wide-body specification
 const SAFE_BUFFER = 62;  // Sand/grass runoff + outer red/silver barrier wall
 
-function makeEllipseLoop(cx, cy, rx, ry, numPts, waveAmp, waveFreq, clockwise = true) {
-  const pts = [];
-  for (let i = 0; i < numPts; i++) {
-    const ratio = i / numPts;
-    const ang = (clockwise ? 1 : -1) * ratio * Math.PI * 2;
-    const mod = 1 + Math.sin(ratio * Math.PI * 2 * waveFreq) * waveAmp + Math.cos(ratio * Math.PI * 4) * (waveAmp * 0.45);
-    pts.push({
-      x: Math.round(cx + Math.cos(ang) * rx * mod),
-      y: Math.round(cy + Math.sin(ang) * ry * mod)
-    });
-  }
-  return pts;
-}
-
 const TRACKS = {
   imola: {
     badge: 'IMOLA', flag: '🇮🇹',
@@ -983,7 +969,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'balanced', gear: 'std', brake: 'balanced' },
     bgColor: '#061a14', grassColor: '#0b291e', asphaltColor: '#1e293b',
     corners: ['Traguardo (Start/Finish)', 'Tamburello Chicane', 'Villeneuve Chicane', 'Tosa Hairpin', 'Piratella', 'Acque Minerali', 'Variante Alta', 'Rivazza I-II'],
-    points: makeEllipseLoop(0, 0, 1420, 920, 28, 0.14, 3, false)
+    points: [{x:-500,y:520}, {x:200,y:520}, {x:850,y:500}, {x:1180,y:380}, {x:1260,y:120}, {x:1060,y:-80}, {x:1180,y:-320}, {x:960,y:-560}, {x:540,y:-520}, {x:240,y:-680}, {x:-140,y:-620}, {x:-360,y:-340}, {x:-640,y:-480}, {x:-980,y:-420}, {x:-1180,y:-140}, {x:-1020,y:140}, {x:-1160,y:380}, {x:-880,y:540}]
   },
   monaco: {
     badge: 'MONACO', flag: '🇲🇨',
@@ -994,7 +980,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'downforce', gear: 'short', brake: 'front' },
     bgColor: '#071324', grassColor: '#0f1f38', asphaltColor: '#1e2636',
     corners: ['Boulevard Albert 1er', 'Sainte Dévote', 'Massenet & Casino', 'Fairmont Hairpin', 'Portier Tunnel', 'Nouvelle Chicane', 'Tabac & Swimming Pool', 'La Rascasse'],
-    points: makeEllipseLoop(0, 0, 1220, 820, 30, 0.18, 4, true)
+    points: [{x:-620,y:520}, {x:140,y:500}, {x:520,y:380}, {x:780,y:500}, {x:1060,y:340}, {x:1100,y:60}, {x:840,y:-140}, {x:980,y:-380}, {x:760,y:-600}, {x:420,y:-500}, {x:160,y:-580}, {x:-260,y:-540}, {x:-580,y:-360}, {x:-420,y:-40}, {x:-900,y:-120}, {x:-1160,y:80}, {x:-940,y:320}, {x:-980,y:500}]
   },
   suzuka: {
     badge: 'SUZUKA', flag: '🇯🇵',
@@ -1005,7 +991,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'downforce', gear: 'std', brake: 'balanced' },
     bgColor: '#071b15', grassColor: '#0e2d22', asphaltColor: '#1f2937',
     corners: ['Main Straight', 'First Curve & S-Curves', 'Dunlop Curve', 'Degner 1-2', 'Hairpin', 'Spoon Curve', 'Back Straight', '130R & Casio Triangle'],
-    points: makeEllipseLoop(0, 0, 1480, 960, 30, 0.16, 3, true)
+    points: [{x:-760,y:560}, {x:240,y:560}, {x:880,y:520}, {x:1240,y:300}, {x:1120,y:-40}, {x:760,y:40}, {x:560,y:-180}, {x:820,y:-380}, {x:620,y:-640}, {x:140,y:-560}, {x:-120,y:-320}, {x:-420,y:-480}, {x:-860,y:-580}, {x:-1240,y:-360}, {x:-1160,y:-40}, {x:-780,y:60}, {x:-980,y:320}]
   },
   spa: {
     badge: 'SPA', flag: '🇧🇪',
@@ -1016,7 +1002,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'balanced' },
     bgColor: '#051812', grassColor: '#09241a', asphaltColor: '#1c2533',
     corners: ['La Source Hairpin', 'Eau Rouge & Raidillon', 'Kemmel Straight', 'Les Combes', 'Pouhon Double-Left', 'Stavelot', 'Blanchimont', 'Bus Stop Chicane'],
-    points: makeEllipseLoop(0, 0, 1620, 1040, 32, 0.15, 3, true)
+    points: [{x:-860,y:640}, {x:-120,y:640}, {x:240,y:420}, {x:680,y:480}, {x:1320,y:420}, {x:1460,y:100}, {x:1120,y:-140}, {x:1240,y:-440}, {x:820,y:-680}, {x:320,y:-540}, {x:-160,y:-680}, {x:-680,y:-560}, {x:-1120,y:-360}, {x:-1340,y:-20}, {x:-1180,y:340}, {x:-1280,y:580}]
   },
   monza: {
     badge: 'MONZA', flag: '🇮🇹',
@@ -1027,7 +1013,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'front' },
     bgColor: '#061a12', grassColor: '#0c291d', asphaltColor: '#222b38',
     corners: ['Rettifilo Tribune', 'Variante del Rettifilo', 'Curva Grande', 'Variante della Roggia', 'Lesmo 1 & 2', 'Variante Ascari', 'Back Straight', 'Curva Parabolica (Alboreto)'],
-    points: makeEllipseLoop(0, 0, 1560, 880, 26, 0.10, 2, true)
+    points: [{x:-900,y:480}, {x:280,y:480}, {x:1240,y:480}, {x:1360,y:260}, {x:1180,y:40}, {x:1260,y:-280}, {x:960,y:-540}, {x:420,y:-520}, {x:120,y:-360}, {x:-280,y:-520}, {x:-860,y:-520}, {x:-1260,y:-360}, {x:-1340,y:-40}, {x:-1220,y:340}]
   },
   silverstone: {
     badge: 'SILVERSTONE', flag: '🇬🇧',
@@ -1038,7 +1024,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'balanced', gear: 'std', brake: 'balanced' },
     bgColor: '#061914', grassColor: '#0b2820', asphaltColor: '#1e293b',
     corners: ['Hamilton Straight & Abbey', 'Village & The Loop', 'Wellington Straight', 'Brooklands & Luffield', 'Copse High-Speed', 'Maggotts & Becketts', 'Hangar Straight', 'Stowe & Vale'],
-    points: makeEllipseLoop(0, 0, 1520, 1020, 30, 0.15, 3, true)
+    points: [{x:-680,y:560}, {x:280,y:560}, {x:860,y:500}, {x:1180,y:220}, {x:980,y:-80}, {x:680,y:40}, {x:520,y:-220}, {x:840,y:-460}, {x:460,y:-680}, {x:-120,y:-580}, {x:-560,y:-680}, {x:-1060,y:-500}, {x:-1240,y:-160}, {x:-960,y:120}, {x:-1160,y:400}]
   },
   interlagos: {
     badge: 'INTERLAGOS', flag: '🇧🇷',
@@ -1049,7 +1035,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'balanced', gear: 'short', brake: 'balanced' },
     bgColor: '#061c14', grassColor: '#0d2b1f', asphaltColor: '#1f2937',
     corners: ['Reta Oposta', 'Senna S (T1-T2)', 'Curva do Sol', 'Descida do Lago', 'Ferradura', 'Laranjinha & Pinheirinho', 'Bico de Pato', 'Junção & Subida dos Boxes'],
-    points: makeEllipseLoop(0, 0, 1340, 900, 28, 0.16, 3, false)
+    points: [{x:-740,y:540}, {x:260,y:540}, {x:960,y:480}, {x:1160,y:180}, {x:920,y:-160}, {x:1080,y:-440}, {x:680,y:-620}, {x:220,y:-420}, {x:-80,y:-580}, {x:-440,y:-380}, {x:-360,y:-100}, {x:-780,y:-140}, {x:-1080,y:80}, {x:-1020,y:400}]
   },
   singapore: {
     badge: 'SINGAPORE', flag: '🇸🇬',
@@ -1060,7 +1046,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'downforce', gear: 'short', brake: 'front' },
     bgColor: '#040d1a', grassColor: '#081629', asphaltColor: '#192231',
     corners: ['Pit Straight', 'Sheares (T1-T3)', 'Republic Boulevard', 'Memorial (T7)', 'Padang & St Andrew', 'Anderson Bridge', 'Esplanade Drive', 'Marina Bay Final Corners'],
-    points: makeEllipseLoop(0, 0, 1380, 940, 30, 0.17, 4, false)
+    points: [{x:-780,y:520}, {x:340,y:520}, {x:980,y:500}, {x:1180,y:260}, {x:960,y:20}, {x:1140,y:-240}, {x:860,y:-540}, {x:340,y:-540}, {x:140,y:-320}, {x:-220,y:-520}, {x:-760,y:-520}, {x:-1120,y:-300}, {x:-980,y:20}, {x:-1140,y:320}]
   },
   baku: {
     badge: 'BAKU', flag: '🇦🇿',
@@ -1071,7 +1057,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'front' },
     bgColor: '#07111e', grassColor: '#0d1b2e', asphaltColor: '#1c2536',
     corners: ['Azadliq Square Start', '90-Degree T1-T2', 'Baku Old City Section', 'Castle Section (T8-T11)', 'High-Speed T13-T15', 'Caspian Sea Entry (T16)', '2.2km Neftchilar Straight', 'Finish Line'],
-    points: makeEllipseLoop(0, 0, 1580, 900, 30, 0.14, 3, false)
+    points: [{x:-1020,y:520}, {x:240,y:520}, {x:1280,y:520}, {x:1380,y:280}, {x:1120,y:100}, {x:1240,y:-180}, {x:960,y:-480}, {x:420,y:-460}, {x:140,y:-280}, {x:-280,y:-480}, {x:-860,y:-480}, {x:-1240,y:-280}, {x:-1180,y:40}, {x:-1320,y:320}]
   },
   melbourne: {
     badge: 'MELBOURNE', flag: '🇦🇺',
@@ -1082,7 +1068,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'balanced', gear: 'std', brake: 'balanced' },
     bgColor: '#061a18', grassColor: '#0b2b26', asphaltColor: '#1e293b',
     corners: ['Walker Straight', 'Brabham T1-T2', 'Sports Center (T3-T4)', 'Lakeside Sweep (T6-T8)', 'Fast Chicane (T9-T10)', 'Waite Corner (T11)', 'Ascari (T13)', 'Stewart Final Corner'],
-    points: makeEllipseLoop(0, 0, 1460, 920, 28, 0.14, 3, true)
+    points: [{x:-760,y:520}, {x:260,y:520}, {x:980,y:460}, {x:1220,y:180}, {x:1040,y:-140}, {x:1180,y:-420}, {x:740,y:-620}, {x:220,y:-520}, {x:-260,y:-620}, {x:-780,y:-480}, {x:-1180,y:-220}, {x:-1080,y:120}, {x:-1180,y:400}]
   },
   austria: {
     badge: 'AUSTRIA', flag: '🇦🇹',
@@ -1093,7 +1079,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'front' },
     bgColor: '#061c12', grassColor: '#0b2e1d', asphaltColor: '#1f2937',
     corners: ['Start/Finish Straight', 'Niki Lauda Kurve (T1)', ' Styrian Straight DRS', 'Remus Hairpin (T3)', 'Schlossgold (T4)', 'Rauch & Würth Infield (T6-T7)', 'Rindt Kurve (T9)', 'Red Bull Mobile (T10)'],
-    points: makeEllipseLoop(0, 0, 1360, 860, 26, 0.13, 3, true)
+    points: [{x:-740,y:480}, {x:380,y:480}, {x:1140,y:440}, {x:1260,y:160}, {x:920,y:-180}, {x:460,y:-520}, {x:-120,y:-440}, {x:-360,y:-160}, {x:-760,y:-340}, {x:-1140,y:-140}, {x:-1080,y:240}]
   },
   bahrain: {
     badge: 'BAHRAIN', flag: '🇧🇭',
@@ -1104,7 +1090,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'balanced', gear: 'std', brake: 'front' },
     bgColor: '#120f0a', grassColor: '#211a11', asphaltColor: '#1e2530',
     corners: ['Main Straight', 'Michael Schumacher (T1-T3)', 'Turn 4 Desert Straight', 'Fast S-Bends (T5-T7)', 'Turn 8 Hairpin', 'Turn 9-10 Lockup Zone', 'Back Straight DRS', 'Turn 14-15 Final'],
-    points: makeEllipseLoop(0, 0, 1440, 940, 28, 0.16, 3, true)
+    points: [{x:-780,y:520}, {x:360,y:520}, {x:1140,y:480}, {x:1260,y:200}, {x:980,y:-40}, {x:1160,y:-340}, {x:780,y:-580}, {x:320,y:-420}, {x:40,y:-580}, {x:-420,y:-440}, {x:-840,y:-540}, {x:-1180,y:-280}, {x:-1080,y:60}, {x:-1160,y:380}]
   },
   jeddah: {
     badge: 'JEDDAH', flag: '🇸🇦',
@@ -1115,7 +1101,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'balanced' },
     bgColor: '#040f1c', grassColor: '#081b30', asphaltColor: '#1a2436',
     corners: ['Corniche Main Straight', 'T1-T2 Chicane', 'High-Speed Esses (T4-T10)', 'Banked Turn 13 Hairpin', 'North Sweep (T16-T21)', 'Fast Chicane (T22-T24)', 'Full-Throttle DRS Zone', 'Turn 27 Hairpin'],
-    points: makeEllipseLoop(0, 0, 1640, 820, 32, 0.12, 3, false)
+    points: [{x:-1120,y:340}, {x:-240,y:360}, {x:540,y:320}, {x:1220,y:340}, {x:1420,y:140}, {x:1240,y:-120}, {x:760,y:-260}, {x:180,y:-200}, {x:-360,y:-320}, {x:-920,y:-260}, {x:-1360,y:-120}, {x:-1420,y:140}]
   },
   barcelona: {
     badge: 'BARCELONA', flag: '🇪🇸',
@@ -1126,7 +1112,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'downforce', gear: 'std', brake: 'balanced' },
     bgColor: '#071a12', grassColor: '#0d2b1e', asphaltColor: '#1e293b',
     corners: ['1km Main Straight', 'Elf Chicane (T1-T2)', 'Renault Long Right (T3)', 'Repsol (T4)', 'Seat Hairpin (T5)', 'Campsa High-Speed (T9)', 'La Caixa Hairpin (T10)', 'New Homologated Final Sweep (T13-T14)'],
-    points: makeEllipseLoop(0, 0, 1440, 920, 28, 0.15, 3, true)
+    points: [{x:-820,y:520}, {x:340,y:520}, {x:1140,y:480}, {x:1280,y:180}, {x:1020,y:-140}, {x:640,y:-460}, {x:140,y:-480}, {x:-180,y:-280}, {x:-560,y:-500}, {x:-1060,y:-420}, {x:-1240,y:-80}, {x:-1120,y:280}]
   },
   zandvoort: {
     badge: 'ZANDVOORT', flag: '🇳🇱',
@@ -1137,7 +1123,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'downforce', gear: 'short', brake: 'balanced' },
     bgColor: '#0e1712', grassColor: '#18261d', asphaltColor: '#1f2937',
     corners: ['Tarzanbocht (T1)', 'Gerlachbocht', 'Hugenholtzbocht (19° Banked T3)', 'Hunzerug & Rob Slotemaker', 'Scheivlak', 'Hans Ernst Chicane', 'Kumhobocht', 'Arie Luyendykbocht (18° Banked T14)'],
-    points: makeEllipseLoop(0, 0, 1340, 880, 28, 0.16, 4, true)
+    points: [{x:-740,y:500}, {x:240,y:500}, {x:960,y:440}, {x:1160,y:140}, {x:920,y:-160}, {x:1060,y:-440}, {x:620,y:-580}, {x:160,y:-420}, {x:-280,y:-560}, {x:-820,y:-460}, {x:-1140,y:-180}, {x:-1040,y:220}]
   },
   austin: {
     badge: 'AUSTIN', flag: '🇺🇸',
@@ -1148,7 +1134,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'balanced', gear: 'std', brake: 'front' },
     bgColor: '#081814', grassColor: '#0f2822', asphaltColor: '#1e293b',
     corners: ['Uphill Blind T1', 'Maggotts-Style Esses (T3-T9)', 'Turn 11 Hairpin', '1km Back Straight DRS', 'Turn 12 Heavy Braking', 'Stadium Section (T13-T15)', 'Triple Right (T16-T18)', 'Turn 19-20 Finish'],
-    points: makeEllipseLoop(0, 0, 1500, 960, 30, 0.16, 3, false)
+    points: [{x:-840,y:540}, {x:360,y:540}, {x:1160,y:480}, {x:1320,y:160}, {x:1020,y:-120}, {x:1180,y:-440}, {x:720,y:-640}, {x:220,y:-460}, {x:-140,y:-620}, {x:-620,y:-460}, {x:-1060,y:-520}, {x:-1260,y:-180}, {x:-1080,y:220}]
   },
   canada: {
     badge: 'CANADA', flag: '🇨🇦',
@@ -1159,7 +1145,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'front' },
     bgColor: '#06181c', grassColor: '#0b262c', asphaltColor: '#1e293b',
     corners: ['Start Line', 'Senna Virage (T1-T2)', 'Chicane T3-T4', 'Pont de la Concorde (T6-T7)', 'Chicane T8-T9', 'L’Epingle Hairpin (T10)', 'Casino Straight DRS', 'Wall of Champions (T13-T14)'],
-    points: makeEllipseLoop(0, 0, 1520, 820, 28, 0.12, 3, true)
+    points: [{x:-980,y:380}, {x:-120,y:380}, {x:680,y:360}, {x:1260,y:300}, {x:1360,y:60}, {x:1080,y:-180}, {x:480,y:-280}, {x:-120,y:-220}, {x:-680,y:-320}, {x:-1220,y:-200}, {x:-1320,y:100}]
   },
   mexico: {
     badge: 'MEXICO', flag: '🇲🇽',
@@ -1170,7 +1156,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'downforce', gear: 'long', brake: 'front' },
     bgColor: '#081912', grassColor: '#0e291e', asphaltColor: '#1f2937',
     corners: ['1.2km Main Straight', 'Moisés Solana (T1-T3)', 'Turn 4-6 Slow Complex', 'High-Speed Esses (T7-T11)', 'Foro Sol Stadium Entry (T12)', 'Foro Sol Amphitheater (T13-T15)', 'Peraltada (T16-T17)', 'Finish Line'],
-    points: makeEllipseLoop(0, 0, 1460, 900, 28, 0.15, 3, true)
+    points: [{x:-920,y:480}, {x:340,y:480}, {x:1180,y:460}, {x:1300,y:180}, {x:1020,y:-120}, {x:1140,y:-420}, {x:680,y:-560}, {x:160,y:-440}, {x:-360,y:-520}, {x:-920,y:-420}, {x:-1220,y:-140}, {x:-1160,y:240}]
   },
   lasvegas: {
     badge: 'VEGAS', flag: '🇺🇸',
@@ -1181,7 +1167,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'topspeed', gear: 'long', brake: 'front' },
     bgColor: '#070919', grassColor: '#0f1229', asphaltColor: '#1b2234',
     corners: ['Pit Straight', 'Turn 1-4 Hairpin Complex', 'Koval Lane Straight', 'Sphere Arena Section (T5-T9)', 'Sands Avenue Sweep (T10-T11)', 'Turn 12 Onto The Strip', '1.9km Las Vegas Strip DRS', 'Turn 14-17 Chicane'],
-    points: makeEllipseLoop(0, 0, 1600, 860, 28, 0.11, 2, false)
+    points: [{x:-1040,y:460}, {x:240,y:460}, {x:1320,y:460}, {x:1440,y:200}, {x:1220,y:-140}, {x:760,y:-440}, {x:120,y:-460}, {x:-580,y:-440}, {x:-1140,y:-340}, {x:-1340,y:-40}, {x:-1280,y:280}]
   },
   abudhabi: {
     badge: 'ABU DHABI', flag: '🇦🇪',
@@ -1192,7 +1178,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'balanced', gear: 'std', brake: 'balanced' },
     bgColor: '#061320', grassColor: '#0b1e33', asphaltColor: '#1c2638',
     corners: ['Main Straight', 'Turn 1 & Fast Sweeper (T2-T3)', 'North Hairpin (T5)', '1.2km Back Straight DRS 1', 'Chicane T6-T7 & DRS 2', 'Marsah Banked Corner (T9)', 'W Hotel Marina Section (T12-T14)', 'Final Corners (T15-T16)'],
-    points: makeEllipseLoop(0, 0, 1480, 920, 28, 0.15, 3, false)
+    points: [{x:-860,y:500}, {x:280,y:500}, {x:1140,y:460}, {x:1280,y:160}, {x:1020,y:-140}, {x:680,y:-480}, {x:120,y:-440}, {x:-260,y:-260}, {x:-680,y:-480}, {x:-1140,y:-340}, {x:-1260,y:20}, {x:-1140,y:340}]
   },
   shanghai: {
     badge: 'SHANGHAI', flag: '🇨🇳',
@@ -1203,7 +1189,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'balanced', gear: 'long', brake: 'front' },
     bgColor: '#061a16', grassColor: '#0c2923', asphaltColor: '#1e293b',
     corners: ['Main Straight', '270° Snail Spiral (T1-T3)', 'Turn 6 Hairpin', 'High-Speed S-Curves (T7-T8)', 'Turn 9-10 Double Left', 'Banked Snail Entry (T11-T13)', '1.2km Back Straight DRS', 'Turn 14 Hairpin & T16'],
-    points: makeEllipseLoop(0, 0, 1500, 960, 30, 0.16, 3, true)
+    points: [{x:-960,y:560}, {x:240,y:560}, {x:1160,y:560}, {x:1440,y:300}, {x:1340,y:-100}, {x:980,y:-120}, {x:520,y:40}, {x:760,y:-420}, {x:440,y:-680}, {x:-40,y:-540}, {x:-480,y:-660}, {x:-1040,y:-540}, {x:-1320,y:-220}, {x:-1180,y:160}, {x:-1280,y:460}]
   },
   qatar: {
     badge: 'QATAR', flag: '🇶🇦',
@@ -1214,7 +1200,7 @@ const TRACKS = {
     recommended: { tire: 'hard', setup: 'downforce', gear: 'std', brake: 'balanced' },
     bgColor: '#09111c', grassColor: '#121e30', asphaltColor: '#1c2536',
     corners: ['1.06km Lusail Straight', 'Turn 1-2 Medium Sweep', 'Turn 4-5 Right-Handers', 'Turn 6 Hairpin', 'Turn 7-10 Flowing Complex', 'Triple-Apex High-G (T12-T14)', 'Turn 15 Fast Right', 'Turn 16 Final Corner'],
-    points: makeEllipseLoop(0, 0, 1480, 940, 30, 0.15, 3, true)
+    points: [{x:-860,y:520}, {x:320,y:520}, {x:1180,y:480}, {x:1320,y:180}, {x:1040,y:-140}, {x:680,y:-500}, {x:140,y:-520}, {x:-360,y:-440}, {x:-880,y:-480}, {x:-1220,y:-220}, {x:-1140,y:220}]
   },
   hungaroring: {
     badge: 'HUNGARY', flag: '🇭🇺',
@@ -1225,7 +1211,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'downforce', gear: 'short', brake: 'balanced' },
     bgColor: '#081b12', grassColor: '#0f2d1f', asphaltColor: '#1f2937',
     corners: ['Main Straight', 'Turn 1 Downhill Hairpin', 'Turn 2-3 Sweep', 'Blind Crest (T4)', 'Turn 5 Long Right', 'Chicane (T6-T7)', 'Technical Esses (T8-T11)', 'Turn 12-14 Final Sector'],
-    points: makeEllipseLoop(0, 0, 1340, 880, 28, 0.17, 4, true)
+    points: [{x:-740,y:520}, {x:260,y:520}, {x:980,y:460}, {x:1160,y:140}, {x:900,y:-160}, {x:1040,y:-460}, {x:580,y:-600}, {x:120,y:-420}, {x:-280,y:-580}, {x:-780,y:-460}, {x:-1120,y:-160}, {x:-1040,y:240}]
   },
   miami: {
     badge: 'MIAMI', flag: '🇺🇸',
@@ -1236,7 +1222,7 @@ const TRACKS = {
     recommended: { tire: 'soft', setup: 'balanced', gear: 'long', brake: 'front' },
     bgColor: '#051a21', grassColor: '#092b36', asphaltColor: '#1e293b',
     corners: ['Start Straight', 'Turn 1-3 Sweep', 'High-Speed S-Curves (T4-T8)', 'Curved DRS Zone 1 (T9-T10)', 'Turn 11 Braking', 'Tight Overpass Chicane (T14-T16)', '1.28km Back Straight DRS 2', 'Turn 17 Hairpin & Finish'],
-    points: makeEllipseLoop(0, 0, 1540, 900, 30, 0.14, 3, false)
+    points: [{x:-940,y:480}, {x:260,y:480}, {x:1160,y:440}, {x:1340,y:140}, {x:1080,y:-160}, {x:640,y:-440}, {x:120,y:-380}, {x:-340,y:-480}, {x:-920,y:-420}, {x:-1240,y:-140}, {x:-1180,y:220}]
   }
 };
 
@@ -2434,6 +2420,10 @@ function startCountdownSequence() {
   createRacersForGrid();
   raceState = 'countdown';
   countdownTimer = 2.4;
+  document.getElementById('hudSpeed').textContent = '0';
+  document.getElementById('hudTime').textContent = '00:00.00';
+  document.getElementById('hudLap').textContent = `1/${selectedLaps}`;
+  document.getElementById('hudPos').textContent = gameMode === 'timetrial' ? 'P1/1' : `P${currentQualiGridPos || 4}/8`;
 
   document.getElementById('menuModal').classList.add('hidden');
   document.getElementById('preRaceSetupModal').classList.add('hidden');
